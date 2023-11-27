@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/data-edit.css') }}">
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script type=text/javascript src="{{ url_for('static', filename='js/data-edit.js') }}"></script>
+{% endblock %}
+{% block title %} 資料驗證 {% endblock %}
+
+{% block popup %}
+<!-- Warning Popup -->
+<div class="popup-container duplicated-popup d-none">
+    <div class="xx">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                </g>
+            </g>
+        </svg>
+    </div>
+    <div id="popup-alert">
+        <label>提醒：請選擇特定行‹‹\( ˙▿˙　)/››‹‹\(　˙▿˙ )/››</label>
+    </div>
+</div>
+{% endblock %}
+
+{% block box2 %}
+<div class="template-title">STEP3. 編輯資料</div>
+{% endblock %}
+
+{% block box3 %}
+    {% for name in checkbox_names %}
+        <div class="checkbox-name" data-checkbox-name="{{ name }}">{{ name }}</div>
+    {% endfor %}
+    <div class="col-content" ></div>
+{% endblock %}
+
+{% block box4 %}
+<div class="function-container">
+    <button class="function-btn" id="add-row">新增一列</button>
+    <button class="function-btn" id="add-ten-rows">新增十列</button>
+    <button class="function-btn" id="delete-row">刪除指定列</button>
+    <button class="function-btn" id="get-data-col">獲取行資料</button>
+</div>
+<div id="grid"></div>
+{% endblock %}
+
+{% block box5 %}{% endblock %}
+
+{% block box6 %}
+<button class="btn export-data-btn">匯出資料</button>
+<button class="btn next-btn">下一步</button>
+{% endblock %}

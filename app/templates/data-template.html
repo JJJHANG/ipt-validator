@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" href="../static/fSelect/fSelect.css">
+<script src="../static/fSelect/fSelect.js"></script>
+<script type=text/javascript src="{{ url_for('static', filename='js/data-template.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/data-template.css') }}">
+{% endblock %}
+{% block title %} 資料模板 {% endblock %}
+
+
+{% block popup %}
+<!-- Save Template Popup -->
+<div class="popup-container save-popup d-none">
+    <div class="xx">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                </g>
+            </g>
+        </svg>
+    </div>
+    <div class="popup-input">
+        <label>模板名稱</label>
+        <input type="text" id="template-name">
+    </div>
+    <div class="popup-btn">
+        <button id="save-btn">儲存</button>
+    </div>
+</div>
+
+<!-- Warning Popup -->
+<div class="popup-container duplicated-popup d-none">
+    <div class="xx">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="1"/>
+                </g>
+            </g>
+        </svg>
+    </div>
+    <div id="popup-alert">
+        <label>提醒：欄位重複勾選‹‹\( ˙▿˙　)/››‹‹\(　˙▿˙ )/››</label>
+    </div>
+</div>
+{% endblock %}
+
+{% block box2 %}
+<div class="template-title">STEP1. 選擇模板</div>
+<div class="column-title">STEP2. 選擇欄位</div>
+{% endblock %}
+                
+
+{% block box3 %}
+<div class="upper-container">
+    <div>
+        <div>
+            自訂模板
+        </div>
+        <select name="" id="custom">
+            <option value=""></option>
+        </select>
+    </div>
+    <div>
+        <div>
+            主題
+        </div>
+        <select id="theme">
+            <option value=""></option>
+            <option value="">無</option>
+            <option value="ecological-survey">生態調查</option>
+            <option value="parasite">寄生蟲</option>
+        </select>
+    </div>
+    <div>
+        <div>
+            資料集類型*
+        </div>
+        <select id="core">
+            <option value=""></option>
+            <option value="checklist">Checklist 物種名錄</option>
+            <option value="occurrence">Occurrence 出現紀錄</option>
+            <option value="samplingevent">Sampling Event 調查活動</option>
+        </select>
+    </div>
+    <div class="extension-container">
+        <div class="extension">
+            延伸資料集
+        </div>
+        <select id="extension" multiple="multiple">
+            <option value=""></option>
+            <option value="darwin-core-occurrence">Darwin Core Occurrence</option>
+            <option value="simple-multimedia">Simple Multimedia</option>
+            <option value="extended-measurement-or-facts">Extended Measurement Or Facts</option>
+            <option value="resource-relationship">Resource Relationship</option>
+            <option value="dna-derived-data">DNA derived data</option>
+        </select>
+    </div>
+</div>
+<div class="lower-container">
+    <div class="custom-column-container">
+        <form class="custom-column-form">
+            <label>自訂欄位名稱</label>
+            <input type="text" class="custom-column-input custom-column">
+            <label>自訂欄位類型</label>
+            <select name="" id="custom-column-type" class="custom-column">
+                <option value=""></option>
+                <option value="">字串</option>
+                <option value="">數字</option>
+                <option value="">布林值</option>
+            </select>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block box4 %}
+<form id="requiredFieldset" method="post" action="/data-template"></form> 
+<form id="customFieldset"></form>  
+{% endblock %}
+
+{% block box5 %}
+<div class="description-container">
+    <div id="description-name"></div>
+    <div class="description-content">
+        <div class="description-title">所屬類別</div>
+        <div id="description-type" class="description"></div>
+    </div>
+    <div class="description-content">
+        <div class="description-title">定義</div>
+        <div id="description" class="description"></div>
+    </div>
+    <div class="description-content">
+        <div class="description-title">常見對應名稱</div>
+        <div id="description-commonname" class="description"></div>
+    </div>
+    <div class="description-content">
+        <div class="description-title">範例</div>
+        <div id="description-example" class="description"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block box6 %}
+<button class="btn save-template-btn">儲存模板</button>
+<button class="btn next-btn">下一步</button>
+{% endblock %}
+
+{% block box7 %}
+<button class="btn column-btn">新增自訂欄位</button>
+{% endblock %}
