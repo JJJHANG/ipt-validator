@@ -41,12 +41,12 @@ $(document).ready(function() {
 function transferDataToBackend (getColHeader, getData) {
     $.ajax({
         type: "POST",
-        url: "/data-clean",
+        url: "/process-validation",
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify({ 'table_header': getColHeader, 'table_data': getData }),
         success: function(data) {
             console.log("Data submitted.");
-            window.location.href = "/data-clean";
+            window.location.href = "/data-validation";
         },
         error: function () {
             console.error("Failed to submit data.");

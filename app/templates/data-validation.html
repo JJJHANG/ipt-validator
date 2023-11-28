@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script type=text/javascript src="{{ url_for('static', filename='js/data-validation.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/data-validation.css') }}">
+{% endblock %}
+{% block title %} 資料模板 {% endblock %}
+
+
+{% block box2 %}
+<div class="template-title">STEP4. 資料驗證</div>
+{% endblock %}
+
+{% block box3 %}
+
+<div id="error-message">
+    錯誤訊息
+    {% if controlled_column_stats %}
+        {% for key, value in controlled_column_stats.items() %}
+            {% if value['valid_percentage'] < 100 %}
+                <div>{{ value['error_message'] }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %} 
+
+    {% if unique_column_stats %}
+        {% for key, value in unique_column_stats.items() %}
+            {% if value['valid_percentage'] < 100 %}
+                <div>{{ value['error_message'] }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %} 
+</div>
+{% endblock %}
+
+{% block box4 %}
+
+<div id="term-frequency">
+    <div id="table-title">欄位頻率</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Term</th>
+                <th>Count</th>
+                <th>Percentage</th>
+                <th>Interpreted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if controlled_column_stats %}
+                {% for key, value in controlled_column_stats.items() %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <th>{{ value['total_rows'] }}</th>
+                    <th>{{ value['valid_percentage'] }}%</th>
+                    <th>{{ value['valid_rows'] }}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}  
+
+            {% if unique_column_stats %}
+                {% for key, value in unique_column_stats.items() %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <th>{{ value['total_rows'] }}</th>
+                    <th>{{ value['valid_percentage'] }}%</th>
+                    <th>{{ value['valid_rows'] }}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+ 
+{% endblock %}
+

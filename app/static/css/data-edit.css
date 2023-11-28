@@ -46,7 +46,6 @@
 }
 
 .box3 {
-    /* background-color: green; */
     grid-column: 1 / 2 !important;
     grid-row: 6 / 48 !important;
     border-right: 1.5px solid #2B59C3;
@@ -58,7 +57,6 @@
 }
 
 .box4 {
-    /* background-color: green; */
     grid-column: 2 / 6 !important;
     grid-row: 6 / 47 !important;
     border: none !important;
@@ -111,7 +109,6 @@
 
 .template-title {
     border-right: none !important;
-
 }
 
 .function-container {
