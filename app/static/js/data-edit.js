@@ -49,6 +49,7 @@ function transferDataToBackend (getColHeader, getData) {
             window.location.href = "/data-validation";
         },
         error: function () {
+            $('.unknown-error-popup').removeClass('d-none');
             console.error("Failed to submit data.");
         },
     })
@@ -99,6 +100,11 @@ function initializeHandsontable() {
                     type: 'dropdown',
                     source: ['absent', 'present'],  
                 };
+            } else if (name === 'continent') {
+                return {
+                    type: 'dropdown',
+                    source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
+                };
             } else {
                 return {};
             }
@@ -145,7 +151,7 @@ function initializeHandsontable() {
             console.log(colName);
             updateColContent(colData);
         } else {
-            $('.popup-container').removeClass('d-none');
+            $('.duplicated-popup').removeClass('d-none');
         } 
         selectedColumn = undefined;
     }; 

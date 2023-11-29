@@ -118,18 +118,18 @@
 }
 
 .function-btn {
-    background-color: #7aa7c7;
-    border: 1px solid #7aa7c7;
+    background-color: #EEE8A9;
+    border: 1px solid #EEE8A9;
     box-sizing: border-box;
-    color: #FFF;
+    color: #2B59C3;
     cursor: pointer;
     display: inline-block;
     font-size: 14px;
-    font-weight: 600;
+    /* font-weight: 600; */
     line-height: 1.5;
     margin: 0;
     outline: none;
-    padding: 8px .8em;
+    padding: 5px 15px 5px 15px;
     position: relative;
     text-align: center;
     text-decoration: none;
@@ -140,6 +140,7 @@
     white-space: nowrap;
     /* width: 100%; */
     font-size: 12px;
+    border-radius: 20px;
 }
 
 .handsontable table thead th{

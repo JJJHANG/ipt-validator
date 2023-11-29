@@ -30,6 +30,7 @@ def data_edit():
 def process_validation():
     controlled_column_stats = {}
     unique_column_stats = {}
+    lon_lat_stats = {}
 
     if request.method == 'POST':
         data = request.get_json()
@@ -41,8 +42,9 @@ def process_validation():
         df = pd.DataFrame(table_data, columns=table_header)
         app.logger.info(df)
 
-        CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus']
+        CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus', 'continent']
         UNIQUE_ID_COLUMNS = ['occurrenceID', 'taxonID', 'samp_name']
+        LON_LAT_COLUMNS = ['decimalLongitude', 'decimalLatitude']
 
         TOTAL_ROWS = len(df) # 計算空白值會用到
 
@@ -58,56 +60,137 @@ def process_validation():
             elif col == 'occurrenceStatus':
                 valid_values = ['absent', 'present']
                 error_message = 'Occurrence status invalid'
+            elif col == 'continent':
+                valid_values = ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America']
+                error_message = 'Continent invalid'
             
             # 檢查欄位值是否在 valid_values 中
             invalid_rows = df[~df[col].isin(valid_values)]
+            blank_rows = df[df[col].isna()]
 
             # 計算統計資訊
-            valid_rows = TOTAL_ROWS - len(invalid_rows)
+            valid_rows = TOTAL_ROWS - len(invalid_rows) # None 會直接算到 invalid_rows 裡面，所以不扣 blank
+            counts_rows = TOTAL_ROWS - len(blank_rows)
             valid_percentage = (valid_rows / TOTAL_ROWS) * 100
+
+            # 提取不符合的值和索引號
+            invalid_values = invalid_rows[col].tolist()
+            invalid_indexes = (invalid_rows.index + 1).tolist() # pandas 從 0 開始，但 Handsontable 從 1 開始
 
             # 儲存統計結果到字典
             controlled_column_stats[col] = {
-                'total_rows': TOTAL_ROWS,
+                'counts_rows': counts_rows,
+                'invalid_rows': {
+                    'count': len(invalid_rows),
+                    'values': invalid_values,
+                    'indexes': invalid_indexes,
+                },
                 'valid_rows': valid_rows,
                 'valid_percentage': valid_percentage,
-                'index_numbers_of_invalid_rows': invalid_rows.index.tolist(),
                 'error_message': error_message
             }
         
+        app.logger.info(controlled_column_stats)
+
         # *****檢查單一值欄位*****
         unique_columns = set(table_header) & set(UNIQUE_ID_COLUMNS)
         for col in unique_columns:
             is_unique = df[col].is_unique
+
             if is_unique:
                 invalid_rows = 0
-                valid_rows = TOTAL_ROWS
+                valid_rows = TOTAL_ROWS 
                 valid_percentage = 100
                 error_message = None
                 
                 unique_column_stats[col] = {
                     'total_rows': TOTAL_ROWS,
+                    'invalid_rows': invalid_rows,
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,
                     'index_numbers_of_invalid_rows': None,
                     'error_message': error_message
                 }
             else:
-                invalid_rows = df[df.duplicated(subset=col, keep=False)]
-                valid_rows = TOTAL_ROWS - len(invalid_rows)
+                duplicated_values = df[df.duplicated(subset=col, keep=False)]
+
+                # 對 values 進行排序，同時保持 index 的對應關係
+                # pandas 從 0 開始，但 Handsontable 從 1 開始
+                sorted_pairs = sorted(zip(duplicated_values.index + 1, duplicated_values[col]), key=lambda x: x[1])
+                # 拆分回 index 和 value
+                sorted_indexes, sorted_values = zip(*sorted_pairs)
+
+                invalid_rows = len(duplicated_values)
+                valid_rows = TOTAL_ROWS - invalid_rows
                 valid_percentage = (valid_rows / TOTAL_ROWS) * 100
                 error_message = f'{col} is not unique'
 
                 unique_column_stats[col] = {
                     'total_rows': TOTAL_ROWS,
+                    'invalid_rows': {
+                        'count': invalid_rows,
+                        'values': list(sorted_values),
+                        'indexes': list(sorted_indexes),
+                    },
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,
-                    'index_numbers_of_invalid_rows': invalid_rows.index.tolist(),
                     'error_message': error_message
                 }
 
+        # *****檢查經緯度欄位*****
+        lon_lat_columns = set(table_header) & set(LON_LAT_COLUMNS)
+        for col in lon_lat_columns:
+            if col == 'decimalLongitude':
+                df['decimalLongitude'] = pd.to_numeric(df['decimalLongitude'], errors='coerce')
+                invalid_longitude_rows = df[(df['decimalLongitude'] < -180) | (df['decimalLongitude'] > 180)]
+                blank_rows = df[df[col].isna()]
+
+                invalid_rows = len(invalid_longitude_rows)
+                counts_rows = TOTAL_ROWS - len(blank_rows)
+                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows)
+                valid_percentage = (valid_rows / TOTAL_ROWS) * 100
+                error_message = 'Longitude out of range'
+
+                lon_lat_stats[col] = {
+                    'counts_rows': counts_rows,
+                    'invalid_rows': {
+                        'count': invalid_rows,
+                        'values': invalid_longitude_rows['decimalLongitude'].tolist(),
+                        'indexes': (invalid_longitude_rows.index + 1).tolist(),
+                    },
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
+                    'error_message': error_message
+                }
+
+            elif col == 'decimalLatitude':
+                df['decimalLatitude'] = pd.to_numeric(df['decimalLatitude'], errors='coerce')
+                invalid_latitude_rows = df[(df['decimalLatitude'] < -90) | (df['decimalLatitude'] > 90)]
+                blank_rows = df[df[col].isna()]
+
+                invalid_rows = len(invalid_latitude_rows)
+                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows)
+                counts_rows = TOTAL_ROWS - len(blank_rows)
+                valid_percentage = (valid_rows / TOTAL_ROWS) * 100
+                error_message = 'Latitude out of range'
+
+                lon_lat_stats[col] = {
+                    'counts_rows': counts_rows,
+                    'invalid_rows': {
+                        'count': invalid_rows,
+                        'values': invalid_latitude_rows['decimalLatitude'].tolist(),
+                        'indexes': (invalid_latitude_rows.index + 1).tolist(),
+                    },
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
+                    'error_message': error_message
+                }
+
+        app.logger.info(lon_lat_stats)
+
     session['controlled_column_stats'] = controlled_column_stats
     session['unique_column_stats'] = unique_column_stats
+    session['lon_lat_stats'] = lon_lat_stats
         
     return redirect(url_for('data_validation'))
 
@@ -115,8 +198,12 @@ def process_validation():
 def data_validation():
     controlled_column_stats = session.get('controlled_column_stats')
     unique_column_stats = session.get('unique_column_stats')
+    lon_lat_stats = session.get('lon_lat_stats')
     
-    return render_template('data-validation.html', controlled_column_stats=controlled_column_stats, unique_column_stats=unique_column_stats)
+    return render_template('data-validation.html', 
+                           controlled_column_stats=controlled_column_stats, 
+                           unique_column_stats=unique_column_stats, 
+                           lon_lat_stats=lon_lat_stats)
 
 
 
