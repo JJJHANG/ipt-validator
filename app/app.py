@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import os
 import pandas as pd
+import numpy as np
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -143,12 +144,14 @@ def process_validation():
             if col == 'decimalLongitude':
                 df['decimalLongitude'] = pd.to_numeric(df['decimalLongitude'], errors='coerce')
                 invalid_longitude_rows = df[(df['decimalLongitude'] < -180) | (df['decimalLongitude'] > 180)]
-                blank_rows = df[df[col].isna()]
+                zero_longitude_rows = df[df['decimalLongitude'] == 0]
+                blank_rows = df[df[col].isna()] # 同時判斷 None 與 NaN
 
                 invalid_rows = len(invalid_longitude_rows)
+                zero_rows = len(zero_longitude_rows)
                 counts_rows = TOTAL_ROWS - len(blank_rows)
-                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows)
-                valid_percentage = (valid_rows / TOTAL_ROWS) * 100
+                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows) - zero_rows 
+                valid_percentage = (valid_rows / counts_rows) * 100 if counts_rows != 0 else 0
                 error_message = 'Longitude out of range'
 
                 lon_lat_stats[col] = {
@@ -158,6 +161,12 @@ def process_validation():
                         'values': invalid_longitude_rows['decimalLongitude'].tolist(),
                         'indexes': (invalid_longitude_rows.index + 1).tolist(),
                     },
+                    'zero_rows': {  
+                        'count': zero_rows,
+                        'values': 0,
+                        'indexes': (zero_longitude_rows.index + 1).tolist(),
+                        'error_message': 'Longitude zero coordinate'
+                    },
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,
                     'error_message': error_message
@@ -166,12 +175,14 @@ def process_validation():
             elif col == 'decimalLatitude':
                 df['decimalLatitude'] = pd.to_numeric(df['decimalLatitude'], errors='coerce')
                 invalid_latitude_rows = df[(df['decimalLatitude'] < -90) | (df['decimalLatitude'] > 90)]
+                zero_latitude_rows = df[df['decimalLatitude'] == 0]
                 blank_rows = df[df[col].isna()]
 
                 invalid_rows = len(invalid_latitude_rows)
-                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows)
+                zero_rows = len(zero_latitude_rows)
+                valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows) - zero_rows
                 counts_rows = TOTAL_ROWS - len(blank_rows)
-                valid_percentage = (valid_rows / TOTAL_ROWS) * 100
+                valid_percentage = (valid_rows / counts_rows) * 100 if counts_rows != 0 else 0
                 error_message = 'Latitude out of range'
 
                 lon_lat_stats[col] = {
@@ -180,6 +191,12 @@ def process_validation():
                         'count': invalid_rows,
                         'values': invalid_latitude_rows['decimalLatitude'].tolist(),
                         'indexes': (invalid_latitude_rows.index + 1).tolist(),
+                    },
+                    'zero_rows': {  
+                        'count': zero_rows,
+                        'values': 0,
+                        'indexes': (zero_latitude_rows.index + 1).tolist(),
+                        'error_message': 'Latitude zero coordinate'
                     },
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,

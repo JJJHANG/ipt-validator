@@ -99,6 +99,30 @@
                         </tbody>
                     </table>
                 </div>
+                {% if value['zero_rows']['count'] >= 1%}
+                    <div class="error-message-box">
+                        <span>{{ value['zero_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ value['zero_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ key }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(value['zero_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ value['zero_rows']['indexes'][i] }}</td>
+                                        <td>{{ value['zero_rows']['values'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             {% endif %}
         {% endfor %}
     {% endif %} 
