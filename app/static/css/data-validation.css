@@ -61,6 +61,15 @@
     cursor: pointer;
 }
 
+.mismatch {
+    /* background-color: #C0A975; */
+    background-color: #FFC05C;
+}
+
+.blank {
+     background-color: #B9CCFF;
+}
+
 .invalid_rows {
     padding-left: 15px;
     border-left: 1px solid #2B59C3;
@@ -120,13 +129,40 @@
 }
 
 .accordion-table thead tr th:first-child {
-    width: 25vw; /* 第一個 column 寬度 */
+    width: 25vw; 
 }
 
 .accordion-table thead tr th:nth-child(2) {
-    width: calc(5 * 25vw); /* 第二個 column 寬度是第一個的 4 倍 */
+    width: calc(5 * 25vw); 
 }
 
 .center {
     text-align: center !important;
+}
+
+.three-col thead tr th:first-child {
+    width: 20vw; 
+}
+
+.three-col thead tr th:nth-child(2) {
+    width: calc(3 * 20vw); 
+}
+
+.three-col thead tr th:nth-child(3) {
+    width: calc(3 * 20vw); 
+}
+
+.next-btn {
+    grid-column: 4 / 5 ;
+    color: #FFF;
+    border-left: 1px solid #2B59C3 !important;
+}
+
+.save-result-btn {
+    color: #2B59C3;
+    background-color: #FFF0E1 !important;
+}
+
+.save-result-btn:hover {
+    background-color: #F9F871 !important;
 }

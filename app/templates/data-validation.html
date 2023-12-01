@@ -126,11 +126,175 @@
             {% endif %}
         {% endfor %}
     {% endif %} 
+
+    {% if datetime_column_stats %}
+        {% for key, value in datetime_column_stats.items() %}
+            {% if value['valid_percentage'] < 100 %}
+                <div class="error-message-box">
+                    <span>{{ value['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['invalid_rows']['count']) %}
+                                <tr>
+                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+            {% if value['mismatched_year_rows']['count'] >= 1 %}
+                <div class="error-message-box mismatch">
+                    <span>{{ value['mismatched_year_rows']['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['mismatched_year_rows']['count'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table three-col">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>{{ key }}</th>
+                                <th>year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['mismatched_year_rows']['count']) %}
+                                <tr>
+                                    <td>{{ value['mismatched_year_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['mismatched_year_rows']['raw_eventDate'][i] }}</td>
+                                    <td>{{ value['mismatched_year_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+            {% if value['mismatched_month_rows']['count'] >= 1 %}
+                <div class="error-message-box mismatch">
+                    <span>{{ value['mismatched_month_rows']['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['mismatched_month_rows']['count'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table three-col">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>{{ key }}</th>
+                                <th>month</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['mismatched_month_rows']['count']) %}
+                                <tr>
+                                    <td>{{ value['mismatched_month_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['mismatched_month_rows']['raw_eventDate'][i] }}</td>
+                                    <td>{{ value['mismatched_month_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+            {% if value['mismatched_day_rows']['count'] >= 1 %}
+                <div class="error-message-box mismatch">
+                    <span>{{ value['mismatched_day_rows']['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['mismatched_day_rows']['count'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table three-col">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>{{ key }}</th>
+                                <th>day</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['mismatched_day_rows']['count']) %}
+                                <tr>
+                                    <td>{{ value['mismatched_day_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['mismatched_day_rows']['raw_eventDate'][i] }}</td>
+                                    <td>{{ value['mismatched_day_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %} 
+
+    {% if date_column_stats %}
+        {% for key, value in date_column_stats.items() %}
+            {% if value['valid_percentage'] < 100 %}
+                <div class="error-message-box">
+                    <span>{{ value['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['invalid_rows']['count']) %}
+                                <tr>
+                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %} 
+        {% endfor %}
+    {% endif %} 
+
+    {% if remain_column_stats %}
+        {% for key, value in remain_column_stats.items() %}
+            {% if value['blank_rows']['counts'] > 0 %}
+                <div class="error-message-box blank">
+                    <span>{{ value['error_message'] }}</span>
+                    <span class="invalid_rows">{{ value['blank_rows']['counts'] }}</span>
+                </div>
+                <div class="accordion-menu d-none">
+                    <table class="accordion-table">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(value['blank_rows']['counts']) %}
+                                <tr>
+                                    <td>{{ value['blank_rows']['indexes'][i] }}</td>
+                                    <td>{{ value['blank_rows']['values'][i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %} 
+        {% endfor %}
+    {% endif %} 
 </div>
 {% endblock %}
 
 {% block box4 %}
-
 <div id="term-frequency">
     <div id="table-title">欄位頻率</div>
     <table id="term-frequency-table">
@@ -175,9 +339,45 @@
                 </tr>
                 {% endfor %}
             {% endif %}
+
+            {% if datetime_column_stats %}
+                {% for key, value in datetime_column_stats.items() %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <th class="center">{{ value['counts_rows'] }}</th>
+                    <th class="center">{{ value['valid_percentage'] }}%</th>
+                    <th class="center">{{ value['valid_rows'] }}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}
+
+            {% if date_column_stats %}
+                {% for key, value in date_column_stats.items() %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <th class="center">{{ value['counts_rows'] }}</th>
+                    <th class="center">{{ value['valid_percentage'] }}%</th>
+                    <th class="center">{{ value['valid_rows'] }}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}
+
+            {% if remain_column_stats %}
+                {% for key, value in remain_column_stats.items() %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <th class="center">{{ value['counts_rows'] }}</th>
+                    <th class="center">{{ value['valid_percentage'] }}%</th>
+                    <th class="center">{{ value['valid_rows'] }}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}
         </tbody>
     </table>
 </div>
-
 {% endblock %}
 
+{% block box6 %}
+<button class="btn save-result-btn">下載結果</button>
+<button class="btn next-btn">下一步</button>
+{% endblock %}
