@@ -14,9 +14,11 @@ $(document).ready(function () {
         $('#core').val('');
         
         if (selectedTheme === 'ecological-survey') {
-            $('#core').val('samplingevent').prop('disabled', true);
+            $('#core').val('samplingevent').prop('disabled', true); // 指定核心，並鎖定下拉選單
         } else if (selectedTheme === 'parasite') {
-            $('#core').val('occurrence').prop('disabled', true);
+            $('#core').val('occurrence').prop('disabled', true); // 指定核心，並鎖定下拉選單
+        } else {
+            $('#core').val('').prop('disabled', false); // 如果沒有特定主題，可以自由選擇核心
         }
 
         updateDropdown();
@@ -700,7 +702,7 @@ function updateFieldsetContent() {
                     latestEpochOrHighestSeries
                 </label>
             </div>
-            <div class="checkbox" data-name="earliestAgeOrLowestStage" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic epoch or highest chronostratigraphic series attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Atlantic,<br>Boreal,<br>Skullrockian">
+            <div class="checkbox" data-name="earliestAgeOrLowestStage" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic age or lowest chronostratigraphic stage attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Atlantic,<br>Boreal,<br>Skullrockian">
                 <label>
                     <input type="checkbox" name="earliestAgeOrLowestStage"/>
                     earliestAgeOrLowestStage
@@ -892,7 +894,7 @@ function updateFieldsetContent() {
                     locality
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="The original textual description of the place." data-commonname="地區" data-example="25 km NNE Bariloche por R. Nac. 237">
+            <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="The original textual description of the place." data-commonname="字面上地區" data-example="25 km NNE Bariloche por R. Nac. 237">
                 <label>
                     <input type="checkbox" name="verbatimLocality"/>
                     verbatimLocality
@@ -926,12 +928,6 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="minimumDepthInMeters"/>
                     minimumDepthInMeters
-                </label>
-            </div>
-            <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="The greater depth of a range of depth below the local surface, in meters." data-commonname="最大深度（公尺）" data-example="0,<br>200">
-                <label>
-                    <input type="checkbox" name="maximumDepthInMeters"/>
-                    maximumDepthInMeters
                 </label>
             </div>
             <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="The greater depth of a range of depth below the local surface, in meters." data-commonname="最大深度（公尺）" data-example="0,<br>200">
@@ -1024,7 +1020,7 @@ function updateFieldsetContent() {
                     verbatimLongitude
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimCoordinateSystem" data-type="Location" data-description="紀錄的座標單位" data-commonname="座標單位" data-example="decimal degrees,<br>degrees decimal minutes,<br>degrees minutes seconds">
+            <div class="checkbox" data-name="verbatimCoordinateSystem" data-type="Location" data-description="紀錄的座標單位" data-commonname="字面上座標格式" data-example="decimal degrees,<br>degrees decimal minutes,<br>degrees minutes seconds">
                 <label>
                     <input type="checkbox" name="verbatimCoordinateSystem"/>
                     verbatimCoordinateSystem
@@ -1114,7 +1110,7 @@ function updateFieldsetContent() {
                     recordedByID
                 </label>
             </div>
-            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量" data-commonname="數量、個體數" data-example="0, 1, 25">
+            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量" data-commonname="個體數量" data-example="0, 1, 25">
                 <label>
                     <input type="checkbox" name="individualCount"/>
                     individualCount
@@ -1216,7 +1212,7 @@ function updateFieldsetContent() {
                     associatedSequences
                 </label>
             </div>
-            <div class="checkbox" data-name="associatedTaxa" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量" data-commonname="相關物種" data-example="host: Quercus alba,<br>host: gbif.org/species/2879737,<br>parasitoid of: Cyclocephala signaticollis | predator of: Apis mellifera">
+            <div class="checkbox" data-name="associatedTaxa" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers or names of taxa and the associations of this Occurrence to each of them." data-commonname="相關物種" data-example="host: Quercus alba,<br>host: gbif.org/species/2879737,<br>parasitoid of: Cyclocephala signaticollis | predator of: Apis mellifera">
                 <label>
                     <input type="checkbox" name="associatedTaxa"/>
                     associatedTaxa
@@ -1246,7 +1242,7 @@ function updateFieldsetContent() {
                     organismName
                 </label>
             </div>
-            <div class="checkbox" data-name="organismScope" data-type="Organism" data-description="A description of the kind of Organism instance. Can be used to indicate whether the Organism instance represents a discrete organism or if it represents a particular type of aggregation.." data-commonname="生物體類型" data-example="multicellular organism,<br.virus,<br>clone,<br>pack,<br>colony">
+            <div class="checkbox" data-name="organismScope" data-type="Organism" data-description="A description of the kind of Organism instance. Can be used to indicate whether the Organism instance represents a discrete organism or if it represents a particular type of aggregation." data-commonname="生物體類型" data-example="multicellular organism,<br>virus,<br>clone,<br>pack,<br>colony">
                 <label>
                     <input type="checkbox" name="organismScope"/>
                     organismScope
@@ -1324,7 +1320,7 @@ function updateFieldsetContent() {
                     institutionID
                 </label>
             </div>
-            <div class="checkbox" data-name="collectionID" data-type="Record-level" data-description="An identifier for the collection or dataset from which the record was derived." data-commonname="語言" data-example="http://biocol.org/urn:lsid:biocol.org:col:1001, http://grbio.org/cool/p5fp-c036">
+            <div class="checkbox" data-name="collectionID" data-type="Record-level" data-description="An identifier for the collection or dataset from which the record was derived." data-commonname="館藏ID" data-example="http://biocol.org/urn:lsid:biocol.org:col:1001, http://grbio.org/cool/p5fp-c036">
                 <label>
                     <input type="checkbox" name="collectionID"/>
                     collectionID
@@ -1408,13 +1404,13 @@ function updateFieldsetContent() {
                     namePublishedInID
                 </label>
             </div>
-            <div class="checkbox" data-name="taxonConceptID" data-type="Taxon" data-description="An identifier for the taxonomic concept to which the record refers - not for the nomenclatural details of a taxon." data-commonname="分類觀ID " data-example="8fa58e08-08de-4ac1-b69c-1235340b7001">
+            <div class="checkbox" data-name="taxonConceptID" data-type="Taxon" data-description="An identifier for the taxonomic concept to which the record refers - not for the nomenclatural details of a taxon." data-commonname="分類觀ID" data-example="8fa58e08-08de-4ac1-b69c-1235340b7001">
                 <label>
                     <input type="checkbox" name="taxonConceptID"/>
                     taxonConceptID
                 </label>
             </div>
-            <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名、Name、名字" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
+            <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
                 <label>
                     <input type="checkbox" name="scientificName"/>
                     scientificName
@@ -1582,12 +1578,6 @@ function updateFieldsetContent() {
                     nomenclaturalCode
                 </label>
             </div>
-            <div class="checkbox" data-name="nomenclaturalCode" data-type="Taxon" data-description="物種的分類階層" data-commonname="命名代碼" data-example="ICN,<br>ICZN,<br>BC,<br>ICNCP,<br>BioCode">
-                <label>
-                    <input type="checkbox" name="nomenclaturalCode"/>
-                    nomenclaturalCode
-                </label>
-            </div>
             <div class="checkbox" data-name="taxonRemarks" data-type="Taxon" data-description="Comments or notes about the taxon or name." data-commonname="分類註記" data-example="this name is a misspelling in common use">
                 <label>
                     <input type="checkbox" name="taxonRemarks"/>
@@ -1663,12 +1653,6 @@ function updateFieldsetContent() {
                 </label>
             </div>
             <div class="checkbox" data-name="audience" data-type="" data-description="A class or description for whom the image is intended or useful." data-commonname="" data-example="experts,<br>general public,<br>children">
-                <label>
-                    <input type="checkbox" name="audience"/>
-                    audience
-                </label>
-            </div>
-            <div class="checkbox" data-name="audience" data-type="" data-description="If the media item was derived or taken from another source this is the reference to that resource. For example a book from which an image was scanned or the original provider of a photo/graphic, such as photography agencies." data-commonname="" data-example="">
                 <label>
                     <input type="checkbox" name="audience"/>
                     audience
@@ -2124,7 +2108,7 @@ function updateFieldsetContent() {
                     contaminationAssessment
                 </label>
             </div>
-            <div class="checkbox" data-name="partitionVolume" data-type="" data-description="An accurate estimation of partition volume. The sum of the partitions multiplied by the partition volume will enable the total volume of the reaction to be calculated.." data-commonname="" data-example="1">
+            <div class="checkbox" data-name="partitionVolume" data-type="" data-description="An accurate estimation of partition volume. The sum of the partitions multiplied by the partition volume will enable the total volume of the reaction to be calculated." data-commonname="" data-example="1">
                 <label>
                     <input type="checkbox" name="partitionVolume"/>
                     partitionVolume
@@ -2472,19 +2456,19 @@ function updateFieldsetContent() {
                     detec_type
                 </label>
             </div>
-            <div class="checkbox" data-name="otu_class_appr" data-type="" data-description="Cutoffs and approach used when clustering new UViGs in "species-level" OTUs. Note that results from standard 95% ANI / 85% AF clustering should be provided alongside OTUS defined from another set of thresholds, even if the latter are the ones primarily used during the analysis" data-commonname="" data-example="95% ANI;85% AF; greedy incremental clustering">
+            <div class="checkbox" data-name="otu_class_appr" data-type="" data-description="Cutoffs and approach used when clustering new UViGs in 'species-level' OTUs. Note that results from standard 95% ANI / 85% AF clustering should be provided alongside OTUS defined from another set of thresholds, even if the latter are the ones primarily used during the analysis" data-commonname="" data-example="95% ANI;85% AF; greedy incremental clustering">
                 <label>
                     <input type="checkbox" name="otu_class_appr"/>
                     otu_class_appr
                 </label>
             </div>
-            <div class="checkbox" data-name="otu_seq_comp_appr" data-type="" data-description="Tool and thresholds used to compare sequences when computing "species-level" OTUs" data-commonname="" data-example="blastn;2.6.0+;e-value cutoff: 0.001">
+            <div class="checkbox" data-name="otu_seq_comp_appr" data-type="" data-description="Tool and thresholds used to compare sequences when computing 'species-level' OTUs" data-commonname="" data-example="blastn;2.6.0+;e-value cutoff: 0.001">
                 <label>
                     <input type="checkbox" name="otu_seq_comp_appr"/>
                     otu_seq_comp_appr
                 </label>
             </div>
-            <div class="checkbox" data-name="otu_db" data-type="" data-description="Reference database (i.e. sequences not generated as part of the current study) used to cluster new genomes in "species-level" OTUs, if any" data-commonname="" data-example="NCBI Viral RefSeq;83">
+            <div class="checkbox" data-name="otu_db" data-type="" data-description="Reference database (i.e. sequences not generated as part of the current study) used to cluster new genomes in 'species-level' OTUs, if any" data-commonname="" data-example="NCBI Viral RefSeq;83">
                 <label>
                     <input type="checkbox" name="otu_db"/>
                     otu_db
@@ -2502,7 +2486,7 @@ function updateFieldsetContent() {
                     url
                 </label>
             </div>
-            <div class="checkbox" data-name="host_pred_appr" data-type="" data-description="" data-commonname="" data-example="http://www.earthmicrobiome.org/">
+            <div class="checkbox" data-name="host_pred_appr" data-type="" data-description="Tool or approach used for host prediction" data-commonname="" data-example="http://www.earthmicrobiome.org/">
                 <label>
                     <input type="checkbox" name="host_pred_appr"/>
                     host_pred_appr

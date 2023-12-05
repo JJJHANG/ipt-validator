@@ -150,6 +150,13 @@
     font-weight: 600;
 }
 
+#alert-small {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 15px;
+    text-align: center;
+}
+
 
 
 
