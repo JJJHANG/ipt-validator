@@ -30,13 +30,50 @@ $(document).ready(function () {
     // 下拉選單事件：更新資料集類型的欄位內容
     $('#core').on('change', function() {
         updateFieldsetContent();
+
+        if ($('#customFieldset').length > 0) {
+            var coreFieldsetID = $(this).val();
+            console.log(coreFieldsetID);
+            console.log(allCheckedCheckboxNames);
+            disableDuplicatedCheckbox(coreFieldsetID);
+        }
+
+        updateCheckedCheckboxNames();
+
+        
+
+        var selectedOptions = $('.fs-option.selected');
+
+        selectedOptions.each(function () {
+            var extensionFieldsetID = $(this).data('value');
+            var target = "#" + extensionFieldsetID + " input[type='checkbox']"
+            $(target).prop('disable', false);
+            
+            disableDuplicatedCheckbox(extensionFieldsetID);
+        });
+
         updateCheckedCheckboxNames();
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
     });
 
     // 下拉選單事件：更新延伸資料集的欄位內容
     $('#extension').on('change', function() {
-        updateFieldsetContent();
+        updateCheckedCheckboxNames();
+        updateExtensionFieldsetContent();
+        // updateFieldsetContent();
+        
+        // var coreFieldsetID = $('#core').val();
+        // disableDuplicatedCheckbox(coreFieldsetID);
+
+        var selectedOptions = $('.fs-option.selected');
+
+        selectedOptions.each(function () {
+            var extensionFieldsetID = $(this).data('value');
+            var target = "#" + extensionFieldsetID + " input[type='checkbox']"
+            $(target).prop('disable', false);
+            disableDuplicatedCheckbox(extensionFieldsetID);
+        });
+
         updateCheckedCheckboxNames();
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
     });
@@ -44,6 +81,24 @@ $(document).ready(function () {
     // 下拉選單事件：更新自訂模板的欄位內容
     $('#custom').on('change', function() {
         updateFieldsetContent();
+        updateCheckedCheckboxNames();
+
+        if ($('#requiredFieldset').length > 0) {
+            $('#core').val('');
+            $('.fs-label').text('');
+            $('.fs-option').removeClass('selected');
+            $('#requiredFieldset').html('');
+        }
+
+        var selectedOptions = $('.fs-option.selected');
+
+        selectedOptions.each(function () {
+            var extensionFieldsetID = $(this).data('value');
+
+            disableDuplicatedCheckbox(extensionFieldsetID);
+        });
+
+        // disableDuplicatedCheckbox('custom')
         updateCheckedCheckboxNames();
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
     });
@@ -281,6 +336,18 @@ function handleCheckboxClick() {
     });
 }
 
+function disableDuplicatedCheckbox (fieldsetID) {
+    var target = "#" + fieldsetID + " input[type='checkbox']"
+    $(target).each(function () {
+        var chec = $(this).attr('name');
+
+        if (allCheckedCheckboxNames.includes(chec)) {
+            $(this).prop('checked', false);
+            $(this).prop('disabled', true);
+        }
+    });
+}
+
 // 功能：更新 fieldset 的內容
 function updateFieldsetContent() {
     const selectedCore = $("#core").val();
@@ -295,7 +362,7 @@ function updateFieldsetContent() {
 
     if (selectedCore === "occurrence") {
         fieldsetContent += `
-        <fieldset id="required-fieldset">
+        <fieldset class="required-fieldset" id="occurrence">
             <legend>必填欄位</legend>
             <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="32567">
                 <label>
@@ -373,7 +440,7 @@ function updateFieldsetContent() {
         `;
     } else if (selectedCore === "samplingevent") {
         fieldsetContent += `
-        <fieldset id="required-fieldset">
+        <fieldset class="required-fieldset" id="samplingevent">
             <legend>必填欄位</legend>
             <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼" data-commonname="ID、編號" data-example="32567">
                 <label>
@@ -415,7 +482,7 @@ function updateFieldsetContent() {
         `;
     } else if (selectedCore === "checklist") {
         fieldsetContent += `
-        <fieldset id="required-fieldset">
+        <fieldset class="required-fieldset" id="checklist">
             <legend>必填欄位</legend>
                 <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼" data-commonname="ID、編號" data-example="32567">
                     <label>
@@ -531,9 +598,53 @@ function updateFieldsetContent() {
         `;
     }
 
+    if (selectedCustom) {
+        // console.log(selectedCustom)
+        var checkboxNames = selectedCustom.split(',');
+        // console.log(checkboxNames)
+        
+        var customTemplateName = $("#custom option:selected").text();
+        var customFieldset = `<fieldset id="custom"><legend>自訂欄位：${customTemplateName}</legend>`;
+
+        for (var i = 0; i < checkboxNames.length; i++) {
+            var checkboxName = checkboxNames[i];
+            
+            var customFieldsetContent = `
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="${checkboxName}" checked/>
+                        ${checkboxName}
+                    </label>
+                </div>
+            `;
+        
+            customFieldset += customFieldsetContent ;
+        }
+        customFieldset += '</fieldset>';
+        $("#customFieldset").html(customFieldset);
+        // fieldsetContent += customFieldset
+    }
+
+    $("#requiredFieldset").html(fieldsetContent);
+
+    // 鎖定必填欄位的選項
+    $('.required-fieldset input[type="checkbox"]').prop('disabled', true);
+
+    if ($('#requiredFieldset').children().length > 0) {
+        $('.checkbox-container').removeClass('border-none');
+    }
+}
+
+function updateExtensionFieldsetContent() {
+    const selectedExtension = $(".extension-container .fs-option.selected").map(function() {
+        return $(this).data('value');
+    }).get();
+
+    var fieldsetContent = "";
+
     if (selectedExtension.includes("darwin-core-occurrence")) {
         fieldsetContent += `
-        <fieldset>
+        <fieldset id="darwin-core-occurrence">
             <legend>延伸資料集欄位：Darwin Core Occurrence</legend>
             <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="實體物質 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人類觀察 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄 Taxon,<br>出現紀錄 Occurrence,<br>材料引用 MaterialCitation">
                 <label>
@@ -1597,7 +1708,7 @@ function updateFieldsetContent() {
     
     if (selectedExtension.includes("simple-multimedia")) {
         fieldsetContent += `
-        <fieldset>
+        <fieldset id="simple-multimedia">
             <legend>延伸資料集欄位：Simple Multimedia</legend>
             <div class="checkbox" data-name="type" data-type="" data-description="The nature or genre of the resource." data-commonname="資源類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
                 <label>
@@ -1689,7 +1800,7 @@ function updateFieldsetContent() {
 
     if (selectedExtension.includes("extended-measurement-or-facts")) {
         fieldsetContent += `
-        <fieldset>
+        <fieldset id="extended-measurement-or-facts">
             <legend>延伸資料集欄位：Extended Measurement Or Facts</legend>
             <div class="checkbox" data-name="measurementID" data-type="" data-description="An identifier for the MeasurementOrFact (information pertaining to measurements, facts, characteristics, or assertions). May be a global unique identifier or an identifier specific to the data set." data-commonname="測量ID" data-example="">
                 <label>
@@ -1775,7 +1886,7 @@ function updateFieldsetContent() {
 
     if (selectedExtension.includes("resource-relationship")) {
         fieldsetContent += `
-        <fieldset>
+        <fieldset id="resource-relationship">
             <legend>延伸資料集欄位：Resource Relationship</legend>
             <div class="checkbox" data-name="resourceID" data-type="" data-description="這筆紀錄的主體" data-commonname="主體紀錄ID" data-example="occ_HL20070207_001">
                 <label>
@@ -1831,7 +1942,7 @@ function updateFieldsetContent() {
 
     if (selectedExtension.includes("dna-derived-data")) {
         fieldsetContent += `
-        <fieldset>
+        <fieldset id="dna-derived-data">
             <legend>延伸資料集欄位：DNA derived data</legend>
             <div class="checkbox" data-name="samp_name" data-type="" data-description="Sample Name is a name that you choose for the sample. It can have any format, but we suggest that you make it concise, unique and consistent within your lab, and as informative as possible. Every Sample Name from a single Submitter must be unique." data-commonname="" data-example="">
                 <label>
@@ -2545,38 +2656,5 @@ function updateFieldsetContent() {
         `;
     }
 
-    if (selectedCustom) {
-        // console.log(selectedCustom)
-        var checkboxNames = selectedCustom.split(',');
-        // console.log(checkboxNames)
-        
-        var customTemplateName = $("#custom option:selected").text();
-        var customFieldset = `<fieldset><legend>自訂欄位：${customTemplateName}</legend>`;
-
-        for (var i = 0; i < checkboxNames.length; i++) {
-            var checkboxName = checkboxNames[i];
-            
-            var customFieldsetContent = `
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="${checkboxName}" checked/>
-                        ${checkboxName}
-                    </label>
-                </div>
-            `;
-        
-            customFieldset += customFieldsetContent ;
-        }
-        customFieldset += '</fieldset>';
-        fieldsetContent += customFieldset
-    }
-
-    $("#requiredFieldset").html(fieldsetContent);
-
-    // 鎖定必填欄位的選項
-    $('#required-fieldset input[type="checkbox"]').prop('disabled', true);
-
-    if ($('#requiredFieldset').children().length > 0) {
-        $('.checkbox-container').removeClass('border-none');
-    }
+    $("#extensionFieldset").html(fieldsetContent);
 }

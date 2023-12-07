@@ -126,12 +126,12 @@ fieldset input{
     accent-color: #2B59C3;
 }
 
-#required-fieldset {
+.required-fieldset {
     border: 1px solid #B91F3E;
     color: #B91F3E;
 }
 
-#required-fieldset input {
+.required-fieldset input {
     accent-color: #B91F3E;
 }
 
