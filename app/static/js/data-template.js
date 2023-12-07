@@ -5,7 +5,7 @@ $(document).ready(function () {
     // 初始化多選下拉選單
     $('#extension').fSelect();
 
-    // 在頁面加載時讀取除存的自定模版
+    // 在頁面加載時讀取儲存的自定模版
     renderSavedOptions()
 
     // 下拉選單事件：主題下拉選單連動其他選單
@@ -24,6 +24,7 @@ $(document).ready(function () {
         updateDropdown();
         updateFieldsetContent(); // 同時更新 fieldset 的內容
         updateCheckedCheckboxNames();
+        updateExtensionFieldsetContent(); 
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
     });
 
@@ -31,24 +32,20 @@ $(document).ready(function () {
     $('#core').on('change', function() {
         updateFieldsetContent();
 
-        if ($('#customFieldset').length > 0) {
+        if ($('#customFieldset').length > 0) { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
             var coreFieldsetID = $(this).val();
-            console.log(coreFieldsetID);
-            console.log(allCheckedCheckboxNames);
             disableDuplicatedCheckbox(coreFieldsetID);
         }
 
         updateCheckedCheckboxNames();
 
-        
-
-        var selectedOptions = $('.fs-option.selected');
-
+        // 檢查資料集類型和延伸資料集重複的欄位
+        var selectedOptions = $('.fs-option.selected'); 
         selectedOptions.each(function () {
             var extensionFieldsetID = $(this).data('value');
             var target = "#" + extensionFieldsetID + " input[type='checkbox']"
             $(target).prop('disable', false);
-            
+            updateExtensionFieldsetContent();
             disableDuplicatedCheckbox(extensionFieldsetID);
         });
 
@@ -60,13 +57,9 @@ $(document).ready(function () {
     $('#extension').on('change', function() {
         updateCheckedCheckboxNames();
         updateExtensionFieldsetContent();
-        // updateFieldsetContent();
-        
-        // var coreFieldsetID = $('#core').val();
-        // disableDuplicatedCheckbox(coreFieldsetID);
 
+        // 檢查延伸資料集和其他重複的欄位
         var selectedOptions = $('.fs-option.selected');
-
         selectedOptions.each(function () {
             var extensionFieldsetID = $(this).data('value');
             var target = "#" + extensionFieldsetID + " input[type='checkbox']"
@@ -83,22 +76,20 @@ $(document).ready(function () {
         updateFieldsetContent();
         updateCheckedCheckboxNames();
 
-        if ($('#requiredFieldset').length > 0) {
+        if ($('#requiredFieldset').length > 0) { // 只要重選自訂模板，其他的下拉選單一起重置
             $('#core').val('');
             $('.fs-label').text('');
             $('.fs-option').removeClass('selected');
             $('#requiredFieldset').html('');
         }
 
+        // 檢查自訂模板和延伸資料集重複的欄位
         var selectedOptions = $('.fs-option.selected');
-
         selectedOptions.each(function () {
             var extensionFieldsetID = $(this).data('value');
-
             disableDuplicatedCheckbox(extensionFieldsetID);
         });
 
-        // disableDuplicatedCheckbox('custom')
         updateCheckedCheckboxNames();
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
     });
@@ -238,15 +229,13 @@ $(document).ready(function () {
     }) 
 
     $('#save-btn').on('click', function (event) {
-        const checkboxNames = $("#requiredFieldset .checkbox input[type='checkbox']:checked").map(function () {
-            return $(this).attr('name');
-        }).get();
+        updateCheckedCheckboxNames();
         const templateName = $('#template-name').val();
         const newOption = $("<option>")
-        .attr('value', checkboxNames.join(','))
+        .attr('value', allCheckedCheckboxNames.join(','))
         .text(templateName);
 
-        localStorage.setItem(templateName, JSON.stringify(checkboxNames));
+        localStorage.setItem(templateName, JSON.stringify(allCheckedCheckboxNames));
 
         $('.save-popup').addClass('d-none');
         $('#custom').append(newOption);
@@ -268,7 +257,7 @@ function downloadCSV(data, filename) {
     a.remove();
 }
 
-// 功能：儲存自訂模板到瀏覽器上
+// 功能：讀取瀏覽器上儲存的自訂模板
 function renderSavedOptions() {
     // 遍歷本地存儲項目並創建選項
     for (let i = 0; i < localStorage.length; i++) {
@@ -309,15 +298,19 @@ function updateDropdown() {
 // 功能：更新勾選的 checkboxes array
 function updateCheckedCheckboxNames() {
     var checkedCheckboxNames = $("#requiredFieldset .checkbox input[type='checkbox']:checked").map(function () {
-        return $(this).attr("name");
+        return $(this).attr("name"); // 包含主題、資料集類型欄位
     }).get();
     
     var checkedCustomCheckboxNames = $("#customFieldset .checkbox input[type='checkbox']:checked").map(function () {
-        return $(this).attr("name");
+        return $(this).attr("name"); // 包含自訂、自訂模板欄位
+    }).get();
+
+    var checkedExtensionCheckboxNames = $("#extensionFieldset .checkbox input[type='checkbox']:checked").map(function () {
+        return $(this).attr("name"); // 包含延伸資料集欄位
     }).get();
     
     // 更新全域變數
-    allCheckedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames);
+    allCheckedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames, checkedExtensionCheckboxNames);
 }
 
 // 功能：檢查欄位勾選是否重複
@@ -336,6 +329,7 @@ function handleCheckboxClick() {
     });
 }
 
+// 功能：檢查欄位是否重複，有重複的話取消選選取並禁用。優先順序實作寫在每個下拉選單變動的地方，自訂模板 > 資料集類型 > 延伸資料集
 function disableDuplicatedCheckbox (fieldsetID) {
     var target = "#" + fieldsetID + " input[type='checkbox']"
     $(target).each(function () {
@@ -348,15 +342,11 @@ function disableDuplicatedCheckbox (fieldsetID) {
     });
 }
 
-// 功能：更新 fieldset 的內容
+// 功能：更新 fieldset 的內容，包含自訂模板、主題、資料集類型
 function updateFieldsetContent() {
     const selectedCore = $("#core").val();
     const selectedTheme = $("#theme").val();
     const selectedCustom = $("#custom").val();
-    const selectedExtension = $(".extension-container .fs-option.selected").map(function() {
-        return $(this).data('value');
-    }).get();
-    // console.log(selectedExtension)
 
     var fieldsetContent = "";
 
@@ -507,7 +497,6 @@ function updateFieldsetContent() {
     }
 
     if (selectedTheme === "ecological-survey") {
-
         const themeTemplateName = $("#theme option:selected").text();
         fieldsetContent += `
         <fieldset>
@@ -535,7 +524,6 @@ function updateFieldsetContent() {
     }
 
     if (selectedTheme === "parasite") {
-
         const themeTemplateName = $("#theme option:selected").text();
         fieldsetContent += `
         <fieldset>
@@ -635,6 +623,7 @@ function updateFieldsetContent() {
     }
 }
 
+// 功能：更新 fieldset 的內容，包含延伸資料集
 function updateExtensionFieldsetContent() {
     const selectedExtension = $(".extension-container .fs-option.selected").map(function() {
         return $(this).data('value');
