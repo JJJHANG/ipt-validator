@@ -62,8 +62,9 @@ function transferDataToBackend (getColHeader, getData) {
 }
 
 // 功能：處理 按鈕事件：獲取行資訊 的細節
-function updateColContent(colData) {
+function updateColContent(colName, colData) {
     if (colData && colData.length > 0) {
+        $('.col-content').removeClass('d-none');
         var elementCounts = {};
 
         // 計算每個數值的出現次數
@@ -72,15 +73,15 @@ function updateColContent(colData) {
         });
 
         // 生成 HTML
-        var htmlContent = '<ul>';
+        var htmlContent = '<div class="col-name">' + colName + '</div><ul>';
         for (var element in elementCounts) {
             if (elementCounts.hasOwnProperty(element)) {
-                htmlContent += '<li>' + element + ': ' + elementCounts[element] + '</li>';
+                htmlContent += '<li class="facet-content"><span>' + element + '</span><span class="facet-content-number"> ' + elementCounts[element] + '</span></li>';
             }
         }
         htmlContent += '</ul>';
 
-        // $('.col-content').html(htmlContent);
+        $('.col-content').html(htmlContent);
     } else {
         console.log('no data');
         $('.col-content').html('No Data');
@@ -170,7 +171,7 @@ function initializeHandsontable() {
             const colName = hot.getColHeader(selectedColumn);
             console.log(colData);
             console.log(colName);
-            updateColContent(colData); 
+            updateColContent(colName, colData); 
         } else {
             $('.duplicated-popup').removeClass('d-none');
         } 

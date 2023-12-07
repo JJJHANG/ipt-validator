@@ -130,41 +130,46 @@ $(document).ready(function () {
     // 按鈕事件：新增欄位（新增自訂欄位到 fieldset）
     var columnType = "";
 
-    $("#column-type").change(function() {
-        columnType = $(this).val();
-        
+    $("#custom-column-type").change(function() { // 下拉選單變動時，更新 columnType 的值
+        columnType = $("#custom-column-type option:selected").text();
     });
 
     $(".column-btn").click(function() {
-        var columnName = $(".custom-column-input").val();
+        var columnName = $('.custom-column-input').val();
 
-        var existingFieldset = $("#customFieldset fieldset");
-        if (existingFieldset.length > 0) {
-            var newContent = `
-                <div class="checkbox" data-description="" data-type=${columnType}>
-                    <label>
-                        <input type="checkbox" name=${columnName} checked />
-                        ${columnName}
-                    </label>
-                </div>
-            `;
-            existingFieldset.append(newContent);
-        } else {
-            var customfieldsetContent = "";
-            customfieldsetContent += `
-            <fieldset>
-                <legend>自訂欄位</legend>
+        if (columnName.length == 0) {
+            $('.no-column-name-popup').removeClass('d-none');
+        } else if (columnType.length == 0) {
+            $('.no-column-type-popup').removeClass('d-none');
+        } else { // columnName 和 columnType 都不為空時才新增欄位
+            var existingFieldset = $("#customFieldset fieldset");
+            if (existingFieldset.length > 0) {
+                var newContent = `
                     <div class="checkbox" data-description="" data-type=${columnType}>
                         <label>
                             <input type="checkbox" name=${columnName} checked />
                             ${columnName}
                         </label>
                     </div>
-            </fieldset>
-            `;
+                `;
+                existingFieldset.append(newContent);
+            } else {
+                var customfieldsetContent = "";
+                customfieldsetContent += `
+                <fieldset>
+                    <legend>自訂欄位</legend>
+                        <div class="checkbox" data-description="" data-type=${columnType}>
+                            <label>
+                                <input type="checkbox" name=${columnName} checked />
+                                ${columnName}
+                            </label>
+                        </div>
+                </fieldset>
+                `;
 
-            $("#customFieldset").html(customfieldsetContent);
-        }   
+                $("#customFieldset").html(customfieldsetContent);
+            }   
+        }
     });
 
     // 彈出視窗事件：儲存模板
@@ -241,6 +246,8 @@ function updateDropdown() {
         $('.fs-wrap').removeClass('fs-default');
         $('.fs-label').text('Resource Relationship');
         $('.fs-option[data-value="resource-relationship"]').addClass('selected');
+    } else {
+        $('.fs-label').text('');
     }
 }
 
