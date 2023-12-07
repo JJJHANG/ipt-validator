@@ -80,6 +80,25 @@
         <p>提醒：請填入自訂欄位類型 (´･_･`)</p>
     </div>
 </div>
+
+<div class="popup-container delete-template-popup d-none">
+    <div class="xx">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
+                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
+                </g>
+            </g>
+        </svg>
+    </div>
+    <div class="" id="custom-template-name">
+        刪除自訂模板：
+    </div>
+    <div class="popup-btn">
+        <button id="delete-btn">確定刪除</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block box2 %}
@@ -91,8 +110,8 @@
 {% block box3 %}
 <div class="upper-container">
     <div>
-        <div>
-            自訂模板
+        <div id="custom-template-container">
+            <span>自訂模板</span><span class="d-none"><button id="delete-template-btn">刪除模板</button></span>
         </div>
         <select name="" id="custom">
             <option value=""></option>

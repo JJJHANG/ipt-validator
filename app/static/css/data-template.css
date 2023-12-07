@@ -175,5 +175,64 @@ fieldset input{
     font-size: 14px;
 }
 
+#custom-template-container {
+    display: flex;
+    justify-content: space-between;
+}
 
+#delete-template-btn {
+    background-color: #EEE8A9;
+    border: 1px solid #EEE8A9;
+    box-sizing: border-box;
+    color: #2B59C3;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 11px;
+    /* font-weight: 600; */
+    line-height: 1.5;
+    margin: 0;
+    outline: none;
+    padding: 5px 15px 5px 15px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: baseline;
+    white-space: nowrap;
+    /* width: 100%; */
+    font-size: 12px;
+    border-radius: 20px;
+}
+
+#custom-template-name {
+    margin-top: 30px;
+    padding: 6px 22px 6px 22px;
+    font-size: 16px;
+}
+
+#delete-btn {
+    background-color: #2B59C3;
+    border: 1px solid #2B59C3;
+    box-sizing: border-box;
+    color: #FFF;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+    outline: none;
+    padding: 8px .8em;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: baseline;
+    white-space: nowrap;
+    width: 100%;
+}
 

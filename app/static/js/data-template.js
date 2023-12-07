@@ -73,6 +73,13 @@ $(document).ready(function () {
 
     // 下拉選單事件：更新自訂模板的欄位內容
     $('#custom').on('change', function() {
+        if ($('#custom option:selected').text() !== '') {
+            $('#custom-template-container span:nth-child(2)').removeClass('d-none');
+            console.log($('#custom option:selected').text());
+        } else {
+            $('#custom-template-container span:nth-child(2)').addClass('d-none');
+        }
+        
         updateFieldsetContent();
         updateCheckedCheckboxNames();
 
@@ -240,6 +247,23 @@ $(document).ready(function () {
         $('.save-popup').addClass('d-none');
         $('#custom').append(newOption);
     });
+
+    // 彈出視窗事件：刪除自訂模板
+    $('#delete-template-btn').on('click', function (event) {
+        $('.delete-template-popup').removeClass('d-none');
+        var customTemplateName = $('#custom option:selected').text()
+        var text = $('#custom-template-name');
+
+        text.append('' + customTemplateName)
+    });
+
+    $('#delete-btn').on('click', function (event) {
+        var customTemplateName = $('#custom option:selected').text()
+        localStorage.removeItem(customTemplateName);
+        $('.delete-template-popup').addClass('d-none');
+        location.reload();
+    });
+
 });
 
 // 功能：array 轉換成 csv 格式
@@ -586,7 +610,7 @@ function updateFieldsetContent() {
         `;
     }
 
-    if (selectedCustom) {
+    if (selectedCustom !== '') {
         // console.log(selectedCustom)
         var checkboxNames = selectedCustom.split(',');
         // console.log(checkboxNames)
@@ -611,6 +635,8 @@ function updateFieldsetContent() {
         customFieldset += '</fieldset>';
         $("#customFieldset").html(customFieldset);
         // fieldsetContent += customFieldset
+    } else {
+        $("#customFieldset").html('');
     }
 
     $("#requiredFieldset").html(fieldsetContent);
