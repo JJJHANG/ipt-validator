@@ -76,10 +76,10 @@ span {
 }
 
 .box6 {
-    grid-column: 3 / 6 !important;
+    grid-column: 2 / 6 !important;
     grid-row: 47 / 48 !important;
     border: none !important;
-    border-left: 1px solid #2B59C3 !important;
+    border-left: none !important;
     font-size: 12px;
     display: flex
 }
@@ -148,8 +148,6 @@ span {
 }
 
 .handsontable table thead th{
-    /* background-color: #7aa7c7; */
-    /* color:#2B59C3; */
     font-size:12px;
     font-weight: 600;
 }
@@ -189,6 +187,81 @@ span {
     justify-content: space-between;
 }
 
+#insert-row-number {
+    border: none;
+    border-bottom: 1px solid #2B59C3;
+    background-color: #EEE8A9;
+    /* padding-left: 10px; */
+    padding: 5px 15px 5px 15px;
+    font-size: 12px;
+    width: 50px;
+}
 
+.wrapper {
+    position: relative;
+    font-size: 12px;
+    background-color: #EEE8A9;
+    border: 1px solid #EEE8A9;
+    padding: 3px 15px 3px 15px;
+    border-radius: 20px;
+}
 
+#insert-row-number {
+    width: 150px;
+    top: 6%;
+    padding: 3px 6px 3px 6px;
+    border: none;
+    border-bottom: 1px solid #2B59C3;
+    background-color: #EEE8A9;
+}
 
+#insert-row-number:focus {
+    outline: none;
+}
+
+#add-row { 
+    position: absolute;
+    right: 5px;
+    top: 8%;
+    z-index: 999;
+    background-color: #EEE8A9;
+    border: 1px solid #EEE8A9;
+    color:#2B59C3;
+    font-size: 12px;
+    border-radius: 20px;
+    box-sizing: border-box;
+    display: inline-block;
+    line-height: 1.5;
+    margin: 0;
+    outline: none;
+    padding: 3px 10px 3px 10px;
+}
+
+#add-row:hover {
+    cursor: pointer;
+}
+
+.import-btn {
+    background-color: #FFF0E1 !important;
+    border-left: none !important;
+    color: #2B59C3;
+}
+
+.import-btn:hover {
+    background-color: #F9F871 !important;
+}
+
+.back-btn {
+    background-color: #FFF0E1 !important;
+    color: #2B59C3;
+    border-right: 1px solid #2B59C3 !important;
+    border-left: 1px solid #2B59C3 !important;
+}
+
+.back-btn:hover {
+    background-color: #F9F871 !important;
+}
+
+.upload {
+    display: none !important;
+}

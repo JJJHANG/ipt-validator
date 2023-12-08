@@ -160,24 +160,27 @@ $(document).ready(function () {
         downloadCSV([allCheckedCheckboxNames.join(",")], "example.csv");
     });
 
-
     // 按鈕事件：下一步（建立模板，轉跳到編輯資料頁面）
     $(".next-btn").click(function () {
-        updateCheckedCheckboxNames()
+        if ($('#core').val() !== '') { // 檢查有沒有選擇資料集類型，有的話才能下一步
+            updateCheckedCheckboxNames()
         
-        $.ajax({
-            type: "POST",
-            url: "/data-template",
-            contentType: 'application/json;charset=UTF-8',
-            data: JSON.stringify({ 'checkbox_names': allCheckedCheckboxNames }),
-            success: function(data) {
-                console.log("Data submitted.");
-                window.location.href = "/data-edit";
-            },
-            error: function () {
-                console.error("Failed to submit data.");
-            },
-        })
+            $.ajax({
+                type: "POST",
+                url: "/data-template",
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({ 'checkbox_names': allCheckedCheckboxNames }),
+                success: function(data) {
+                    console.log("Data submitted.");
+                    window.location.href = "/data-edit";
+                },
+                error: function () {
+                    console.error("Failed to submit data.");
+                },
+            })
+        } else {
+            $('.required-popup').removeClass('d-none');
+        }
     });
 
     // 按鈕事件：新增欄位（新增自訂欄位到 fieldset）
@@ -263,7 +266,6 @@ $(document).ready(function () {
         $('.delete-template-popup').addClass('d-none');
         location.reload();
     });
-
 });
 
 // 功能：array 轉換成 csv 格式

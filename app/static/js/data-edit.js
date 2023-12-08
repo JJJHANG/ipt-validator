@@ -1,6 +1,18 @@
 var checkboxNames = [];
 
-$(document).ready(function() {
+// $(document).ready(function() {
+//     var example = document.getElementById('example1');
+//     var hot1 = new Handsontable(example, {
+//     data: Handsontable.helper.createSpreadsheetData(100000, 20), //row, columns
+//     colWidths: 100,
+//     width: '100%',
+//     dropdownMenu: true,
+//     filters: true,
+//     height: 320,
+//     rowHeights: 23,
+//     rowHeaders: true,
+//     colHeaders: true
+//   });
 
     // 收集從後端傳來的欄位名稱
     $(".checkbox-name").each(function() {
@@ -13,20 +25,21 @@ $(document).ready(function() {
         initializeHandsontable();
     }
 
-    // 按鈕事件：新增一列
+    // 按鈕事件：新增列在表格底部
     $('#add-row').click(function () {
-        window.addRow(); 
+        const insertRowNumber = $('#insert-row-number').val()
+        window.addRow(insertRowNumber); 
     });
 
-    // 按鈕事件：新增十列
-    $('#add-ten-rows').click(function () {
-        window.addTenRow(); 
-    });
+    // *deprecated* 按鈕事件：新增十列  
+    // $('#add-ten-rows').click(function () {
+    //     window.addTenRow(); 
+    // });
 
-    // 按鈕事件：刪除指定列
-    $('#delete-row').click(function () {
-        window.deleteRow(); 
-    });
+    // *deprecated* 按鈕事件：刪除指定列  
+    // $('#delete-row').click(function () {
+    //     window.deleteRow(); 
+    // });
 
     // 按鈕事件：獲取行資料
     $('#get-data-col').click(function () {
@@ -37,6 +50,43 @@ $(document).ready(function() {
     $('.next-btn').click(function () {
         window.getData();
     });
+
+    // 按鈕事件：上一步
+    $('.back-btn').click(function () {
+        window.history.back();
+    });
+
+    // 按鈕事件：匯入資料
+    $('.import-btn').click(function () {
+        $('#import-file').click();
+    });
+
+    $('#import-file').change(function() {
+        var inputCSV = $(this)[0];
+        if (inputCSV.files.length > 0) {
+            var formData = new FormData();
+            formData.append('file', inputCSV.files[0]);
+
+            $.ajax({
+                type: 'POST',
+                url: '/convert-csv-to-json',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: (data) => {
+                    if (JSON.stringify(data[0]) === JSON.stringify(checkboxNames)) {
+                        initializeHandsontable(data);
+                    } else {
+                        $('.columns-issue-popup').removeClass('d-none');
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log('Error:', textStatus, errorThrown);
+                }
+            })
+        }
+    });
+
 
     $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
@@ -88,56 +138,123 @@ function updateColContent(colName, colData) {
     }
 };
 
-// 功能：初始化編輯表格
-function initializeHandsontable() {
+function updateHandsontable(data) {
     var container = document.getElementById('grid');
-    var hot = new Handsontable(container, {
-        colHeaders: checkboxNames,
-        columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
-            if (name === 'basisOfRecord') {
-                return {
-                    type: 'dropdown',
-                    source: ['MaterialEntity', 'PreservedSpecimen', 'FossilSpecimen', 'LivingSpecimen', 'MaterialSample', 'Event', 'HumanObservation', 'MachineObservation', 'Taxon', 'Occurrence', 'MaterialCitation'],  
-                };
-            } else if (name === 'type') {
-                return {
-                    type: 'dropdown',
-                    source: ['Collection', 'Dataset', 'Event', 'Image', 'MovingImage', 'PhysicalObject', 'Sound', 'StillImage', 'Text'],  
-                };
-            } else if (name === 'occurrenceStatus') {
-                return {
-                    type: 'dropdown',
-                    source: ['absent', 'present'],  
-                };
-            } else if (name === 'continent') {
-                return {
-                    type: 'dropdown',
-                    source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
-                };
-            } else if (name === 'decimalLongitude') {
-                return {
-                    type: 'numeric',
-                };
-            } else if (name === 'decimalLatitude') {
-                return {
-                    type: 'numeric',
-                };
-            } else {
-                return {};
-            }
-        }),
-
-        minRows: 1,
+    var hot2 = new Handsontable(container, {
+        colHeaders: data[0],
         rowHeaders: true,
         width: '100%',
-        height: 'auto',
-        // Header 開啟過濾功能
-        filters: true,
-        // Header 開啟 menu
-        dropdownMenu: true,
-        selectionMode: 'multiple',
+        height: '100%',
         licenseKey: 'non-commercial-and-evaluation'
     });
+    hot2.loadData(data.slice(1));
+}
+
+// 功能：初始化編輯表格
+function initializeHandsontable(data) {
+    var container = document.getElementById('grid');
+    if (data) {
+        var hot = new Handsontable(container, {
+            colHeaders: data[0],
+            columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
+                if (name === 'basisOfRecord') {
+                    return {
+                        type: 'dropdown',
+                        source: ['MaterialEntity', 'PreservedSpecimen', 'FossilSpecimen', 'LivingSpecimen', 'MaterialSample', 'Event', 'HumanObservation', 'MachineObservation', 'Taxon', 'Occurrence', 'MaterialCitation'],  
+                    };
+                } else if (name === 'type') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Collection', 'Dataset', 'Event', 'Image', 'MovingImage', 'PhysicalObject', 'Sound', 'StillImage', 'Text'],  
+                    };
+                } else if (name === 'occurrenceStatus') {
+                    return {
+                        type: 'dropdown',
+                        source: ['absent', 'present'],  
+                    };
+                } else if (name === 'continent') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
+                    };
+                } else if (name === 'decimalLongitude') {
+                    return {
+                        type: 'numeric',
+                    };
+                } else if (name === 'decimalLatitude') {
+                    return {
+                        type: 'numeric',
+                    };
+                } else {
+                    return {};
+                }
+            }),
+    
+            minRows: 1,
+            rowHeaders: true,
+            width: '100%',
+            height: '100%',
+            // Header 開啟過濾功能
+            filters: true,
+            // Header 開啟 menu
+            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut'],
+            selectionMode: 'multiple',
+            language: 'zh-TW',
+            licenseKey: 'non-commercial-and-evaluation'
+        });
+        hot.loadData(data.slice(1));
+    } else {
+        var hot = new Handsontable(container, {
+            colHeaders: checkboxNames,
+            columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
+                if (name === 'basisOfRecord') {
+                    return {
+                        type: 'dropdown',
+                        source: ['MaterialEntity', 'PreservedSpecimen', 'FossilSpecimen', 'LivingSpecimen', 'MaterialSample', 'Event', 'HumanObservation', 'MachineObservation', 'Taxon', 'Occurrence', 'MaterialCitation'],  
+                    };
+                } else if (name === 'type') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Collection', 'Dataset', 'Event', 'Image', 'MovingImage', 'PhysicalObject', 'Sound', 'StillImage', 'Text'],  
+                    };
+                } else if (name === 'occurrenceStatus') {
+                    return {
+                        type: 'dropdown',
+                        source: ['absent', 'present'],  
+                    };
+                } else if (name === 'continent') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
+                    };
+                } else if (name === 'decimalLongitude') {
+                    return {
+                        type: 'numeric',
+                    };
+                } else if (name === 'decimalLatitude') {
+                    return {
+                        type: 'numeric',
+                    };
+                } else {
+                    return {};
+                }
+            }),
+    
+            minRows: 1,
+            rowHeaders: true,
+            width: '100%',
+            height: '100%',
+            // Header 開啟過濾功能
+            filters: true,
+            // Header 開啟 menu
+            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut'],
+            selectionMode: 'multiple',
+            language: 'zh-TW',
+            licenseKey: 'non-commercial-and-evaluation'
+        });
+    }
 
     // 取得被選取的行、列的 index
     hot.updateSettings({
@@ -147,21 +264,22 @@ function initializeHandsontable() {
         }
     });
 
-    // 新增一列
-    window.addRow = function() {
-        hot.alter('insert_row_below', 1, 1);
+    // 新增自訂列
+    window.addRow = function(insertRowNumber) {
+        const totalRows = hot.countRows();
+        hot.alter('insert_row_below', totalRows, insertRowNumber);
     };
     
-    // 新增十列
-    window.addTenRow = function () {
-        hot.alter('insert_row_below', 1, 10);
-    };
+    // *deprecated* 新增十列
+    // window.addTenRow = function () {
+    //     hot.alter('insert_row_below', 1, 10);
+    // };
     
-    // 刪除指定列
-    window.deleteRow = function () {
-        // console.log(selectedRow)
-        hot.alter('remove_row', selectedRow);   
-    };
+    // *deprecated* 刪除指定列
+    // window.deleteRow = function () {
+    //     // console.log(selectedRow)
+    //     hot.alter('remove_row', selectedRow);   
+    // };
 
     // 獲取行資訊
     window.getDataCol = function () {

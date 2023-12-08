@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify
 import os
 import pandas as pd
 import numpy as np
@@ -22,11 +22,36 @@ def data_template():
     else:
         return render_template('data-template.html')
 
+@app.route('/convert-csv-to-json', methods=['POST'])
+def convert_csv_to_json():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
+
+    if file:
+        try:
+            df = pd.read_csv(file)
+
+            df = df.fillna('')
+            df = df.iloc[:, 1:]
+
+            header = df.columns.tolist()
+            data = [header] + df.values.tolist()
+
+            return jsonify(data)
+        except Exception as e:
+            return jsonify({'error': str(e)})
+
 @app.route('/data-edit', methods=['GET', 'POST'])
 def data_edit():
     checkbox_names = session.get('checkbox_names', [])
     # app.logger.info(f'checkbox_names in data_edit: {checkbox_names}')
     return render_template('data-edit.html', checkbox_names=checkbox_names)
+
 
 @app.route('/process-validation', methods=['POST'])
 def process_validation():
@@ -105,7 +130,7 @@ def process_validation():
             if is_unique:
                 invalid_rows = 0
                 valid_rows = TOTAL_ROWS 
-                valid_percentage = 100
+                valid_percentage = 100.0
                 error_message = None
                 
                 unique_column_stats[col] = {
