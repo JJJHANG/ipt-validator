@@ -32,7 +32,7 @@ $(document).ready(function () {
     $('#core').on('change', function() {
         updateFieldsetContent();
 
-        if ($('#customFieldset').length > 0) { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
+        if ($('#custom option:selected').text() !== '') { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
             var coreFieldsetID = $(this).val();
             disableDuplicatedCheckbox(coreFieldsetID);
         }
