@@ -73,27 +73,42 @@
         <br/><br/>
         <input type="submit" />
     </form>
+    <ul class="tab-title">
+        <li><a href="#tab01">tab01</a></li>
+        <li><a href="#tab02">tab02</a></li>
+        <li><a href="#tab03">tab03</a></li>
+    </ul>
 {% endblock %}
 
 {% block box4 %}
-<div class="function-container">
-    <!-- <button class="function-btn" id="add-row">新增一列</button> -->
-    <!-- <button class="function-btn" id="add-ten-rows">新增十列</button> -->
-    <!-- <button class="function-btn" id="delete-row">刪除指定列</button> -->
-    <button class="function-btn" id="get-data-col">獲取行資料</button>
-    <div class="wrapper">
-        <button id="add-row">新增列在表格底部</button>
-        <input type="text" id="insert-row-number"/>
+
+<div id="tab01" class="tab-inner">
+    <p>tab01的內容</p>
+    <div class="function-container">
+        <!-- <button class="function-btn" id="add-row">新增一列</button> -->
+        <!-- <button class="function-btn" id="add-ten-rows">新增十列</button> -->
+        <!-- <button class="function-btn" id="delete-row">刪除指定列</button> -->
+        <button class="function-btn" id="get-data-col">獲取行資料</button>
+        <div class="wrapper">
+            <button id="add-row">新增列在表格底部</button>
+            <input type="text" id="insert-row-number"/>
+        </div>
     </div>
+    <div id="grid"></div>
 </div>
-<div id="grid"></div>
+<div id="tab02" class="tab-inner">
+    <p>tab02的內容</p>
+</div>
+<div id="tab03" class="tab-inner">
+    <p>tab03的內容</p>
+</div>
 <!-- <div id="example1"></div> -->
 {% endblock %}
 
 {% block box5 %}{% endblock %}
 
 {% block box6 %}
-<button class="btn import-btn">匯入資料<small> *Beta</small></button>
+<button class="btn import-btn">匯入資料</button>
 <button class="btn back-btn">上一步</button>
 <button class="btn export-data-btn">匯出資料</button>
 <button class="btn next-btn">下一步</button>

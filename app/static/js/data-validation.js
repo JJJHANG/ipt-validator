@@ -10,4 +10,9 @@ $(document).ready(function() {
             $(this).siblings('.error-message-box').find('.accordion-menu').addClass('d-none');
         }
     });
+
+    // 按鈕事件：上一步
+    $('.back-btn').click(function () {
+        window.history.back();
+    });
 });

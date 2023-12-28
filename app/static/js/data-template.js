@@ -1,4 +1,6 @@
 var allCheckedCheckboxNames = [];
+var checkedExtensionCheckboxNames = [];
+var checkedCheckboxNames = [];
 
 $(document).ready(function () {
 
@@ -10,34 +12,28 @@ $(document).ready(function () {
 
     // 下拉選單事件：主題下拉選單連動其他選單
     $('#theme').on('change', function() {
-        var selectedTheme = $(this).val();
-        $('#core').val('');
-        
-        if (selectedTheme === 'ecological-survey') {
-            $('#core').val('samplingevent').prop('disabled', true); // 指定核心，並鎖定下拉選單
-        } else if (selectedTheme === 'parasite') {
-            $('#core').val('occurrence').prop('disabled', true); // 指定核心，並鎖定下拉選單
-        } else {
-            $('#core').val('').prop('disabled', false); // 如果沒有特定主題，可以自由選擇核心
-        }
-
-        updateDropdown();
-        updateFieldsetContent(); // 同時更新 fieldset 的內容
-        updateCheckedCheckboxNames();
-        updateExtensionFieldsetContent(); 
-        handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
+        updateDropdown(); // 指定核心以及延伸資料集
+        updateFieldsetContent(); // 更新對應的核心欄位內容
+        updateExtensionFieldsetContent(); // 更新對應的延伸資料集欄位內容
+        updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
+        handleCheckboxClick(); // 檢查欄位是否重複勾選
     });
 
     // 下拉選單事件：更新資料集類型的欄位內容
     $('#core').on('change', function() {
-        updateFieldsetContent();
+        $('.fs-label').text('');
+        $('.fs-option').removeClass('selected');
+        $('#extensionFieldset').html('');
+
+        updateFieldsetContent(); // 更新對應的核心欄位內容
 
         if ($('#custom option:selected').text() !== '') { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
             var coreFieldsetID = $(this).val();
             disableDuplicatedCheckbox(coreFieldsetID);
         }
 
-        updateCheckedCheckboxNames();
+        updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
+        handelSpecificColumn(); // 處理特定欄位的規則
 
         // 檢查資料集類型和延伸資料集重複的欄位
         var selectedOptions = $('.fs-option.selected'); 
@@ -49,26 +45,33 @@ $(document).ready(function () {
             disableDuplicatedCheckbox(extensionFieldsetID);
         });
 
-        updateCheckedCheckboxNames();
-        handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
+        updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
+        // handleCheckboxClick(); // 檢查欄位是否重複勾選
     });
 
     // 下拉選單事件：更新延伸資料集的欄位內容
     $('#extension').on('change', function() {
-        updateCheckedCheckboxNames();
+        checkedExtensionCheckboxNames = [];
         updateExtensionFieldsetContent();
+        handelSpecificColumn(); // 處理特定欄位的規則
+        // updateCheckedCheckboxNames();
+        console.log(allCheckedCheckboxNames);
 
         // 檢查延伸資料集和其他重複的欄位
-        var selectedOptions = $('.fs-option.selected');
-        selectedOptions.each(function () {
-            var extensionFieldsetID = $(this).data('value');
-            var target = "#" + extensionFieldsetID + " input[type='checkbox']"
-            $(target).prop('disable', false);
-            disableDuplicatedCheckbox(extensionFieldsetID);
-        });
-
-        updateCheckedCheckboxNames();
+        if ($('#core option:selected').text() !== '' || $('#custom option:selected').text() !== '') {
+            var selectedOptions = $('.fs-option.selected');
+            selectedOptions.each(function () {
+                var extensionFieldsetID = $(this).data('value');
+                var target = "#" + extensionFieldsetID + " input[type='checkbox']"
+                $(target).prop('disable', false);
+                disableDuplicatedCheckbox(extensionFieldsetID);
+            });
+        }
+        
+        // updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
+        console.log(allCheckedCheckboxNames);
         handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
+        
     });
 
     // 下拉選單事件：更新自訂模板的欄位內容
@@ -80,14 +83,15 @@ $(document).ready(function () {
             $('#custom-template-container span:nth-child(2)').addClass('d-none');
         }
         
-        updateFieldsetContent();
-        updateCheckedCheckboxNames();
+        updateFieldsetContent(); // 更新對應的核心欄位內容
+        updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
 
         if ($('#requiredFieldset').length > 0) { // 只要重選自訂模板，其他的下拉選單一起重置
             $('#core').val('');
             $('.fs-label').text('');
             $('.fs-option').removeClass('selected');
             $('#requiredFieldset').html('');
+            $('#extensionFieldset').html('');
         }
 
         // 檢查自訂模板和延伸資料集重複的欄位
@@ -97,8 +101,8 @@ $(document).ready(function () {
             disableDuplicatedCheckbox(extensionFieldsetID);
         });
 
-        updateCheckedCheckboxNames();
-        handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
+        updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
+        // handleCheckboxClick(); // 檢查欄位是否重複勾選
     });
 
     // 滑鼠事件之前隱藏樣式
@@ -110,7 +114,7 @@ $(document).ready(function () {
     $(".description-title").hide();
 
     // 滑鼠事件：移入欄位顯示對應的說明
-    $("#requiredFieldset").on("mouseenter", ".checkbox", function () {
+    $("#requiredFieldset, #extensionFieldset").on("mouseenter", ".checkbox", function () {
     
         const name = $(this).data("name");
         const type = $(this).data("type");
@@ -145,7 +149,7 @@ $(document).ready(function () {
         }
     });
 
-    $("#requiredFieldset").on("mouseleave", ".checkbox", function () {
+    $("#requiredFieldset, #extensionFieldset").on("mouseleave", ".checkbox", function () {
         $("#description-name").hide();
         $("#description-type").hide();
         $("#description").hide();
@@ -162,7 +166,7 @@ $(document).ready(function () {
 
     // 按鈕事件：下一步（建立模板，轉跳到編輯資料頁面）
     $(".next-btn").click(function () {
-        if ($('#core').val() !== '') { // 檢查有沒有選擇資料集類型，有的話才能下一步
+        if ($('#core').val() !== '' || $('#custom').val() !== '') { // 檢查有沒有選擇資料集類型，有的話才能下一步
             updateCheckedCheckboxNames()
         
             $.ajax({
@@ -268,6 +272,15 @@ $(document).ready(function () {
     });
 });
 
+// 功能：處理必選欄位、ID類欄位
+function handelSpecificColumn() {
+    // required-col: 必填欄位
+    // key-col: ID類欄位（eventID, occurrenceID, taxonID）
+
+    $('.required-col').prop('disabled', true);
+    $('.key-col').prop('disabled', false);
+}
+
 // 功能：array 轉換成 csv 格式
 function downloadCSV(data, filename) {
     const csvContent = "," + data.join(",") + "\n\n";
@@ -307,14 +320,14 @@ function updateDropdown() {
     })
 
     if (selectedTheme === 'ecological-survey') {
-        $('#core').val('samplingevent');
+        $('#core').val('samplingevent').prop('disabled', true); // 指定核心，並鎖定下拉選單
         $('.fs-wrap').removeClass('fs-default');
-        $('.fs-label').text('Darwin Core Occurrence');
+        $('.fs-label').text('Darwin Core Occurrence'); // 指定延伸資料集
         $('.fs-option[data-value="darwin-core-occurrence"]').addClass('selected');
     } else if (selectedTheme === 'parasite') {
-        $('#core').val('occurrence');
+        $('#core').val('occurrence').prop('disabled', true); // 指定核心，並鎖定下拉選單
         $('.fs-wrap').removeClass('fs-default');
-        $('.fs-label').text('Resource Relationship');
+        $('.fs-label').text('Resource Relationship'); // 指定延伸資料集
         $('.fs-option[data-value="resource-relationship"]').addClass('selected');
     } else {
         $('.fs-label').text('');
@@ -336,20 +349,36 @@ function updateCheckedCheckboxNames() {
     }).get();
     
     // 更新全域變數
+    checkedCheckboxNames = checkedCheckboxNames
+    checkedExtensionCheckboxNames = checkedExtensionCheckboxNames
     allCheckedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames, checkedExtensionCheckboxNames);
 }
 
 // 功能：檢查欄位勾選是否重複
 function handleCheckboxClick() {
     $(".checkbox input[type='checkbox']").on('click', function() {
-        console.log($(this).prop('checked'));
-        if (allCheckedCheckboxNames.includes($(this).attr('name'))) {
-            if ($(this).prop('checked') === true) {  // 已經勾選過的欄位不做檢查，避免自我檢查
-                $(this).prop('disabled', true);
-                $(this).prop('checked', false);
-                $('.duplicated-popup').removeClass('d-none'); 
-            }         
-        } 
+
+        if ($(this).hasClass('key-col')) {
+            return; // ID類欄位需要重複勾選
+        }
+        // 檢查勾選狀態之前的 allCheckedCheckboxNames
+        const wasPreviouslyChecked = allCheckedCheckboxNames.includes($(this).attr('name'));
+        console.log(wasPreviouslyChecked)
+        // 更新 allCheckedCheckboxNames
+        updateCheckedCheckboxNames();
+
+        // 檢查勾選狀態之後的 allCheckedCheckboxNames
+        const isCurrentlyChecked = allCheckedCheckboxNames.includes($(this).attr('name'));
+        console.log(isCurrentlyChecked)
+
+        // 如果在前一個檢查時該 checkbox 是勾選的，但在當前檢查時已經不是了，則表示該 checkbox 已經被取消勾選。
+        if (wasPreviouslyChecked && isCurrentlyChecked) {
+            $(this).prop('disabled', true);
+            $(this).prop('checked', false);
+            $('.duplicated-popup').removeClass('d-none');
+            return; // 結束函數，不進行後續的操作
+        }
+        
         updateCheckedCheckboxNames();
         // console.log(allCheckedCheckboxNames);
     });
@@ -360,6 +389,10 @@ function disableDuplicatedCheckbox (fieldsetID) {
     var target = "#" + fieldsetID + " input[type='checkbox']"
     $(target).each(function () {
         var chec = $(this).attr('name');
+
+        if ($(this).hasClass('key-col')) {
+            return; // ID類欄位需要重複勾選
+        }
 
         if (allCheckedCheckboxNames.includes(chec)) {
             $(this).prop('checked', false);
@@ -379,53 +412,83 @@ function updateFieldsetContent() {
     if (selectedCore === "occurrence") {
         fieldsetContent += `
         <fieldset class="required-fieldset" id="occurrence">
-            <legend>必填欄位</legend>
-            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="32567">
+            <legend>資料集類型欄位：Occurrence</legend>
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="occurrenceID" checked />
+                    <input type="checkbox" name="eventID" class="required-col" checked />
+                    eventID
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="occurrenceID" class="required-col" checked />
                     occurrenceID
                 </label>
             </div>
-            <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="實體物質 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人類觀察 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄 Taxon,<br>出現紀錄 Occurrence,<br>材料引用 MaterialCitation">
+            <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="材料實體 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人為觀測 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄/分類群 Taxon,<br>出現紀錄 Occurrence,<br>文獻紀錄 MaterialCitation">
                 <label>
-                    <input type="checkbox" name="basisOfRecord" checked />
+                    <input type="checkbox" name="basisOfRecord" class="required-col" checked/>
                     basisOfRecord
                 </label>
             </div>
             <div class="checkbox" data-name="eventDate" data-type="Event" data-description="該筆資料被記錄的日期" data-commonname="調查日期、Date、時間" data-example="「1994-11-05」代表單日，「1996-06」代表 1996 年 6 月">
                 <label>
-                    <input type="checkbox" name="eventDate" checked />
+                    <input type="checkbox" name="eventDate" class="required-col" checked />
                     eventDate
-                </label>
-            </div>
-            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量" data-commonname="數量、個體數" data-example="0, 1, 25">
-                <label>
-                    <input type="checkbox" name="individualCount" checked />
-                    individualCount
                 </label>
             </div>
             <div class="checkbox" data-name="locality" data-type="Location" data-description="採集或觀測地點的明確描述" data-commonname="地點" data-example="觀音山,<br>Caribbean Sea,<br>Florida">
                 <label>
-                    <input type="checkbox" name="locality" checked />
+                    <input type="checkbox" name="locality" class="required-col" checked />
                     locality
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLatitude" data-type="Location" data-description="字面緯度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="緯度" data-example="41d 16’N">
+            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
                 <label>
-                    <input type="checkbox" name="verbatimLatitude" checked />
-                    verbatimLatitude
+                    <input type="checkbox" name="countryCode" class="required-col" checked />
+                    countryCode
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLongitude" data-type="Location" data-description="字面經度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="經度" data-example="121d 10’ 34" W">
+            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
                 <label>
-                    <input type="checkbox" name="verbatimLongitude" checked />
-                    verbatimLongitude
+                    <input type="checkbox" name="samplingProtocol" class="required-col" checked />
+                    samplingProtocol
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimCoordinateSystem" data-type="Location" data-description="紀錄的座標單位" data-commonname="座標單位" data-example="decimal degrees,<br>degrees decimal minutes,<br>degrees minutes seconds">
+            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位。" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
                 <label>
-                    <input type="checkbox" name="verbatimCoordinateSystem" checked />
-                    verbatimCoordinateSystem
+                    <input type="checkbox" name="sampleSizeValue" class="required-col" checked />
+                    sampleSizeValue
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
+                <label>
+                    <input type="checkbox" name="sampleSizeUnit" class="required-col" checked />
+                    sampleSizeUnit
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col" checked />
+                    taxonID
+                </label>
+            </div>
+            <div class="checkbox" data-name="scientificName" data-type="Taxon, Occurrence" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名、Name、名字" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
+                <label>
+                    <input type="checkbox" name="scientificName" class="required-col" checked />
+                    scientificName
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="與dwc:scientificName欄位搭配，填上該筆紀錄的最低分類位階" data-commonname="分類位階、分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
+                <label>
+                    <input type="checkbox" name="taxonRank" class="required-col" checked />
+                    taxonRank
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
+                <label>
+                    <input type="checkbox" name="samplingEffort" checked />
+                    samplingEffort
                 </label>
             </div>
             <div class="checkbox" data-name="decimalLatitude" data-type="Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
@@ -446,10 +509,562 @@ function updateFieldsetContent() {
                     geodeticDatum
                 </label>
             </div>
-            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
+            <div class="checkbox" data-name="coordinateUncertaintyInMeters" data-type="Occurrence, Location" data-description="從給定的十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）到包含整個位置的最小圓的水平距離（以公尺為單位）。如果座標不確定、無法估計或不適用（因爲没有座標），則將該值留空。零值不是該項的有效值" data-commonname="座標誤差（公尺）" data-example="30 (reasonable lower limit on or after 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time).<br>100 (reasonable lower limit before 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time).<br>71 (uncertainty for a UTM coordinate having 100 meter precision and a known spatial reference system).">
                 <label>
-                    <input type="checkbox" name="countryCode" checked />
-                    countryCode
+                    <input type="checkbox" name="coordinateUncertaintyInMeters" checked />
+                    coordinateUncertaintyInMeters
+                </label>
+            </div>
+            <div class="checkbox" data-name="recordedBy" data-type="Occurrence" data-description="記錄此資料的人或最初的觀察者，可以是個人、一份名單、一個群體、一個組織" data-commonname="記錄者、採集者" data-example="Melissa Liu | Daphne Hoh">
+                <label>
+                    <input type="checkbox" name="recordedBy" checked/>
+                    recordedBy
+                </label>
+            </div>
+            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量，只能為正整數" data-commonname="數量、個體數" data-example="0, 1, 25">
+                <label>
+                    <input type="checkbox" name="individualCount" checked />
+                    individualCount
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismQuantity" data-type="Occurrence" data-description="該筆紀錄所包含的生物體的量，若非正整數時可用此欄位記錄。須與dwc: organismQuantityType 搭配使用。" data-commonname="生物體數量" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType),<br>many (organismQuantity) with individuals (organismQuantityType).">
+                <label>
+                    <input type="checkbox" name="organismQuantity" checked/>
+                    organismQuantity
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismQuantityType" data-type="Occurrence" data-description="生物體數量的單位，若非正整數時可用此欄位記錄。" data-commonname="生物體數量單位" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType)">
+                <label>
+                    <input type="checkbox" name="organismQuantityType" checked/>
+                    organismQuantityType
+                </label>
+            </div>
+            <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="界" data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
+                <label>
+                    <input type="checkbox" name="kingdom" checked />
+                    kingdom 
+                </label>
+            </div>
+            <div class="checkbox" data-name="phylum" data-type="Taxon" data-description="門" data-commonname="門" data-example="Chordata (phylum),<br>Bryophyta (division)">
+                <label>
+                    <input type="checkbox" name="phylum"/>
+                    phylum 
+                </label>
+            </div>
+            <div class="checkbox" data-name="class" data-type="Taxon" data-description="綱" data-commonname="綱" data-example="Mammalia,<br>Hepaticopsida">
+                <label>
+                    <input type="checkbox" name="class"/>
+                    class 
+                </label>
+            </div>
+            <div class="checkbox" data-name="order" data-type="Taxon" data-description="目" data-commonname="目" data-example="Carnivora,<br>Monocleales">
+                <label>
+                    <input type="checkbox" name="order"/>
+                    order 
+                </label>
+            </div>
+            <div class="checkbox" data-name="family" data-type="Taxon" data-description="科" data-commonname="科" data-example="Felidae,<br>Monocleaceae">
+                <label>
+                    <input type="checkbox" name="family"/>
+                    family 
+                </label>
+            </div>
+            <div class="checkbox" data-name="subfamily" data-type="Taxon" data-description="亞科" data-commonname="亞科" data-example="Periptyctinae,<br>Orchidoideae,<br>Sphindociinae">
+                <label>
+                    <input type="checkbox" name="subfamily"/>
+                    subfamily 
+                </label>
+            </div>
+            <div class="checkbox" data-name="genus" data-type="Taxon" data-description="屬" data-commonname="屬" data-example="Puma,<br>Monoclea">
+                <label>
+                    <input type="checkbox" name="genus"/>
+                    genus 
+                </label>
+            </div>
+            <div class="checkbox" data-name="subgenus" data-type="Taxon" data-description="亞屬" data-commonname="亞屬" data-example="Strobus,<br>Amerigo,<br>Pilosella">
+                <label>
+                    <input type="checkbox" name="subgenus"/>
+                    subgenus 
+                </label>
+            </div>
+            <div class="checkbox" data-name="infragenericEpithet" data-type="Taxon" data-description="屬以下別名" data-commonname="屬以下別名" data-example="Abacetillus (for scientificName Abacetus (Abacetillus) ambiguus),<br>Cracca (for scientificName Vicia sect. Cracca)">
+                <label>
+                    <input type="checkbox" name="infragenericEpithet"/>
+                    infragenericEpithet 
+                </label>
+            </div>
+            <div class="checkbox" data-name="specificEpithet" data-type="Taxon" data-description="種小名" data-commonname="種小名" data-example="concolor,<br>gottschei">
+                <label>
+                    <input type="checkbox" name="specificEpithet"/>
+                    specificEpithet 
+                </label>
+            </div>
+            <div class="checkbox" data-name="infraspecificEpithet" data-type="Taxon" data-description="種以下別名" data-commonname="種以下別名" data-example="concolor (for scientificName Puma concolor concolor (Linnaeus, 1771)),<br>oxyadenia (for scientificName Quercus agrifolia var. oxyadenia (Torr.) J.T. Howell),<br>laxa (for scientificName Cheilanthes hirta f. laxa (Kunze) W.Jacobsen & N.Jacobsen),<br>scaberrima (for scientificName Indigofera charlieriana var. scaberrima (Schinz) J.B.Gillett)">
+                <label>
+                    <input type="checkbox" name="infraspecificEpithet"/>
+                    infraspecificEpithet 
+                </label>
+            </div>
+            <div class="checkbox" data-name="cultivarEpithet" data-type="Taxon" data-description="栽培種小名" data-commonname="栽培種小名" data-example="King Edward (for scientificName Solanum tuberosum 'King Edward' and taxonRank cultivar),<br>Mishmiense (for scientificName Rhododendron boothii Mishmiense Group and taxonRank cultivar group),<br>Atlantis (for scientificName Paphiopedilum Atlantis grex and taxonRank grex)">
+                <label>
+                    <input type="checkbox" name="cultivarEpithet"/>
+                    cultivarEpithet 
+                </label>
+            </div>
+            <div class="checkbox" data-name="parentEventID" data-type="Event" data-description="上階層調查活動ID" data-commonname="上階層調查活動ID、母事件ID" data-example="A1 (parentEventID to identify the main Whittaker Plot in nested samples, each with its own eventID - A1:1, A1:2)">
+                <label>
+                    <input type="checkbox" name="parentEventID"/>
+                    parentEventID
+                </label>
+            </div>
+            <div class="checkbox" data-name="fieldNumber" data-type="Event" data-description="在野外給此調查活動的編號" data-commonname="野外調查編號" data-example="RV Sol 87-03-08">
+                <label>
+                    <input type="checkbox" name="fieldNumber"/>
+                    fieldNumber 
+                </label>
+            </div>
+            <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間。建議格式參考 ISO 8601-1:2019" data-commonname="調查時間" data-example="14:07-0600 (2:07 pm UTC+6),<br>08:40Z (8:40 am UTC時區),<br>13:00Z/15:30Z (1:00-3:30 pm UTC時區)">
+                <label>
+                    <input type="checkbox" name="eventTime"/>
+                    eventTime
+                </label>
+            </div>
+            <div class="checkbox" data-name="year" data-type="Event, Occurrence" data-description="西元年" data-commonname="年、西元年" data-example="1996,<br>2023">
+                <label>
+                    <input type="checkbox" name="year"/>
+                    year
+                </label>
+            </div>
+            <div class="checkbox" data-name="month" data-type="Event, Occurrence" data-description="月" data-commonname="月" data-example="11,<br>01">
+                <label>
+                    <input type="checkbox" name="month"/>
+                    month
+                </label>
+            </div>
+            <div class="checkbox" data-name="day" data-type="Event, Occurrence" data-description="日" data-commonname="日" data-example="26,<br>01">
+                <label>
+                    <input type="checkbox" name="day"/>
+                    day 
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimEventDate" data-type="Event, Occurrence" data-description="最原始記錄且未被轉譯過的調查日期" data-commonname="字面上調查日期、原始調查日期" data-example="spring 1910,<br>Marzo 2002,<br>1999-03-XX,<br>17IV1934">
+                <label>
+                    <input type="checkbox" name="verbatimEventDate"/>
+                    verbatimEventDate 
+                </label>
+            </div>
+            <div class="checkbox" data-name="habitat" data-type="Event" data-description="調查樣區的棲地類型" data-commonname="棲地" data-example="樹,<br>灌叢,<br>道路">
+                <label>
+                    <input type="checkbox" name="habitat"/>
+                    habitat 
+                </label>
+            </div>
+            <div class="checkbox" data-name="fieldNotes" data-type="Event" data-description="野外調查的筆記、註記" data-commonname="野外調查註記" data-example="Notes available in the Grinnell-Miller Library.">
+                <label>
+                    <input type="checkbox" name="fieldNotes"/>
+                    fieldNotes
+                </label>
+            </div>
+            <div class="checkbox" data-name="eventRemarks" data-type="Event" data-description="可註記天氣或調查狀況等任何文字資訊" data-commonname="調查備註" data-example="陣雨,<br>濃霧,<br>部分有雲">
+                <label>
+                    <input type="checkbox" name="eventRemarks"/>
+                    eventRemarks 
+                </label>
+            </div>
+            <div class="checkbox" data-name="typeStatus" data-type="Identification" data-description="學名標本模式，最好能使用控制詞彙" data-commonname="學名標本模式" data-example="正模標本 HOLOTYPE,<br>副模標本 PARATYPE,<br>複模標本 ISOTYPE,<br>配模標本 ALLOTYPE,<br>總模標本 SYNTYPE,<br>選模標本 LECTOTYPE,<br>副選模標本 PARALECTOTYPE,<br>新模標本 NEOTYPE,<br>模式地標本 TOPOTYPE">
+                <label>
+                    <input type="checkbox" name="typeStatus"/>
+                    typeStatus 
+                </label>
+            </div>
+            <div class="checkbox" data-name="identifiedBy" data-type="Identification" data-description="鑑定此筆紀錄分類相關資訊的人、群體或組織。若有多人則以 '|' 符號區隔" data-commonname="學名鑑定人" data-example="James L. Patton, Theodore Pappenfuss | Robert Macey">
+                <label>
+                    <input type="checkbox" name="identifiedBy"/>
+                    identifiedBy 
+                </label>
+            </div>
+            <div class="checkbox" data-name="identificationReferences" data-type="" data-description="鑑定此紀錄的物種分類資訊的參考文獻連結" data-commonname="學名鑑定參考" data-example="Aves del Noroeste Patagonico. Christie et al. 2004.,<br>Stebbins, R. Field Guide to Western Reptiles and Amphibians. 3rd Edition. 2003. | Irschick, D.J. and Shaffer, H.B. (1997). The polytypic species revisited: Morphological differentiation among tiger salamanders (Ambystoma tigrinum) (Amphibia: Caudata). Herpetologica, 53(1), 30-49">
+                <label>
+                    <input type="checkbox" name="identificationReferences"/>
+                    identificationReferences
+                </label>
+            </div>
+            <div class="checkbox" data-name="identificationVerificationStatus" data-type="Identification" data-description="為表示此紀錄的分類資訊驗證狀態的指標，來判斷是否需要驗證或修正。建議使用控制詞彙" data-commonname="學名鑑定驗證狀態" data-example="0 ('unverified' in HISPID/ABCD)">
+                <label>
+                    <input type="checkbox" name="identificationVerificationStatus"/>
+                    identificationVerificationStatus
+                </label>
+            </div>
+            <div class="checkbox" data-name="identificationRemarks" data-type="Identification" data-description="" data-commonname="學名鑑定備註" data-example="Distinguished between Anthus correndera and Anthus hellmayri based on the comparative lengths of the uñas">
+                <label>
+                    <input type="checkbox" name="identificationRemarks"/>
+                    identificationRemarks
+                </label>
+            </div>
+            <div class="checkbox" data-name="continent" data-type="Location" data-description="洲" data-commonname="洲" data-example="非洲 Africa,<br>南極洲 Antarctica,<br>亞洲 Asia,<br>歐洲 Europe,<br>北美洲 North America,<br>大洋洲 Oceania,<br>南美洲 South America">
+                <label>
+                    <input type="checkbox" name="continent"/>
+                    continent 
+                </label>
+            </div>
+            <div class="checkbox" data-name="waterBody" data-type="Location" data-description="水體" data-commonname="水體" data-example="Indian Ocean,<br>Baltic Sea,<br>Hudson River,<br>Lago Nahuel Huapi">
+                <label>
+                    <input type="checkbox" name="waterBody"/>
+                    waterBody 
+                </label>
+            </div>
+            <div class="checkbox" data-name="islandGroup" data-type="Location" data-description="群島" data-commonname="群島" data-example="Alexander Archipelago,<br>Archipiélago Diego Ramírez,<br>Seychelles">
+                <label>
+                    <input type="checkbox" name="islandGroup"/>
+                    islandGroup 
+                </label>
+            </div>
+            <div class="checkbox" data-name="island" data-type="Location" data-description="島嶼" data-commonname="島嶼" data-example="Nosy Be,<br>Bikini Atoll,<br>Vancouver,<br>Viti Levu,<br>Zanzibar">
+                <label>
+                    <input type="checkbox" name="island"/>
+                    island 
+                </label>
+            </div>
+            <div class="checkbox" data-name="country" data-type="Location" data-description="國家" data-commonname="國家" data-example="Taiwan">
+                <label>
+                    <input type="checkbox" name="country"/>
+                    country 
+                </label>
+            </div>
+            <div class="checkbox" data-name="stateProvince" data-type="Location" data-description="省份/州" data-commonname="省份/州" data-example="Montana,<br>Minas Gerais,<br>Córdoba">
+                <label>
+                    <input type="checkbox" name="stateProvince"/>
+                    stateProvince 
+                </label>
+            </div>
+            <div class="checkbox" data-name="county" data-type="Location" data-description="縣市" data-commonname="縣市" data-example="Nantou County">
+                <label>
+                    <input type="checkbox" name="county"/>
+                    county 
+                </label>
+            </div>
+            <div class="checkbox" data-name="municipality" data-type="Location" data-description="行政區" data-commonname="行政區" data-example="Yuchi Township">
+                <label>
+                    <input type="checkbox" name="municipality"/>
+                    municipality 
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="" data-commonname="字面上地區" data-example="">
+                <label>
+                    <input type="checkbox" name="verbatimLocality"/>
+                    verbatimLocality 
+                </label>
+            </div>
+            <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="最低海拔（公尺）" data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
+                <label>
+                    <input type="checkbox" name="minimumElevationInMeters"/>
+                    minimumElevationInMeters 
+                </label>
+            </div>
+            <div class="checkbox" data-name="maximumElevationInMeters" data-type="Location" data-description="最高海拔（公尺）" data-commonname="最高海拔（公尺）" data-example="-205,<br>1236">
+                <label>
+                    <input type="checkbox" name="maximumElevationInMeters"/>
+                    maximumElevationInMeters 
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimElevation" data-type="Location" data-description="" data-commonname="字面上海拔" data-example="100-200 m">
+                <label>
+                    <input type="checkbox" name="verbatimElevation"/>
+                    verbatimElevation 
+                </label>
+            </div>
+            <div class="checkbox" data-name="minimumDepthInMeters" data-type="Location" data-description="最小深度（公尺）" data-commonname="最小深度（公尺）" data-example="0,<br>100">
+                <label>
+                    <input type="checkbox" name="minimumDepthInMeters"/>
+                    minimumDepthInMeters 
+                </label>
+            </div>
+            <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="最大深度（公尺）" data-commonname="最大深度（公尺）" data-example="0,<br>200">
+                <label>
+                    <input type="checkbox" name="maximumDepthInMeters"/>
+                    maximumDepthInMeters 
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimDepth" data-type="Location" data-description="" data-commonname="字面上深度" data-example="100-200 m">
+                <label>
+                    <input type="checkbox" name="verbatimDepth"/>
+                    verbatimDepth 
+                </label>
+            </div>
+            <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="地區註記" data-commonname="字面地區註記上深度" data-example="under water since 2005">
+                <label>
+                    <input type="checkbox" name="locationRemarks"/>
+                    locationRemarks 
+                </label>
+            </div>
+            <div class="checkbox" data-name="coordinatePrecision" data-type="Occurrence, Location" data-description="依據十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）中給出的座標精確度的十進位表示" data-commonname="座標精準度" data-example="0.00001 (normal GPS limit for decimal degrees),<br>0.000278 (nearest second),<br>0.01667 (nearest minute),<br>1.0 (nearest degree)">
+                <label>
+                    <input type="checkbox" name="coordinatePrecision"/>
+                    coordinatePrecision
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimCoordinates" data-type="Location" data-description="字面上座標，意即最初採集或觀測取得紀錄的經度和緯度，且尚未被轉譯過，任何座標系統皆可" data-commonname="字面上座標" data-example="41 05 54S 121 05 34W, 17T 630000 4833400">
+                <label>
+                    <input type="checkbox" name="verbatimCoordinates"/>
+                    verbatimCoordinates
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimLatitude" data-type="Location" data-description="字面緯度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="緯度" data-example="41d 16’N">
+                <label>
+                    <input type="checkbox" name="verbatimLatitude"/>
+                    verbatimLatitude
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimLongitude" data-type="Location" data-description="字面經度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="經度" data-example="121d 10’ 34" W">
+                <label>
+                    <input type="checkbox" name="verbatimLongitude"/>
+                    verbatimLongitude
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimCoordinateSystem" data-type="Location" data-description="紀錄的座標單位" data-commonname="座標單位" data-example="decimal degrees,<br>degrees decimal minutes,<br>degrees minutes seconds">
+                <label>
+                    <input type="checkbox" name="verbatimCoordinateSystem"/>
+                    verbatimCoordinateSystem
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimSRS" data-type="Location" data-description="字面上座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="字面上空間參照系統" data-example="unknown,<br>EPSG:4326,<br>WGS84,<br>NAD27,<br>Campo Inchauspe,<br>European 1950,<br>Clarke 1866">
+                <label>
+                    <input type="checkbox" name="verbatimSRS"/>
+                    verbatimSRS
+                </label>
+            </div>
+            <div class="checkbox" data-name="footprintWKT" data-type="Location" data-description="一個位置可能既有點半徑表示法（見十進位緯度），也有足跡表示法，兩者可能互不相同。若該筆紀錄無法以一個點位或點半徑記錄，則可參考使用此欄位" data-commonname="地理足跡WKT" data-example="epsg:4326, GEOGCS['GCS_WGS_1984', DATUM['D_WGS_1984', SPHEROID['WGS_1984',6378137,298.257223563]], PRIMEM['Greenwich',0], UNIT['Degree',0.0174532925199433]] (WKT for the standard WGS84 Spatial Reference System EPSG:4326)">
+                <label>
+                    <input type="checkbox" name="footprintWKT"/>
+                    footprintWKT
+                </label>
+            </div>
+            <div class="checkbox" data-name="catalogNumber" data-type="Occurrence" data-description="通常為典藏標本納入館藏時所獲得的序號" data-commonname="館藏號" data-example="145732,<br>145732a,<br>2008.1334,<br>R-4313">
+                <label>
+                    <input type="checkbox" name="catalogNumber"/>
+                    catalogNumber
+                </label>
+            </div>
+            <div class="checkbox" data-name="recordNumber" data-type="Occurrence" data-description="採集樣本並記錄時所寫下的序號" data-commonname="採集號" data-example="OPP 7101">
+                <label>
+                    <input type="checkbox" name="recordNumber"/>
+                    recordNumber
+                </label>
+            </div>
+            <div class="checkbox" data-name="recordedByID" data-type="Occurrence" data-description="記錄者的相關個人連結，如ORCID" data-commonname="記錄者連結、記錄者ID" data-example="https://orcid.org/0000-0002-1825-0097 (for an individual),<br>https://orcid.org/0000-0002-1825-0097 | https://orcid.org/0000-0002-1825-0098 (for a list of people)">
+                <label>
+                    <input type="checkbox" name="recordedByID"/>
+                    recordedByID
+                </label>
+            </div>
+            <div class="checkbox" data-name="sex" data-type="Occurrence" data-description="該筆紀錄中生物個體的性別，建議使用控制詞彙。" data-commonname="性別" data-example="雌性 female,<br>雄性 male,<br>雌雄同體 hermaphrodite">
+                <label>
+                    <input type="checkbox" name="sex"/>
+                    sex
+                </label>
+            </div>
+            <div class="checkbox" data-name="lifeStage" data-type="Occurrence" data-description="該筆紀錄中生物的生活史階段" data-commonname="生活史階段" data-example="zygote,<br>larva,<br>juvenile,<br>adult,<br>seedling,<br>flowering,<br>fruiting">
+                <label>
+                    <input type="checkbox" name="lifeStage"/>
+                    lifeStage
+                </label>
+            </div>
+            <div class="checkbox" data-name="reproductiveCondition" data-type="Occurrence" data-description="該筆紀錄中生物的生殖狀態" data-commonname="生殖狀態" data-example="non-reproductive,<br>pregnant,<br>in bloom,<br>fruit-bearing">
+                <label>
+                    <input type="checkbox" name="reproductiveCondition"/>
+                    reproductiveCondition
+                </label>
+            </div>
+            <div class="checkbox" data-name="behavior" data-type="Occurrence" data-description="該筆紀錄的生物被觀察時，正進行的行為" data-commonname="行為" data-example="roosting,<br>foraging,<br>running">
+                <label>
+                    <input type="checkbox" name="behavior"/>
+                    behavior
+                </label>
+            </div>
+            <div class="checkbox" data-name="establishmentMeans" data-type="Occurrence" data-description="關於一種或多種生物是否藉由現代人類的直接或間接活動引入特定地點和時間的聲明或評估" data-commonname="原生或引入定義評估" data-example="原生 native,<br>原生：再引進 nativeReintroduced,<br>引進（外來、非原生、非原住） introduced,<br>引進（協助拓殖） introducedAssistedColonisation,<br>流浪的 vagrant,<br>不確定的（未知、隱源性） uncertain">
+                <label>
+                    <input type="checkbox" name="establishmentMeans"/>
+                    establishmentMeans
+                </label>
+            </div>
+            <div class="checkbox" data-name="degreeOfEstablishment" data-type="Occurrence" data-description="生物在特定地點和時間的生存、繁殖和擴大範圍的程度" data-commonname="原生或引入階段評估" data-example="原生 native,<br>收容 captive,<br>栽培 cultivated,<br>野放 released,<br>衰退中 failing,<br>偶然出現的 casual,<br>繁殖中 reproducing,<br>歸化 established,<br>拓殖中 colonising,<br>入侵 invasive,<br>廣泛入侵 widespreadInvasive">
+                <label>
+                    <input type="checkbox" name="degreeOfEstablishment"/>
+                    degreeOfEstablishment
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceStatus" data-type="Occurrence" data-description="該筆紀錄在特定時間和地點，為生物有出現或未出現的狀態，須使用DwC規範之控制詞彙" data-commonname="出現狀態" data-example="出現 present,<br>未出現 absent">
+                <label>
+                    <input type="checkbox" name="occurrenceStatus"/>
+                    occurrenceStatus
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedMedia" data-type="Occurrence" data-description="與該筆紀錄相關的多媒體連結，若有多個連結以 '|' 分隔。" data-commonname="相關多媒體資訊、影片、照片、聲音檔" data-example="https://arctos.database.museum/media/10520962 | https://arctos.database.museum/media/10520964">
+                <label>
+                    <input type="checkbox" name="associatedMedia"/>
+                    associatedMedia
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedOccurrences" data-type="Occurrence" data-description="與該筆紀錄相關的其他出現紀錄，若有多個連結以 '|' 分隔。" data-commonname="相關物種出現紀錄" data-example="parasite collected from: https://arctos.database.museum/guid/MSB:Mamm:215895?seid=950760,<br>encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3175067 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177393 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177394 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177392 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3609139">
+                <label>
+                    <input type="checkbox" name="associatedOccurrences"/>
+                    associatedOccurrences
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedReferences" data-type="Occurrence" data-description="與該筆紀錄相關的其他出現紀錄，若有多個連結以 '|' 分隔。" data-commonname="相關參考資料" data-example="http://www.sciencemag.org/cgi/content/abstract/322/5899/261, Christopher J. Conroy, Jennifer L. Neuwald. 2008. Phylogeographic study of the California vole, Microtus californicus Journal of Mammalogy, 89(3):755-767., Steven R. Hoofer and Ronald A. Van Den Bussche. 2001. Phylogenetic Relationships of Plecotine Bats and Allies Based on Mitochondrial Ribosomal Sequences. Journal of Mammalogy 82(1):131-137. | Walker, Faith M., Jeffrey T. Foster, Kevin P. Drees, Carol L. Chambers. 2014. Spotted bat (Euderma maculatum) microsatellite discovery using illumina sequencing. Conservation Genetics Resources.">
+                <label>
+                    <input type="checkbox" name="associatedReferences"/>
+                    associatedReferences
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedSequences" data-type="Occurrence" data-description="與該筆紀錄相關的基因序列（提供其於開放基因資料庫或文獻中的連結），若有多個連結則以 '|' 分隔。" data-commonname="相關基因序列" data-example="http://www.ncbi.nlm.nih.gov/nuccore/U34853.1, http://www.ncbi.nlm.nih.gov/nuccore/GU328060 | http://www.ncbi.nlm.nih.gov/nuccore/AF326093">
+                <label>
+                    <input type="checkbox" name="associatedSequences"/>
+                    associatedSequences
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedTaxa" data-type="Occurrence" data-description="與該筆紀錄相關的物種（如有交互作用的物種），若有多個則以 '|' 分隔。" data-commonname="相關物種" data-example="host: Quercus alba,<br>host: gbif.org/species/2879737,<br>parasitoid of: Cyclocephala signaticollis | predator of: Apis mellifera">
+                <label>
+                    <input type="checkbox" name="associatedTaxa"/>
+                    associatedTaxa
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceRemarks" data-type="Occurrence" data-description="該筆出現紀錄註記、備註" data-commonname="出現紀錄註記" data-example="found dead on road">
+                <label>
+                    <input type="checkbox" name="occurrenceRemarks"/>
+                    occurrenceRemarks
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismID" data-type="Organism" data-description="若該筆紀錄可追溯至生物個體，則可給予生物體ID。可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)" data-commonname="生物體ID、個體ID" data-example="http://arctos.database.museum/guid/WNMU:Mamm:1249">
+                <label>
+                    <input type="checkbox" name="organismID"/>
+                    organismID
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismName" data-type="Organism" data-description="給該生物體取的名字或標籤" data-commonname="生物體名、個體名稱" data-example="Huberta,<br>Boab Prison Tree,<br>J pod,<br>小破洞,<br>傑尼龜">
+                <label>
+                    <input type="checkbox" name="organismName"/>
+                    organismName
+                </label>
+            </div>
+            <div class="checkbox" data-name="associatedOrganisms" data-type="Organism" data-description="與該生物體相關的其他生物個體" data-commonname="相關生物體、相關個體" data-example="sibling of: http://arctos.database.museum/guid/DMNS:Mamm:14171,<br>parent of: http://arctos.database.museum/guid/MSB:Mamm:196208 | parent of: http://arctos.database.museum/guid/MSB:Mamm:196523 | sibling of: http://arctos.database.museum/guid/MSB:Mamm:142638">
+                <label>
+                    <input type="checkbox" name="associatedOrganisms"/>
+                    associatedOrganisms
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismRemarks" data-type="Organism" data-description="該生物體的註記、備註" data-commonname="生物體註記" data-example="One of a litter of six">
+                <label>
+                    <input type="checkbox" name="organismRemarks"/>
+                    organismRemarks
+                </label>
+            </div>
+            <div class="checkbox" data-name="type" data-type="Record-level" data-description="該筆資源/媒體的性質或類型，必須填入 DCMI 類型詞彙表中的值(http://dublincore.org/documents/2010/10/11/dcmi-type-vocabulary/)" data-commonname="資源類型、媒體類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
+                <label>
+                    <input type="checkbox" name="type"/>
+                    type
+                </label>
+            </div>
+            <div class="checkbox" data-name="modified" data-type="Record-level" data-description="該筆紀錄最近被修改的日期時間" data-commonname="紀錄修改時間" data-example="1963-03-08T14:07-0600 (1963年3月8日 2:07 pm UTC+6),<br>2009-02-20T08:40Z (2009年2月20日 8:40 am UTC時區),<br>2018-08-29T15:19 (2018年8月29日 3:15 pm 當地時間),<br>1809-02-12 (只顯示日期),<br>1906-06 (只顯示到月份),<br>2007-11-13/15 (用'/'表示某個日期區段)">
+                <label>
+                    <input type="checkbox" name="modified"/>
+                    modified
+                </label>
+            </div>
+            <div class="checkbox" data-name="language" data-type="Record-level" data-description="該紀錄所用的語言，建議使用控制詞彙(RFC 5646標準)" data-commonname="語言" data-example="en (英文),<br>zh-TW (繁體中文)">
+                <label>
+                    <input type="checkbox" name="language"/>
+                    language
+                </label>
+            </div>
+            <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>無授權標示, <br>無法辨識">
+                <label>
+                    <input type="checkbox" name="license"/>
+                    license
+                </label>
+            </div>
+            <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="擁有或管理資料權利的個人或組織" data-commonname="所有權、所有權人" data-example="Taiwan Biodiversity Information Facility, TaiBIF<br>National Taiwan University, NTU<br>Forestry and Nature Conservation Agency">
+                <label>
+                    <input type="checkbox" name="rightsHolder"/>
+                    rightsHolder
+                </label>
+            </div>
+            <div class="checkbox" data-name="bibliographicCitation" data-type="Record-level" data-description="此筆資料的引用方式" data-commonname="資料引用方式" data-example="Museum of Vertebrate Zoology, UC Berkeley. MVZ Mammal Collection (Arctos). Record ID: http://arctos.database.museum/guid/MVZ:Mamm:165861?seid=101356.">
+                <label>
+                    <input type="checkbox" name="bibliographicCitation"/>
+                    bibliographicCitation
+                </label>
+            </div>
+            <div class="checkbox" data-name="references" data-type="Record-level" data-description="被描述的資源參考、引用或以其他方式指向的相關資源" data-commonname="資料參考來源、參考文獻、參考資源、參考來源" data-example="http://arctos.database.museum/guid/MVZ:Mamm:165861 (MaterialEntity example),<br>https://www.catalogueoflife.org/data/taxon/32664 (Taxon example)">
+                <label>
+                    <input type="checkbox" name="references"/>
+                    references
+                </label>
+            </div>
+            <div class="checkbox" data-name="collectionID" data-type="Record-level" data-description="該筆紀錄在發布機構的典藏ID，最好為全球唯一的URL" data-commonname="館藏ID、典藏號、館藏號" data-example="http://biocol.org/urn:lsid:biocol.org:col:1001, http://grbio.org/cool/p5fp-c036">
+                <label>
+                    <input type="checkbox" name="collectionID"/>
+                    collectionID
+                </label>
+            </div>
+            <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="該筆紀錄在來源資料集中的ID，最好為全球唯一或於該發布機構唯一的ID" data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
+                <label>
+                    <input type="checkbox" name="datasetID"/>
+                    datasetID
+                </label>
+            </div>
+            <div class="checkbox" data-name="institutionCode" data-type="Record-level" data-description="發布機構所使用的名稱（博物館）代碼或縮寫" data-commonname="機構代碼" data-example="GBIF,<br>TaiBIF,<br>NTM,<br>NSTC">
+                <label>
+                    <input type="checkbox" name="institutionCode"/>
+                    institutionCode
+                </label>
+            </div>
+            <div class="checkbox" data-name="datasetName" data-type="Record-level" data-description="該筆紀錄來源的資料集名稱" data-commonname="資料集名稱、來源計畫名稱" data-example="Taiwan Wild Bird Federation Bird Records Database,<br>Data-set of Moth Specimen from TESRI">
+                <label>
+                    <input type="checkbox" name="datasetName"/>
+                    datasetName
+                </label>
+            </div>
+            <div class="checkbox" data-name="informationWithheld" data-type="Record-level" data-description="若有隸屬於此資料集但尚未開放的其他資訊，可在此欄位補充" data-commonname="隱藏資訊" data-example="location information not given for endangered species,<br>collector identities withheld | ask about tissue samples">
+                <label>
+                    <input type="checkbox" name="informationWithheld"/>
+                    informationWithheld
+                </label>
+            </div>
+            <div class="checkbox" data-name="dataGeneralizations" data-type="Record-level" data-description="針對共享資料採取的措施，使其比原始形式更不具體或完整（如將點位模糊化）。可表明若有需要更高品質的替代資料可提出申請" data-commonname="資料模糊化、屏蔽資料" data-example="Coordinates generalized from original GPS coordinates to the nearest half degree grid cell">
+                <label>
+                    <input type="checkbox" name="dataGeneralizations"/>
+                    dataGeneralizations
+                </label>
+            </div>
+            <div class="checkbox" data-name="verbatimTaxonRank" data-type="Taxon" data-description="原始紀錄的學名中，最具體且尚未被轉譯過的分類位階等級。" data-commonname="字面上分類位階" data-example="Agamospecies, sub-lesus, prole, apomict, nothogrex, sp., subsp., var.">
+                <label>
+                    <input type="checkbox" name="verbatimTaxonRank"/>
+                    verbatimTaxonRank
+                </label>
+            </div>
+            <div class="checkbox" data-name="scientificNameAuthorship" data-type="Taxon" data-description="學名命名者" data-commonname="學名命名者" data-example="(Torr.) J.T. Howell, (Martinovský) Tzvelev, (Györfi, 1952)">
+                <label>
+                    <input type="checkbox" name="scientificNameAuthorship"/>
+                    scientificNameAuthorship
+                </label>
+            </div>
+            <div class="checkbox" data-name="vernacularName" data-type="Taxon" data-description="俗名、中文名" data-commonname="俗名、中文名" data-example="小花蔓澤蘭,<br>大翅鯨,<br>紫斑蝶">
+                <label>
+                    <input type="checkbox" name="vernacularName"/>
+                    vernacularName
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonomicStatus" data-type="Taxon" data-description="學名作為分類群標籤的使用狀況。需要分類學意見來界定分類群的範圍，然後結合專家意見，使用優先權規則來定義該範圍内所含命名的分類地位。它必須與定義該概念的具體分類參考資料相互連結" data-commonname="分類狀態" data-example="invalid,<br>misapplied,<br>homotypic synonym,<br>accepted">
+                <label>
+                    <input type="checkbox" name="taxonomicStatus"/>
+                    taxonomicStatus
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonRemarks" data-type="Taxon" data-description="分類註記" data-commonname="分類註記" data-example="this name is a misspelling in common use">
+                <label>
+                    <input type="checkbox" name="taxonRemarks"/>
+                    taxonRemarks
                 </label>
             </div>
         </fieldset>
@@ -457,65 +1072,509 @@ function updateFieldsetContent() {
     } else if (selectedCore === "samplingevent") {
         fieldsetContent += `
         <fieldset class="required-fieldset" id="samplingevent">
-            <legend>必填欄位</legend>
-            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼" data-commonname="ID、編號" data-example="32567">
-                <label>
-                    <input type="checkbox" name="eventID" checked />
-                    eventID
-                </label>
-            </div>
-            <div class="checkbox" data-name="eventDate" data-type="Event" data-description="該筆資料被記錄的日期" data-commonname="調查日期、Date、時間" data-example="「1994-11-05」代表單日，「1996-06」代表 1996 年 6 月">
-                <label>
-                    <input type="checkbox" name="eventDate" checked />
-                    eventDate
-                </label>
-            </div>
-            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻" data-commonname="材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
-                <label>
-                    <input type="checkbox" name="samplingProtocol" checked />
-                    samplingProtocol
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)" data-commonname="採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
-                <label>
-                    <input type="checkbox" name="sampleSizeValue" checked />
-                    sampleSizeValue
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
-                <label>
-                    <input type="checkbox" name="sampleSizeUnit" checked />
-                    sampleSizeUnit
-                </label>
-            </div>
-            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
-                <label>
-                    <input type="checkbox" name="samplingEffort" checked />
-                    samplingEffort
-                </label>
-            </div>
+            <legend>資料集類型欄位：Sampling Event</legend>
+                <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
+                    <label>
+                        <input type="checkbox" name="eventID" class="required-col" checked />
+                        eventID
+                    </label>
+                </div>
+                <div class="checkbox" data-name="eventDate" data-type="Event" data-description="該筆資料被記錄的日期。通用格式為yyyy-mm-dd，詳見範例" data-commonname="調查日期、Date、時間" data-example="「1994-11-05」代表單日；<br>「1996-06」代表 1996 年 6 月；<br>「2022-01/02」代表2022年1-2月(以 '/' 區分)；<br>「2023-05-06/12」代表2023年5月6-12日；<br>「1989/1993」代表1989-1993年">
+                    <label>
+                        <input type="checkbox" name="eventDate" class="required-col"checked />
+                        eventDate
+                    </label>
+                </div>
+                <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
+                    <label>
+                        <input type="checkbox" name="samplingProtocol" class="required-col" checked />
+                        samplingProtocol
+                    </label>
+                </div>
+                <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位。" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
+                    <label>
+                        <input type="checkbox" name="sampleSizeValue" class="required-col" checked />
+                        sampleSizeValue
+                    </label>
+                </div>
+                <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
+                    <label>
+                        <input type="checkbox" name="sampleSizeUnit" class="required-col" checked />
+                        sampleSizeUnit
+                    </label>
+                </div>
+                <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
+                    <label>
+                        <input type="checkbox" name="samplingEffort" checked />
+                        samplingEffort
+                    </label>
+                </div>
+                <div class="checkbox" data-name="countryCode" data-type="Occurrence, Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
+                    <label>
+                        <input type="checkbox" name="countryCode" checked/>
+                        countryCode
+                    </label>
+                </div>
+                <div class="checkbox" data-name="decimalLatitude" data-type="Occurrence, Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
+                    <label>
+                        <input type="checkbox" name="decimalLatitude" checked />
+                        decimalLatitude
+                    </label>
+                </div>
+                <div class="checkbox" data-name="decimalLongitude" data-type="Occurrence, Location" data-description="十進位經度" data-commonname="十進位經度" data-example="-121.1761111">
+                    <label>
+                        <input type="checkbox" name="decimalLongitude" checked />
+                        decimalLongitude
+                    </label>
+                </div>
+                <div class="checkbox" data-name="geodeticDatum" data-type="Occurrence, Location" data-description="座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="大地基準、大地系統" data-example="EPSG:4326,<br>WGS84,<br>EPSG:3826 (TWD97 / TM2 臺灣),<br>EPSG:3828（TWD67 / TM2 臺灣）">
+                    <label>
+                        <input type="checkbox" name="geodeticDatum" checked />
+                        geodeticDatum
+                    </label>
+                </div>
+                <div class="checkbox" data-name="coordinateUncertaintyInMeters" data-type="Occurrence, Location" data-description="從給定的十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）到包含整個位置的最小圓的水平距離（以公尺為單位）。如果座標不確定、無法估計或不適用（因爲没有座標），則將該值留空。零值不是該項的有效值" data-commonname="座標誤差（公尺）" data-example="30 (reasonable lower limit on or after 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time).<br>100 (reasonable lower limit before 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time).<br>71 (uncertainty for a UTM coordinate having 100 meter precision and a known spatial reference system).">
+                    <label>
+                        <input type="checkbox" name="coordinateUncertaintyInMeters" checked />
+                        coordinateUncertaintyInMeters
+                    </label>
+                </div>
+                <div class="checkbox" data-name="coordinatePrecision" data-type="Occurrence, Location" data-description="依據十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）中給出的座標精確度的十進位表示" data-commonname="座標精準度" data-example="0.00001 (normal GPS limit for decimal degrees),<br>0.000278 (nearest second),<br>0.01667 (nearest minute),<br>1.0 (nearest degree)">
+                    <label>
+                        <input type="checkbox" name="coordinatePrecision"/>
+                        coordinatePrecision
+                    </label>
+                </div>
+                <div class="checkbox" data-name="parentEventID" data-type="Event" data-description="上階層調查活動ID" data-commonname="上階層調查活動ID、母事件ID" data-example="A1 (parentEventID to identify the main Whittaker Plot in nested samples, each with its own eventID - A1:1, A1:2)">
+                    <label>
+                        <input type="checkbox" name="parentEventID"/>
+                        parentEventID
+                    </label>
+                </div>
+                <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間。建議格式參考 ISO 8601-1:2019" data-commonname="調查時間" data-example="14:07-0600 (2:07 pm UTC+6),<br>08:40Z (8:40 am UTC時區),<br>13:00Z/15:30Z (1:00-3:30 pm UTC時區)">
+                    <label>
+                        <input type="checkbox" name="eventTime"/>
+                        eventTime
+                    </label>
+                </div>
+                <div class="checkbox" data-name="year" data-type="Event, Occurrence" data-description="西元年" data-commonname="年、西元年" data-example="1996,<br>2023">
+                    <label>
+                        <input type="checkbox" name="year"/>
+                        year
+                    </label>
+                </div>
+                <div class="checkbox" data-name="month" data-type="Event, Occurrence" data-description="月" data-commonname="月" data-example="11,<br>01">
+                    <label>
+                        <input type="checkbox" name="month"/>
+                        month
+                    </label>
+                </div>
+                <div class="checkbox" data-name="day" data-type="Event, Occurrence" data-description="日" data-commonname="日" data-example="26,<br>01">
+                    <label>
+                        <input type="checkbox" name="day"/>
+                        day 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimEventDate" data-type="Event, Occurrence" data-description="最原始記錄且未被轉譯過的調查日期" data-commonname="字面上調查日期、原始調查日期" data-example="spring 1910,<br>Marzo 2002,<br>1999-03-XX,<br>17IV1934">
+                    <label>
+                        <input type="checkbox" name="verbatimEventDate"/>
+                        verbatimEventDate 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="habitat" data-type="Event" data-description="調查樣區的棲地類型" data-commonname="棲地" data-example="樹,<br>灌叢,<br>道路">
+                    <label>
+                        <input type="checkbox" name="habitat"/>
+                        habitat 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="fieldNumber" data-type="Event" data-description="在野外給此調查活動的編號" data-commonname="野外調查編號" data-example="RV Sol 87-03-08">
+                    <label>
+                        <input type="checkbox" name="fieldNumber"/>
+                        fieldNumber 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="eventRemarks" data-type="Event" data-description="可註記天氣或調查狀況等任何文字資訊" data-commonname="調查備註" data-example="陣雨,<br>濃霧,<br>部分有雲">
+                    <label>
+                        <input type="checkbox" name="eventRemarks"/>
+                        eventRemarks 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="continent" data-type="Location" data-description="洲" data-commonname="洲" data-example="非洲 Africa,<br>南極洲 Antarctica,<br>亞洲 Asia,<br>歐洲 Europe,<br>北美洲 North America,<br>大洋洲 Oceania,<br>南美洲 South America">
+                    <label>
+                        <input type="checkbox" name="continent"/>
+                        continent 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="waterBody" data-type="Location" data-description="水體" data-commonname="水體" data-example="Indian Ocean,<br>Baltic Sea,<br>Hudson River,<br>Lago Nahuel Huapi">
+                    <label>
+                        <input type="checkbox" name="waterBody"/>
+                        waterBody 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="islandGroup" data-type="Location" data-description="群島" data-commonname="群島" data-example="Alexander Archipelago,<br>Archipiélago Diego Ramírez,<br>Seychelles">
+                    <label>
+                        <input type="checkbox" name="islandGroup"/>
+                        islandGroup 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="island" data-type="Location" data-description="島嶼" data-commonname="島嶼" data-example="Nosy Be,<br>Bikini Atoll,<br>Vancouver,<br>Viti Levu,<br>Zanzibar">
+                    <label>
+                        <input type="checkbox" name="island"/>
+                        island 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="country" data-type="Location" data-description="國家" data-commonname="國家" data-example="Taiwan">
+                    <label>
+                        <input type="checkbox" name="country"/>
+                        country 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="stateProvince" data-type="Location" data-description="省份/州" data-commonname="省份/州" data-example="Montana,<br>Minas Gerais,<br>Córdoba">
+                    <label>
+                        <input type="checkbox" name="stateProvince"/>
+                        stateProvince 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="county" data-type="Location" data-description="縣市" data-commonname="縣市" data-example="Nantou County">
+                    <label>
+                        <input type="checkbox" name="county"/>
+                        county 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="municipality" data-type="Location" data-description="行政區" data-commonname="行政區" data-example="Yuchi Township">
+                    <label>
+                        <input type="checkbox" name="municipality"/>
+                        municipality 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="locality" data-type="Location" data-description="該筆紀錄的最小地點描述" data-commonname="地區" data-example="Sun Moon Lake">
+                    <label>
+                        <input type="checkbox" name="locality"/>
+                        locality 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="" data-commonname="字面上地區" data-example="">
+                    <label>
+                        <input type="checkbox" name="verbatimLocality"/>
+                        verbatimLocality 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="最低海拔（公尺）" data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
+                    <label>
+                        <input type="checkbox" name="minimumElevationInMeters"/>
+                        minimumElevationInMeters 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="maximumElevationInMeters" data-type="Location" data-description="最高海拔（公尺）" data-commonname="最高海拔（公尺）" data-example="-205,<br>1236">
+                    <label>
+                        <input type="checkbox" name="maximumElevationInMeters"/>
+                        maximumElevationInMeters 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="minimumDepthInMeters" data-type="Location" data-description="最小深度（公尺）" data-commonname="最小深度（公尺）" data-example="0,<br>100">
+                    <label>
+                        <input type="checkbox" name="minimumDepthInMeters"/>
+                        minimumDepthInMeters 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="最大深度（公尺）" data-commonname="最大深度（公尺）" data-example="0,<br>200">
+                    <label>
+                        <input type="checkbox" name="maximumDepthInMeters"/>
+                        maximumDepthInMeters 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimDepth" data-type="Location" data-description="" data-commonname="字面上深度" data-example="100-200 m">
+                    <label>
+                        <input type="checkbox" name="verbatimDepth"/>
+                        verbatimDepth 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="地區註記" data-commonname="字面地區註記上深度" data-example="under water since 2005">
+                    <label>
+                        <input type="checkbox" name="locationRemarks"/>
+                        locationRemarks 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimCoordinates" data-type="Location" data-description="字面上座標，意即最初採集或觀測取得紀錄的經度和緯度，且尚未被轉譯過，任何座標系統皆可" data-commonname="字面上座標" data-example="41 05 54S 121 05 34W, 17T 630000 4833400">
+                    <label>
+                        <input type="checkbox" name="verbatimCoordinates"/>
+                        verbatimCoordinates
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimLatitude" data-type="Location" data-description="字面緯度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="字面上緯度" data-example="41d 16’N">
+                    <label>
+                        <input type="checkbox" name="verbatimLatitude"/>
+                        verbatimLatitude
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimLongitude" data-type="Location" data-description="字面經度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="字面上經度" data-example="121d 10’ 34" W">
+                    <label>
+                        <input type="checkbox" name="verbatimLongitude"/>
+                        verbatimLongitude
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimCoordinateSystem" data-type="Location" data-description="紀錄的座標單位" data-commonname="字面上座標格式" data-example="decimal degrees,<br>degrees decimal minutes,<br>degrees minutes seconds">
+                    <label>
+                        <input type="checkbox" name="verbatimCoordinateSystem"/>
+                        verbatimCoordinateSystem
+                    </label>
+                </div>
+                <div class="checkbox" data-name="verbatimSRS" data-type="Location" data-description="字面上座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="字面上空間參照系統" data-example="unknown,<br>EPSG:4326,<br>WGS84,<br>NAD27,<br>Campo Inchauspe,<br>European 1950,<br>Clarke 1866">
+                    <label>
+                        <input type="checkbox" name="verbatimSRS"/>
+                        verbatimSRS
+                    </label>
+                </div>
+                <div class="checkbox" data-name="footprintWKT" data-type="Location" data-description="一個位置可能既有點半徑表示法（見十進位緯度），也有足跡表示法，兩者可能互不相同。若該筆紀錄無法以一個點位或點半徑記錄，則可參考使用此欄位" data-commonname="地理足跡WKT" data-example="epsg:4326, GEOGCS['GCS_WGS_1984', DATUM['D_WGS_1984', SPHEROID['WGS_1984',6378137,298.257223563]], PRIMEM['Greenwich',0], UNIT['Degree',0.0174532925199433]] (WKT for the standard WGS84 Spatial Reference System EPSG:4326)">
+                    <label>
+                        <input type="checkbox" name="footprintWKT"/>
+                        footprintWKT
+                    </label>
+                </div>
+                <div class="checkbox" data-name="type" data-type="Record-level" data-description="該筆資源/媒體的性質或類型，必須填入 DCMI 類型詞彙表中的值(http://dublincore.org/documents/2010/10/11/dcmi-type-vocabulary/)" data-commonname="資源類型、媒體類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
+                    <label>
+                        <input type="checkbox" name="type"/>
+                        type
+                    </label>
+                </div>
+                <div class="checkbox" data-name="modified" data-type="Record-level" data-description="該筆紀錄最近被修改的日期時間" data-commonname="紀錄修改時間" data-example="1963-03-08T14:07-0600 (1963年3月8日 2:07 pm UTC+6),<br>2009-02-20T08:40Z (2009年2月20日 8:40 am UTC時區),<br>2018-08-29T15:19 (2018年8月29日 3:15 pm 當地時間),<br>1809-02-12 (只顯示日期),<br>1906-06 (只顯示到月份),<br>2007-11-13/15 (用'/'表示某個日期區段)">
+                    <label>
+                        <input type="checkbox" name="modified"/>
+                        modified
+                    </label>
+                </div>
+                <div class="checkbox" data-name="language" data-type="Record-level" data-description="該紀錄所用的語言，建議使用控制詞彙(RFC 5646標準)" data-commonname="語言" data-example="en (英文),<br>zh-TW (繁體中文)">
+                    <label>
+                        <input type="checkbox" name="language"/>
+                        language
+                    </label>
+                </div>
+                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>無授權標示, <br>無法辨識">
+                    <label>
+                        <input type="checkbox" name="license"/>
+                        license
+                    </label>
+                </div>
+                <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="擁有或管理資料權利的個人或組織" data-commonname="所有權、所有權人" data-example="Taiwan Biodiversity Information Facility, TaiBIF<br>National Taiwan University, NTU<br>Forestry and Nature Conservation Agency">
+                    <label>
+                        <input type="checkbox" name="rightsHolder"/>
+                        rightsHolder
+                    </label>
+                </div>
+                <div class="checkbox" data-name="bibliographicCitation" data-type="Record-level" data-description="此筆資料的引用方式" data-commonname="資料引用方式" data-example="Museum of Vertebrate Zoology, UC Berkeley. MVZ Mammal Collection (Arctos). Record ID: http://arctos.database.museum/guid/MVZ:Mamm:165861?seid=101356.">
+                    <label>
+                        <input type="checkbox" name="bibliographicCitation"/>
+                        bibliographicCitation
+                    </label>
+                </div>
+                <div class="checkbox" data-name="references" data-type="Record-level" data-description="被描述的資源參考、引用或以其他方式指向的相關資源" data-commonname="資料參考來源、參考文獻、參考資源、參考來源" data-example="http://arctos.database.museum/guid/MVZ:Mamm:165861 (MaterialEntity example),<br>https://www.catalogueoflife.org/data/taxon/32664 (Taxon example)">
+                    <label>
+                        <input type="checkbox" name="references"/>
+                        references
+                    </label>
+                </div>
+                <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="該筆紀錄在來源資料集中的ID，最好為全球唯一或於該發布機構唯一的ID" data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
+                    <label>
+                        <input type="checkbox" name="datasetID"/>
+                        datasetID
+                    </label>
+                </div>
+                <div class="checkbox" data-name="datasetName" data-type="Record-level" data-description="該筆紀錄來源的資料集名稱" data-commonname="資料集名稱、來源計畫名稱" data-example="Taiwan Wild Bird Federation Bird Records Database,<br>Data-set of Moth Specimen from TESRI">
+                    <label>
+                        <input type="checkbox" name="datasetName"/>
+                        datasetName
+                    </label>
+                </div>
+                <div class="checkbox" data-name="institutionCode" data-type="Record-level" data-description="發布機構所使用的名稱（博物館）代碼或縮寫" data-commonname="機構代碼" data-example="GBIF,<br>TaiBIF,<br>NTM,<br>NSTC">
+                    <label>
+                        <input type="checkbox" name="institutionCode"/>
+                        institutionCode
+                    </label>
+                </div>
+                <div class="checkbox" data-name="informationWithheld" data-type="Record-level" data-description="若有隸屬於此資料集但尚未開放的其他資訊，可在此欄位補充" data-commonname="隱藏資訊" data-example="location information not given for endangered species,<br>collector identities withheld | ask about tissue samples">
+                    <label>
+                        <input type="checkbox" name="informationWithheld"/>
+                        informationWithheld
+                    </label>
+                </div>
+                <div class="checkbox" data-name="dataGeneralizations" data-type="Record-level" data-description="針對共享資料採取的措施，使其比原始形式更不具體或完整（如將點位模糊化）。可表明若有需要更高品質的替代資料可提出申請" data-commonname="資料模糊化、屏蔽資料" data-example="Coordinates generalized from original GPS coordinates to the nearest half degree grid cell">
+                    <label>
+                        <input type="checkbox" name="dataGeneralizations"/>
+                        dataGeneralizations
+                    </label>
+                </div>
         </fieldset>
         `;
     } else if (selectedCore === "checklist") {
         fieldsetContent += `
         <fieldset class="required-fieldset" id="checklist">
-            <legend>必填欄位</legend>
-                <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼" data-commonname="ID、編號" data-example="32567">
+            <legend>資料集類型欄位：Chescklist</legend>
+                <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                     <label>
-                        <input type="checkbox" name="taxonID" checked />
+                        <input type="checkbox" name="taxonID" class="required-col" checked />
                         taxonID
                     </label>
                 </div>
-                <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名、Name、名字" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
+                <div class="checkbox" data-name="scientificName" data-type="Taxon, Occurrence" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名、Name、名字" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
                     <label>
-                        <input type="checkbox" name="scientificName" checked />
+                        <input type="checkbox" name="scientificName" class="required-col" checked />
                         scientificName
                     </label>
                 </div>
-                <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="物種的分類階層" data-commonname="分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
+                <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="與dwc:scientificName欄位搭配，填上該筆紀錄的最低分類位階" data-commonname="分類位階、分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
                     <label>
-                        <input type="checkbox" name="taxonRank" checked />
+                        <input type="checkbox" name="taxonRank" class="required-col" checked />
                         taxonRank
+                    </label>
+                </div>
+                <div class="checkbox" data-name="modified" data-type="Record-level" data-description="該筆紀錄最近被修改的日期時間" data-commonname="紀錄修改時間" data-example="1963-03-08T14:07-0600 (1963年3月8日 2:07 pm UTC+6),<br>2009-02-20T08:40Z (2009年2月20日 8:40 am UTC時區),<br>2018-08-29T15:19 (2018年8月29日 3:15 pm 當地時間),<br>1809-02-12 (只顯示日期),<br>1906-06 (只顯示到月份),<br>2007-11-13/15 (用'/'表示某個日期區段)">
+                <label>
+                    <input type="checkbox" name="modified" checked/>
+                    modified
+                </label>
+                </div>
+                <div class="checkbox" data-name="language" data-type="Record-level" data-description="該紀錄所用的語言，建議使用控制詞彙(RFC 5646標準)" data-commonname="語言" data-example="en (英文),<br>zh-TW (繁體中文)">
+                    <label>
+                        <input type="checkbox" name="language" checked/>
+                        language
+                    </label>
+                </div>
+                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>無授權標示, <br>無法辨識">
+                    <label>
+                        <input type="checkbox" name="license" checked/>
+                        license
+                    </label>
+                </div>
+                <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="擁有或管理資料權利的個人或組織" data-commonname="所有權、所有權人" data-example="Taiwan Biodiversity Information Facility, TaiBIF<br>National Taiwan University, NTU<br>Forestry and Nature Conservation Agency">
+                    <label>
+                        <input type="checkbox" name="rightsHolder" checked/>
+                        rightsHolder
+                    </label>
+                </div>
+                <div class="checkbox" data-name="bibliographicCitation" data-type="Record-level" data-description="此筆資料的引用方式" data-commonname="資料引用方式" data-example="Museum of Vertebrate Zoology, UC Berkeley. MVZ Mammal Collection (Arctos). Record ID: http://arctos.database.museum/guid/MVZ:Mamm:165861?seid=101356.">
+                    <label>
+                        <input type="checkbox" name="bibliographicCitation" checked/>
+                        bibliographicCitation
+                    </label>
+                </div>
+                <div class="checkbox" data-name="references" data-type="Record-level" data-description="被描述的資源參考、引用或以其他方式指向的相關資源" data-commonname="資料參考來源、參考文獻、參考資源、參考來源" data-example="http://arctos.database.museum/guid/MVZ:Mamm:165861 (MaterialEntity example),<br>https://www.catalogueoflife.org/data/taxon/32664 (Taxon example)">
+                    <label>
+                        <input type="checkbox" name="references" checked/>
+                        references
+                    </label>
+                </div>
+                <div class="checkbox" data-name="institutionCode" data-type="Record-level" data-description="發布機構所使用的名稱（博物館）代碼或縮寫" data-commonname="機構代碼" data-example="GBIF,<br>TaiBIF,<br>NTM,<br>NSTC">
+                    <label>
+                        <input type="checkbox" name="institutionCode" checked/>
+                        institutionCode
+                    </label>
+                </div>
+                <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="該筆紀錄在來源資料集中的ID，最好為全球唯一或於該發布機構唯一的ID" data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
+                    <label>
+                        <input type="checkbox" name="datasetID" checked/>
+                        datasetID
+                    </label>
+                </div>
+                <div class="checkbox" data-name="datasetName" data-type="Record-level" data-description="該筆紀錄來源的資料集名稱" data-commonname="資料集名稱、來源計畫名稱" data-example="Taiwan Wild Bird Federation Bird Records Database,<br>Data-set of Moth Specimen from TESRI">
+                    <label>
+                        <input type="checkbox" name="datasetName" checked/>
+                        datasetName
+                    </label>
+                </div>
+                <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="界" data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
+                    <label>
+                        <input type="checkbox" name="kingdom" checked />
+                        kingdom 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="phylum" data-type="Taxon" data-description="門" data-commonname="門" data-example="Chordata (phylum),<br>Bryophyta (division)">
+                    <label>
+                        <input type="checkbox" name="phylum"/>
+                        phylum 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="class" data-type="Taxon" data-description="綱" data-commonname="綱" data-example="Mammalia,<br>Hepaticopsida">
+                    <label>
+                        <input type="checkbox" name="class"/>
+                        class 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="order" data-type="Taxon" data-description="目" data-commonname="目" data-example="Carnivora,<br>Monocleales">
+                    <label>
+                        <input type="checkbox" name="order"/>
+                        order 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="family" data-type="Taxon" data-description="科" data-commonname="科" data-example="Felidae,<br>Monocleaceae">
+                    <label>
+                        <input type="checkbox" name="family"/>
+                        family 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="subfamily" data-type="Taxon" data-description="亞科" data-commonname="亞科" data-example="Periptyctinae,<br>Orchidoideae,<br>Sphindociinae">
+                    <label>
+                        <input type="checkbox" name="subfamily"/>
+                        subfamily 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="genus" data-type="Taxon" data-description="屬" data-commonname="屬" data-example="Puma,<br>Monoclea">
+                    <label>
+                        <input type="checkbox" name="genus"/>
+                        genus 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="subgenus" data-type="Taxon" data-description="亞屬" data-commonname="亞屬" data-example="Strobus,<br>Amerigo,<br>Pilosella">
+                    <label>
+                        <input type="checkbox" name="subgenus"/>
+                        subgenus 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="infragenericEpithet" data-type="Taxon" data-description="屬以下別名" data-commonname="屬以下別名" data-example="Abacetillus (for scientificName Abacetus (Abacetillus) ambiguus),<br>Cracca (for scientificName Vicia sect. Cracca)">
+                    <label>
+                        <input type="checkbox" name="infragenericEpithet"/>
+                        infragenericEpithet 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="specificEpithet" data-type="Taxon" data-description="種小名" data-commonname="種小名" data-example="concolor,<br>gottschei">
+                    <label>
+                        <input type="checkbox" name="specificEpithet"/>
+                        specificEpithet 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="infraspecificEpithet" data-type="Taxon" data-description="種以下別名" data-commonname="種以下別名" data-example="concolor (for scientificName Puma concolor concolor (Linnaeus, 1771)),<br>oxyadenia (for scientificName Quercus agrifolia var. oxyadenia (Torr.) J.T. Howell),<br>laxa (for scientificName Cheilanthes hirta f. laxa (Kunze) W.Jacobsen & N.Jacobsen),<br>scaberrima (for scientificName Indigofera charlieriana var. scaberrima (Schinz) J.B.Gillett)">
+                    <label>
+                        <input type="checkbox" name="infraspecificEpithet"/>
+                        infraspecificEpithet 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="cultivarEpithet" data-type="Taxon" data-description="栽培種小名" data-commonname="栽培種小名" data-example="King Edward (for scientificName Solanum tuberosum 'King Edward' and taxonRank cultivar),<br>Mishmiense (for scientificName Rhododendron boothii Mishmiense Group and taxonRank cultivar group),<br>Atlantis (for scientificName Paphiopedilum Atlantis grex and taxonRank grex)">
+                    <label>
+                        <input type="checkbox" name="cultivarEpithet"/>
+                        cultivarEpithet 
+                    </label>
+                </div>
+                <div class="checkbox" data-name="informationWithheld" data-type="Record-level" data-description="若有隸屬於此資料集但尚未開放的其他資訊，可在此欄位補充" data-commonname="隱藏資訊" data-example="location information not given for endangered species,<br>collector identities withheld | ask about tissue samples">
+                    <label>
+                        <input type="checkbox" name="informationWithheld"/>
+                        informationWithheld
+                    </label>
+                </div>
+                <div class="checkbox" data-name="scientificNameAuthorship" data-type="Taxon" data-description="學名命名者" data-commonname="學名命名者" data-example="(Torr.) J.T. Howell, (Martinovský) Tzvelev,<br>(Györfi, 1952)">
+                    <label>
+                        <input type="checkbox" name="scientificNameAuthorship"/>
+                        scientificNameAuthorship
+                    </label>
+                </div>
+                <div class="checkbox" data-name="vernacularName" data-type="Taxon" data-description="俗名、中文名" data-commonname="俗名、中文名" data-example="小花蔓澤蘭,<br>大翅鯨,<br>紫斑蝶">
+                    <label>
+                        <input type="checkbox" name="vernacularName"/>
+                        vernacularName
+                    </label>
+                </div>
+                <div class="checkbox" data-name="taxonRemarks" data-type="Taxon" data-description="分類註記" data-commonname="分類註記" data-example="this name is a misspelling in common use">
+                    <label>
+                        <input type="checkbox" name="taxonRemarks"/>
+                        taxonRemarks
                     </label>
                 </div>
         </fieldset>
@@ -602,7 +1661,7 @@ function updateFieldsetContent() {
                     country
                 </label>
             </div>
-            <div class="checkbox" data-name="recordedBy" data-type="Occurrence" data-description="A list (concatenated and separated) of names of people, groups, or organizations responsible for recording the original Occurrence. The primary collector or observer, especially one who applies a personal identifier (recordNumber), should be listed first." data-commonname="記錄者" data-example="José E. Crespo. Oliver P. Pearson | Anita K. Pearson (where the value in recordNumber OPP 7101 corresponds to the collector number for the specimen in the field catalog of Oliver P. Pearson)">
+            <div class="checkbox" data-name="recordedBy" data-type="Occurrence" data-description="記錄此資料的人或最初的觀察者，可以是個人、一份名單、一個群體、一個組織" data-commonname="記錄者、採集者" data-example="Melissa Liu | Daphne Hoh">
                 <label>
                     <input type="checkbox" name="recordedBy"/>
                     recordedBy
@@ -618,7 +1677,7 @@ function updateFieldsetContent() {
         // console.log(checkboxNames)
         
         var customTemplateName = $("#custom option:selected").text();
-        var customFieldset = `<fieldset id="custom"><legend>自訂欄位：${customTemplateName}</legend>`;
+        var customFieldset = `<fieldset id="custom"><legend>自訂模板：${customTemplateName}</legend>`;
 
         for (var i = 0; i < checkboxNames.length; i++) {
             var checkboxName = checkboxNames[i];
@@ -644,7 +1703,7 @@ function updateFieldsetContent() {
     $("#requiredFieldset").html(fieldsetContent);
 
     // 鎖定必填欄位的選項
-    $('.required-fieldset input[type="checkbox"]').prop('disabled', true);
+    // $('.required-fieldset input[type="checkbox"]').prop('disabled', true);
 
     if ($('#requiredFieldset').children().length > 0) {
         $('.checkbox-container').removeClass('border-none');
@@ -663,115 +1722,181 @@ function updateExtensionFieldsetContent() {
         fieldsetContent += `
         <fieldset id="darwin-core-occurrence">
             <legend>延伸資料集欄位：Darwin Core Occurrence</legend>
-            <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="實體物質 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人類觀察 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄 Taxon,<br>出現紀錄 Occurrence,<br>材料引用 MaterialCitation">
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="basisOfRecord"/>
-                    basisOfRecord
-                </label>
-            </div>
-            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="32567">
-                <label>
-                    <input type="checkbox" name="occurrenceID"/>
-                    occurrenceID
-                </label>
-            </div>
-            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼" data-commonname="ID、編號" data-example="32567">
-                <label>
-                    <input type="checkbox" name="eventID"/>
+                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
                     eventID
                 </label>
             </div>
-            <div class="checkbox" data-name="parentEventID" data-type="Event" data-description="An identifier for the broader Event that groups this and potentially other Events." data-commonname="上階層調查活動ID" data-example="">
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
+                    occurrenceID
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col key-col" checked/>
+                    taxonID
+                </label>
+            </div>
+            <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="材料實體 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人為觀測 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄/分類群 Taxon,<br>出現紀錄 Occurrence,<br>文獻紀錄 MaterialCitation">
+                <label>
+                    <input type="checkbox" name="basisOfRecord" class="required-col" checked/>
+                    basisOfRecord
+                </label>
+            </div>
+            <div class="checkbox" data-name="eventDate" data-type="Event" data-description="該筆資料被記錄的日期。通用格式為yyyy-mm-dd，詳見範例" data-commonname="調查日期、Date、日期" data-example="「1994-11-05」代表單日；,<br>「1996-06」代表 1996 年 6 月；,<br>「2022-01/02」代表2022年1-2月(以 '/' 區分)；,<br>「2023-05-06/12」代表2023年5月6-12日；,<br>「1989/1993」代表1989-1993年">
+                <label>
+                    <input type="checkbox" name="eventDate" class="required-col" checked/>
+                    eventDate
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
+                <label>
+                    <input type="checkbox" name="samplingProtocol" class="required-col" checked/>
+                    samplingProtocol
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配  dwc:sampleSizeUnit 欄位" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
+                <label>
+                    <input type="checkbox" name="sampleSizeValue" class="required-col" checked/>
+                    sampleSizeValue
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
+                <label>
+                    <input type="checkbox" name="sampleSizeUnit" class="required-col" checked/>
+                    sampleSizeUnit
+                </label>
+            </div>
+            <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
+                <label>
+                    <input type="checkbox" name="scientificName" class="required-col" checked/>
+                    scientificName
+                </label>
+            </div>
+            <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="界" data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
+                <label>
+                    <input type="checkbox" name="kingdom" class="required-col" checked/>
+                    kingdom
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="與dwc:scientificName欄位搭配，填上該筆紀錄的最低分類位階" data-commonname="分類位階、分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
+                <label>
+                    <input type="checkbox" name="taxonRank" class="required-col" checked/>
+                    taxonRank
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
+                <label>
+                    <input type="checkbox" name="samplingEffort" checked/>
+                    samplingEffort
+                </label>
+            </div>
+            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
+                <label>
+                    <input type="checkbox" name="countryCode" checked/>
+                    countryCode
+                </label>
+            </div>
+            <div class="checkbox" data-name="decimalLatitude" data-type="Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
+                <label>
+                    <input type="checkbox" name="decimalLatitude" checked/>
+                    decimalLatitude
+                </label>
+            </div>
+            <div class="checkbox" data-name="decimalLongitude" data-type="Location" data-description="十進位經度" data-commonname="十進位經度" data-example="-121.1761111">
+                <label>
+                    <input type="checkbox" name="decimalLongitude" checked/>
+                    decimalLongitude
+                </label>
+            </div>
+            <div class="checkbox" data-name="geodeticDatum" data-type="Location" data-description="座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="大地基準、大地系統" data-example="EPSG:4326,<br>WGS84,<br>EPSG:3826 (TWD97 / TM2 臺灣),<br>EPSG:3828（TWD67 / TM2 臺灣）">
+                <label>
+                    <input type="checkbox" name="geodeticDatum" checked/>
+                    geodeticDatum
+                </label>
+            </div>
+            <div class="checkbox" data-name="coordinateUncertaintyInMeters" data-type="Location" data-description="從給定的十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）到包含整個位置的最小圓的水平距離（以公尺為單位）。如果座標不確定、無法估計或不適用（因爲没有座標），則將該值留空。零值不是該項的有效值。" data-commonname="座標誤差（公尺）" data-example="30 (reasonable lower limit on or after 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time),<br>100 (reasonable lower limit before 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time),<br>71 (uncertainty for a UTM coordinate having 100 meter precision and a known spatial reference system)">
+                <label>
+                    <input type="checkbox" name="coordinateUncertaintyInMeters" checked/>
+                    coordinateUncertaintyInMeters
+                </label>
+            </div>
+            <div class="checkbox" data-name="recordedBy" data-type="Occurrence" data-description="記錄此資料的人或最初的觀察者，可以是個人、一份名單、一個群體、一個組織" data-commonname="記錄者" data-example="José E. Crespo. Oliver P. Pearson | Anita K. Pearson (where the value in recordNumber OPP 7101 corresponds to the collector number for the specimen in the field catalog of Oliver P. Pearson)">
+                <label>
+                    <input type="checkbox" name="recordedBy" checked/>
+                    recordedBy
+                </label>
+            </div>
+            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量，只能為正整數" data-commonname="個體數量" data-example="0, 1, 25">
+                <label>
+                    <input type="checkbox" name="individualCount" checked/>
+                    individualCount
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismQuantity" data-type="Occurrence" data-description="該筆紀錄所包含的生物體的量，若非正整數時可用此欄位記錄。須與dwc: organismQuantityType 搭配使用。" data-commonname="生物體數量" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType),<br>many (organismQuantity) with individuals (organismQuantityType).">
+                <label>
+                    <input type="checkbox" name="organismQuantity" checked/>
+                    organismQuantity
+                </label>
+            </div>
+            <div class="checkbox" data-name="organismQuantityType" data-type="Occurrence" data-description="生物體數量的單位，若非正整數時可用此欄位記錄。" data-commonname="生物體數量單位" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType)">
+                <label>
+                    <input type="checkbox" name="organismQuantityType" checked/>
+                    organismQuantityType
+                </label>
+            </div>
+            <div class="checkbox" data-name="parentEventID" data-type="Event" data-description="上階層調查活動ID" data-commonname="上階層調查活動ID、母事件ID" data-example="A1 (parentEventID to identify the main Whittaker Plot in nested samples, each with its own eventID - A1:1, A1:2)">
                 <label>
                     <input type="checkbox" name="parentEventID" />
                     parentEventID
                 </label>
             </div>
-            <div class="checkbox" data-name="fieldNumber" data-type="Event" data-description="An identifier given to the dwc:Event in the field. Often serves as a link between field notes and the dwc:Event." data-commonname="調查區域、區域編號" data-example="A-國家生技研究園區（開發區）,<br>B-生態研究區,<br>C-其餘位於202兵工廠之範圍">
+            <div class="checkbox" data-name="fieldNumber" data-type="Event" data-description="在野外給此調查活動的編號" data-commonname="野外調查編號" data-example="RV Sol 87-03-08">
                 <label>
                     <input type="checkbox" name="fieldNumber" />
                     fieldNumber
                 </label>
             </div>
-            <div class="checkbox" data-name="eventDate" data-type="Event" data-description="該筆資料被記錄的日期" data-commonname="調查日期、Date、時間" data-example="「1994-11-05」代表單日，「1996-06」代表 1996 年 6 月">
-                <label>
-                    <input type="checkbox" name="eventDate"/>
-                    eventDate
-                </label>
-            </div>
-            <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間" data-commonname="調查時間" data-example="">
+            <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間。建議格式參考 ISO 8601-1:2019" data-commonname="調查時間" data-example="14:07-0600 (2:07 pm UTC+6),<br>08:40Z (8:40 am UTC時區),<br>13:00Z/15:30Z (1:00-3:30 pm UTC時區)">
                 <label>
                     <input type="checkbox" name="eventTime"/>
                     eventTime
                 </label>
             </div>
-            <div class="checkbox" data-name="startDayOfYear" data-type="Event" data-description="The earliest integer day of the year on which the Event occurred." data-commonname="" data-example="1 (1 January),<br>366 (31 December),<br>365 (30 December in a leap year, 31 December in a non-leap year)">
-                <label>
-                    <input type="checkbox" name="startDayOfYear"/>
-                    startDayOfYear
-                </label>
-            </div>
-            <div class="checkbox" data-name="endDayOfYear" data-type="Event" data-description="The latest integer day of the year on which the Event occurred." data-commonname="" data-example="1 (1 January),<br>366 (31 December),<br>365 (30 December in a leap year, 31 December in a non-leap year)">
-                <label>
-                    <input type="checkbox" name="endDayOfYear"/>
-                    endDayOfYear
-                </label>
-            </div>
-            <div class="checkbox" data-name="year" data-type="Event" data-description="The four-digit year in which the Event occurred, according to the Common Era Calendar." data-commonname="年" data-example="1996,<br>2023">
+            <div class="checkbox" data-name="year" data-type="Event" data-description="西元年" data-commonname="年、西元年" data-example="1996,<br>2023">
                 <label>
                     <input type="checkbox" name="year"/>
                     year
                 </label>
             </div>
-            <div class="checkbox" data-name="month" data-type="Event" data-description="The integer month in which the Event occurred." data-commonname="月" data-example="11,<br>01">
+            <div class="checkbox" data-name="month" data-type="Event" data-description="月" data-commonname="月" data-example="11,<br>01">
                 <label>
                     <input type="checkbox" name="month"/>
                     month
                 </label>
             </div>
-            <div class="checkbox" data-name="day" data-type="Event" data-description="The integer day of the month on which the Event occurred." data-commonname="日" data-example="26,<br>01">
+            <div class="checkbox" data-name="day" data-type="Event" data-description="日" data-commonname="日" data-example="26,<br>01">
                 <label>
                     <input type="checkbox" name="day"/>
                     day
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimEventDate" data-type="Event" data-description="The verbatim original representation of the date and time information for an Event." data-commonname="字面上調查日期" data-example="spring 1910,<br>Marzo 2002,<br>1999-03-XX,<br>17IV1934">
+            <div class="checkbox" data-name="verbatimEventDate" data-type="Event" data-description="最原始記錄且未被轉譯過的調查日期" data-commonname="字面上調查日期、原始調查日期" data-example="spring 1910,<br>Marzo 2002,<br>1999-03-XX,<br>17IV1934">
                 <label>
                     <input type="checkbox" name="verbatimEventDate"/>
                     verbatimEventDate
                 </label>
             </div>
-            <div class="checkbox" data-name="habitat" data-type="Event" data-description="A category or description of the habitat in which the dwc:Event occurred." data-commonname="棲地" data-example="樹,<br>灌叢,<br>道路">
+            <div class="checkbox" data-name="habitat" data-type="Event" data-description="調查樣區的棲地類型" data-commonname="棲地" data-example="樹,<br>灌叢,<br>道路">
                 <label>
                     <input type="checkbox" name="habitat"/>
                     habitat
                 </label>
             </div>
-            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻" data-commonname="材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
-                <label>
-                    <input type="checkbox" name="samplingProtocol"/>
-                    samplingProtocol
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)" data-commonname="採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
-                <label>
-                    <input type="checkbox" name="sampleSizeValue"/>
-                    sampleSizeValue
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
-                <label>
-                    <input type="checkbox" name="sampleSizeUnit"/>
-                    sampleSizeUnit
-                </label>
-            </div>
-            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
-                <label>
-                    <input type="checkbox" name="samplingEffort"/>
-                    samplingEffort
-                </label>
-            </div>
-            <div class="checkbox" data-name="fieldNotes" data-type="Event" data-description="One of a) an indicator of the existence of, b) a reference to (publication, URI), or c) the text of notes taken in the field about the Event." data-commonname="野外調查註記" data-example="Notes available in the Grinnell-Miller Library.">
+            <div class="checkbox" data-name="fieldNotes" data-type="Event" data-description="野外調查的筆記、註記" data-commonname="野外調查註記" data-example="Notes available in the Grinnell-Miller Library.">
                 <label>
                     <input type="checkbox" name="fieldNotes"/>
                     fieldNotes
@@ -783,241 +1908,55 @@ function updateExtensionFieldsetContent() {
                     eventRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="geologicalContextID" data-type="GeologicalContext" data-description="An identifier for the set of information associated with a GeologicalContext (the location within a geological context, such as stratigraphy). May be a global unique identifier or an identifier specific to the data set." data-commonname="" data-example="https://opencontext.org/subjects/e54377f7-4452-4315-b676-40679b10c4d9">
-                <label>
-                    <input type="checkbox" name="geologicalContextID"/>
-                    geologicalContextID
-                </label>
-            </div>
-            <div class="checkbox" data-name="earliestEonOrLowestEonothem" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic eon or lowest chrono-stratigraphic eonothem or the informal name ("Precambrian") attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Phanerozoic,<br>Proterozoic">
-                <label>
-                    <input type="checkbox" name="earliestEonOrLowestEonothem"/>
-                    earliestEonOrLowestEonothem
-                </label>
-            </div>
-            <div class="checkbox" data-name="latestEonOrHighestEonothem" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic eon or highest chrono-stratigraphic eonothem or the informal name ("Precambrian") attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Phanerozoic,<br>Proterozoic">
-                <label>
-                    <input type="checkbox" name="latestEonOrHighestEonothem"/>
-                    latestEonOrHighestEonothem
-                </label>
-            </div>
-            <div class="checkbox" data-name="earliestEraOrLowestErathem" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic era or lowest chronostratigraphic erathem attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Cenozoic,<br>Mesozoic">
-                <label>
-                    <input type="checkbox" name="earliestEraOrLowestErathem"/>
-                    earliestEraOrLowestErathem
-                </label>
-            </div>
-            <div class="checkbox" data-name="latestEraOrHighestErathem" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic era or highest chronostratigraphic erathem attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Cenozoic,<br>Mesozoic">
-                <label>
-                    <input type="checkbox" name="latestEraOrHighestErathem"/>
-                    latestEraOrHighestErathem
-                </label>
-            </div>
-            <div class="checkbox" data-name="earliestPeriodOrLowestSystem" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic period or lowest chronostratigraphic system attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Neogene,<br>Tertiary,<br>Quaternary">
-                <label>
-                    <input type="checkbox" name="earliestPeriodOrLowestSystem"/>
-                    earliestPeriodOrLowestSystem
-                </label>
-            </div>
-            <div class="checkbox" data-name="latestPeriodOrHighestSystem" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic period or highest chronostratigraphic system attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Neogene,<br>Tertiary,<br>Quaternary">
-                <label>
-                    <input type="checkbox" name="latestPeriodOrHighestSystem"/>
-                    latestPeriodOrHighestSystem
-                </label>
-            </div>
-            <div class="checkbox" data-name="earliestEpochOrLowestSeries" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic epoch or lowest chronostratigraphic series attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Holocene,<br>Pleistocene,<br>Ibexian Series">
-                <label>
-                    <input type="checkbox" name="earliestEpochOrLowestSeries"/>
-                    earliestEpochOrLowestSeries
-                </label>
-            </div>
-            <div class="checkbox" data-name="latestEpochOrHighestSeries" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic epoch or highest chronostratigraphic series attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Holocene,<br>Pleistocene,<br>Ibexian Series">
-                <label>
-                    <input type="checkbox" name="latestEpochOrHighestSeries"/>
-                    latestEpochOrHighestSeries
-                </label>
-            </div>
-            <div class="checkbox" data-name="earliestAgeOrLowestStage" data-type="GeologicalContext" data-description="The full name of the earliest possible geochronologic age or lowest chronostratigraphic stage attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Atlantic,<br>Boreal,<br>Skullrockian">
-                <label>
-                    <input type="checkbox" name="earliestAgeOrLowestStage"/>
-                    earliestAgeOrLowestStage
-                </label>
-            </div>
-            <div class="checkbox" data-name="latestAgeOrHighestStage" data-type="GeologicalContext" data-description="The full name of the latest possible geochronologic age or highest chronostratigraphic stage attributable to the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Atlantic,<br>Boreal,<br>Skullrockian">
-                <label>
-                    <input type="checkbox" name="latestAgeOrHighestStage"/>
-                    latestAgeOrHighestStage
-                </label>
-            </div>
-            <div class="checkbox" data-name="lowestBiostratigraphicZone" data-type="GeologicalContext" data-description="The full name of the lowest possible geological biostratigraphic zone of the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Maastrichtian">
-                <label>
-                    <input type="checkbox" name="lowestBiostratigraphicZone"/>
-                    lowestBiostratigraphicZone
-                </label>
-            </div>
-            <div class="checkbox" data-name="highestBiostratigraphicZone" data-type="GeologicalContext" data-description="The full name of the highest possible geological biostratigraphic zone of the stratigraphic horizon from which the cataloged item was collected." data-commonname="" data-example="Blancan">
-                <label>
-                    <input type="checkbox" name="highestBiostratigraphicZone"/>
-                    highestBiostratigraphicZone
-                </label>
-            </div>
-            <div class="checkbox" data-name="lithostratigraphicTerms" data-type="GeologicalContext" data-description="The combination of all litho-stratigraphic names for the rock from which the cataloged item was collected." data-commonname="" data-example="Pleistocene-Weichselien">
-                <label>
-                    <input type="checkbox" name="lithostratigraphicTerms"/>
-                    lithostratigraphicTerms
-                </label>
-            </div>
-            <div class="checkbox" data-name="group" data-type="GeologicalContext" data-description="The full name of the lithostratigraphic group from which the cataloged item was collected." data-commonname="" data-example="Bathurst,<br>Lower Wealden">
-                <label>
-                    <input type="checkbox" name="group"/>
-                    group
-                </label>
-            </div>
-            <div class="checkbox" data-name="formation" data-type="GeologicalContext" data-description="The full name of the lithostratigraphic formation from which the cataloged item was collected." data-commonname="" data-example="Notch Peak Formation,<br>House Limestone,<br>Fillmore Formation">
-                <label>
-                    <input type="checkbox" name="formation"/>
-                    formation
-                </label>
-            </div>
-            <div class="checkbox" data-name="member" data-type="GeologicalContext" data-description="The full name of the lithostratigraphic member from which the cataloged item was collected." data-commonname="" data-example="Lava Dam Member,<br>Hellnmaria Member">
-                <label>
-                    <input type="checkbox" name="member"/>
-                    member
-                </label>
-            </div>
-            <div class="checkbox" data-name="bed" data-type="GeologicalContext" data-description="The full name of the lithostratigraphic bed from which the cataloged item was collected." data-commonname="" data-example="Harlem coal">
-                <label>
-                    <input type="checkbox" name="bed"/>
-                    bed
-                </label>
-            </div>
-            <div class="checkbox" data-name="identificationID" data-type="Identification" data-description="An identifier for the Identification (the body of information associated with the assignment of a scientific name). May be a global unique identifier or an identifier specific to the data set." data-commonname="學名鑑定ID" data-example="Harlem coal">
-                <label>
-                    <input type="checkbox" name="identificationID"/>
-                    identificationID
-                </label>
-            </div>
-            <div class="checkbox" data-name="verbatimIdentification" data-type="Identification" data-description="A string representing the taxonomic identification as it appeared in the original record." data-commonname="字面上學名鑑定" data-example="Peromyscus sp.,<br>Ministrymon sp. nov. 1,<br>Anser anser X Branta canadensis,<br>Pachyporidae?">
-                <label>
-                    <input type="checkbox" name="verbatimIdentification"/>
-                    verbatimIdentification
-                </label>
-            </div>
-            <div class="checkbox" data-name="identificationQualifier" data-type="Identification" data-description="A brief phrase or a standard term ("cf.", "aff.") to express the determiner's doubts about the Identification." data-commonname="學名鑑定標註" data-example="aff. agrifolia var. oxyadenia<br>(for Quercus aff. agrifolia var. oxyadenia with accompanying values Quercus in genus, agrifolia in specificEpithet, oxyadenia in infraspecificEpithet, and var. in taxonRank)<br>cf. var. oxyadenia<br>(for Quercus agrifolia cf. var. oxyadenia with accompanying values Quercus in genus, agrifolia in specificEpithet, oxyadenia in infraspecificEpithet, and var. in taxonRank)">
-                <label>
-                    <input type="checkbox" name="identificationQualifier"/>
-                    identificationQualifier
-                </label>
-            </div>
-            <div class="checkbox" data-name="typeStatus" data-type="Identification" data-description="A list (concatenated and separated) of nomenclatural types (type status, typified scientific name, publication) applied to the subject." data-commonname="學名標本模式" data-example="holotype of Ctenomys sociabilis. Pearson O. P., and M. I. Christie. 1985. Historia Natural, 5(37):388,<br>holotype of Pinus abies | holotype of Picea abies">
+            <div class="checkbox" data-name="typeStatus" data-type="Identification" data-description="學名標本模式，最好能使用控制詞彙" data-commonname="學名標本模式" data-example="正模標本 HOLOTYPE,<br>副模標本 PARATYPE,<br>複模標本 ISOTYPE,<br>配模標本 ALLOTYPE,<br>總模標本 SYNTYPE,<br>選模標本 LECTOTYPE,<br>副選模標本 PARALECTOTYPE,<br>新模標本 NEOTYPE,<br>模式地標本 TOPOTYPE">
                 <label>
                     <input type="checkbox" name="typeStatus"/>
                     typeStatus
                 </label>
             </div>
-            <div class="checkbox" data-name="identifiedBy" data-type="Identification" data-description="A list (concatenated and separated) of names of people, groups, or organizations who assigned the Taxon to the subject." data-commonname="學名鑑定人" data-example="James L. Patton, Theodore Pappenfuss | Robert Macey">
+            <div class="checkbox" data-name="identifiedBy" data-type="Identification" data-description="鑑定此筆紀錄分類相關資訊的人、群體或組織。若有多人則以 '|' 符號區隔" data-commonname="學名鑑定人" data-example="James L. Patton, Theodore Pappenfuss | Robert Macey">
                 <label>
                     <input type="checkbox" name="identifiedBy"/>
                     identifiedBy
                 </label>
             </div>
-            <div class="checkbox" data-name="identifiedByID" data-type="Identification" data-description="A list (concatenated and separated) of the globally unique identifier for the person, people, groups, or organizations responsible for assigning the Taxon to the subject." data-commonname="學名鑑定人ID" data-example="https://orcid.org/0000-0002-1825-0097 (for an individual),<br>https://orcid.org/0000-0002-1825-0097 | https://orcid.org/0000-0002-1825-0098 (for a list of people).">
-                <label>
-                    <input type="checkbox" name="identifiedByID"/>
-                    identifiedByID
-                </label>
-            </div>
-            <div class="checkbox" data-name="dateIdentified" data-type="Identification" data-description="The date on which the subject was determined as representing the Taxon." data-commonname="學名鑑定日期" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40am UTC),<br>2018-08-29T15:19 (3:19pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007)">
-                <label>
-                    <input type="checkbox" name="dateIdentified"/>
-                    dateIdentified
-                </label>
-            </div>
-            <div class="checkbox" data-name="identificationReferences" data-type="Identification" data-description="A list (concatenated and separated) of references (publication, global unique identifier, URI) used in the Identification." data-commonname="學名鑑定參考" data-example="Aves del Noroeste Patagonico. Christie et al. 2004.,<br>Stebbins, R. Field Guide to Western Reptiles and Amphibians. 3rd Edition. 2003. | Irschick, D.J. and Shaffer, H.B. (1997). The polytypic species revisited: Morphological differentiation among tiger salamanders (Ambystoma tigrinum) (Amphibia: Caudata). Herpetologica, 53(1), 30-49">
+            <div class="checkbox" data-name="identificationReferences" data-type="Identification" data-description="鑑定此紀錄的物種分類資訊的參考文獻連結" data-commonname="學名鑑定參考" data-example="Aves del Noroeste Patagonico. Christie et al. 2004.,<br>Stebbins, R. Field Guide to Western Reptiles and Amphibians. 3rd Edition. 2003. | Irschick, D.J. and Shaffer, H.B. (1997). The polytypic species revisited: Morphological differentiation among tiger salamanders (Ambystoma tigrinum) (Amphibia: Caudata). Herpetologica, 53(1), 30-49">
                 <label>
                     <input type="checkbox" name="identificationReferences"/>
                     identificationReferences
                 </label>
             </div>
-            <div class="checkbox" data-name="identificationVerificationStatus" data-type="Identification" data-description="A categorical indicator of the extent to which the taxonomic identification has been verified to be correct." data-commonname="學名鑑定驗證狀態" data-example="0 ('unverified' in HISPID/ABCD)">
+            <div class="checkbox" data-name="identificationVerificationStatus" data-type="Identification" data-description="為表示此紀錄的分類資訊驗證狀態的指標，來判斷是否需要驗證或修正。建議使用控制詞彙" data-commonname="學名鑑定驗證狀態" data-example="0 ('unverified' in HISPID/ABCD)">
                 <label>
                     <input type="checkbox" name="identificationVerificationStatus"/>
                     identificationVerificationStatus
                 </label>
             </div>
-            <div class="checkbox" data-name="identificationRemarks" data-type="Identification" data-description="Comments or notes about the Identification." data-commonname="學名鑑定備註" data-example="Distinguished between Anthus correndera and Anthus hellmayri based on the comparative lengths of the uñas">
+            <div class="checkbox" data-name="identificationRemarks" data-type="Identification" data-description="學名鑑定其他補充內容或備註" data-commonname="學名鑑定備註" data-example="Distinguished between Anthus correndera and Anthus hellmayri based on the comparative lengths of the uñas">
                 <label>
                     <input type="checkbox" name="identificationRemarks"/>
                     identificationRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="locationID" data-type="Location" data-description="An identifier for the set of location information (data associated with dcterms:Location). May be a global unique identifier or an identifier specific to the data set." data-commonname="地點ID" data-example="https://opencontext.org/subjects/768A875F-E205-4D0B-DE55-BAB7598D0FD1">
-                <label>
-                    <input type="checkbox" name="locationID"/>
-                    locationID
-                </label>
-            </div>
-            <div class="checkbox" data-name="higherGeographyID" data-type="Location" data-description="An identifier for the geographic region within which the Location occurred." data-commonname="概略地理描述ID" data-example="http://vocab.getty.edu/tgn/1002002 (Antártida e Islas del Atlántico Sur, Territorio Nacional de la Tierra del Fuego, Argentina)">
-                <label>
-                    <input type="checkbox" name="higherGeographyID"/>
-                    higherGeographyID
-                </label>
-            </div>
-            <div class="checkbox" data-name="higherGeography" data-type="Location" data-description="An identifier for the geographic region within which the Location occurred." data-commonname="概略地理描述" data-example="North Atlantic Ocean. South America | Argentina | Patagonia | Parque Nacional Nahuel Huapi | Neuquén | Los Lagos (with accompanying values South America in continent, Argentina in country, Neuquén in stateProvince, and Los Lagos in county)">
-                <label>
-                    <input type="checkbox" name="higherGeography"/>
-                    higherGeography
-                </label>
-            </div>
-            <div class="checkbox" data-name="continent" data-type="Location" data-description="The name of the continent in which the Location occurs." data-commonname="洲" data-example="Africa,<br>Antarctica,<br>Asia, Europe,<br>North America,<br>Oceania,<br>South America">
-                <label>
-                    <input type="checkbox" name="continent"/>
-                    continent
-                </label>
-            </div>
-            <div class="checkbox" data-name="waterBody" data-type="Location" data-description="The name of the water body in which the Location occurs." data-commonname="水體" data-example="Indian Ocean,<br>Baltic Sea,<br>Hudson River,<br>Lago Nahuel Huapi">
-                <label>
-                    <input type="checkbox" name="waterBody"/>
-                    waterBody
-                </label>
-            </div>
-            <div class="checkbox" data-name="islandGroup" data-type="Location" data-description="The name of the island group in which the Location occurs." data-commonname="群島" data-example="Alexander Archipelago,<br>Archipiélago Diego Ramírez,<br>Seychelles">
-                <label>
-                    <input type="checkbox" name="islandGroup"/>
-                    islandGroup
-                </label>
-            </div>
-            <div class="checkbox" data-name="island" data-type="Location" data-description="The name of the island on or near which the Location occurs." data-commonname="島嶼" data-example="Nosy Be,<br>Bikini Atoll,<br>Vancouver,<br>Viti Levu,<br>Zanzibar">
-                <label>
-                    <input type="checkbox" name="island"/>
-                    island
-                </label>
-            </div>
-            <div class="checkbox" data-name="country" data-type="Location" data-description="The name of the country or major administrative unit in which the Location occurs." data-commonname="國家" data-example="Taiwan">
+            <div class="checkbox" data-name="country" data-type="Location" data-description="國家" data-commonname="國家" data-example="Taiwan">
                 <label>
                     <input type="checkbox" name="country"/>
                     country
                 </label>
             </div>
-            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
-                <label>
-                    <input type="checkbox" name="countryCode"/>
-                    countryCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="stateProvince" data-type="Location" data-description="The name of the next smaller administrative region than country (state, province, canton, department, region, etc.) in which the Location occurs." data-commonname="省份/州" data-example="Montana,<br>Minas Gerais,<br>Córdoba">
+            <div class="checkbox" data-name="stateProvince" data-type="Location" data-description="省份/州" data-commonname="省份/州" data-example="Montana,<br>Minas Gerais,<br>Córdoba">
                 <label>
                     <input type="checkbox" name="stateProvince"/>
                     stateProvince
                 </label>
             </div>
-            <div class="checkbox" data-name="county" data-type="Location" data-description="The name of the next smaller administrative region than country (state, province, canton, department, region, etc.) in which the Location occurs." data-commonname="縣市" data-example="Nantou County">
+            <div class="checkbox" data-name="county" data-type="Location" data-description="縣市" data-commonname="縣市" data-example="Nantou County">
                 <label>
                     <input type="checkbox" name="county"/>
                     county
                 </label>
             </div>
-            <div class="checkbox" data-name="municipality" data-type="Location" data-description="The full, unabbreviated name of the next smaller administrative region than county (city, municipality, etc.) in which the Location occurs. Do not use this term for a nearby named place that does not contain the actual location." data-commonname="行政區" data-example="Yuchi Township">
+            <div class="checkbox" data-name="municipality" data-type="Location" data-description="行政區" data-commonname="行政區" data-example="Yuchi Township">
                 <label>
                     <input type="checkbox" name="municipality"/>
                     municipality
@@ -1029,127 +1968,55 @@ function updateExtensionFieldsetContent() {
                     locality
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="The original textual description of the place." data-commonname="字面上地區" data-example="25 km NNE Bariloche por R. Nac. 237">
-                <label>
-                    <input type="checkbox" name="verbatimLocality"/>
-                    verbatimLocality
-                </label>
-            </div>
-            <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="The lower limit of the range of elevation (altitude, usually above sea level), in meters." data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
+            <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="最低海拔（公尺）" data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
                 <label>
                     <input type="checkbox" name="minimumElevationInMeters"/>
                     minimumElevationInMeters
                 </label>
             </div>
-            <div class="checkbox" data-name="maximumElevationInMeters" data-type="Location" data-description="The upper limit of the range of elevation (altitude, usually above sea level), in meters." data-commonname="最高海拔（公尺）" data-example="-205,<br>1236">
+            <div class="checkbox" data-name="maximumElevationInMeters" data-type="Location" data-description="最高海拔（公尺）." data-commonname="最高海拔（公尺）" data-example="-205,<br>1236">
                 <label>
                     <input type="checkbox" name="maximumElevationInMeters"/>
                     maximumElevationInMeters
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimElevation" data-type="Location" data-description="The original description of the elevation (altitude, usually above sea level) of the Location." data-commonname="字面上海拔" data-example="100-200 m">
-                <label>
-                    <input type="checkbox" name="verbatimElevation"/>
-                    verbatimElevation
-                </label>
-            </div>
-            <div class="checkbox" data-name="verticalDatum" data-type="Location" data-description="The vertical datum used as the reference upon which the values in the elevation terms are based." data-commonname="垂直基準" data-example="EGM84,<br>EGM96,<br>EGM2008,<br>PGM2000A,<br>PGM2004,<br>PGM2006,<br>PGM2007,<br>epsg:7030,<br>unknown">
-                <label>
-                    <input type="checkbox" name="verticalDatum"/>
-                    verticalDatum
-                </label>
-            </div>
-            <div class="checkbox" data-name="minimumDepthInMeters" data-type="Location" data-description="The lesser depth of a range of depth below the local surface, in meters." data-commonname="最小深度（公尺）" data-example="0,<br>100">
+            <div class="checkbox" data-name="minimumDepthInMeters" data-type="Location" data-description="最小深度（公尺）" data-commonname="最小深度（公尺）" data-example="0,<br>100">
                 <label>
                     <input type="checkbox" name="minimumDepthInMeters"/>
                     minimumDepthInMeters
                 </label>
             </div>
-            <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="The greater depth of a range of depth below the local surface, in meters." data-commonname="最大深度（公尺）" data-example="0,<br>200">
+            <div class="checkbox" data-name="maximumDepthInMeters" data-type="Location" data-description="最大深度（公尺）" data-commonname="最大深度（公尺）" data-example="0,<br>200">
                 <label>
                     <input type="checkbox" name="maximumDepthInMeters"/>
                     maximumDepthInMeters
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimDepth" data-type="Location" data-description="The original description of the depth below the local surface." data-commonname="字面上深度" data-example="100-200 m">
-                <label>
-                    <input type="checkbox" name="verbatimDepth"/>
-                    verbatimDepth
-                </label>
-            </div>
-            <div class="checkbox" data-name="minimumDistanceAboveSurfaceInMeters" data-type="Location" data-description="The lesser distance in a range of distance from a reference surface in the vertical direction, in meters. Use positive values for locations above the surface, negative values for locations below. If depth measures are given, the reference surface is the location given by the depth, otherwise the reference surface is the location given by the elevation." data-commonname="最小表面垂直距離" data-example="-1.5 (below the surface). 4.2 (above the surface). For a 1.5 meter sediment core from the bottom of a lake (at depth 20m) at 300m elevation: verbatimElevation: 300m minimumElevationInMeters: 300, maximumElevationInMeters: 300, verbatimDepth: 20m, minimumDepthInMeters: 20, maximumDepthInMeters: 20, minimumDistanceAboveSurfaceInMeters: 0, maximumDistanceAboveSurfaceInMeters: -1.5">
-                <label>
-                    <input type="checkbox" name="minimumDistanceAboveSurfaceInMeters"/>
-                    minimumDistanceAboveSurfaceInMeters
-                </label>
-            </div>
-            <div class="checkbox" data-name="maximumDistanceAboveSurfaceInMeters" data-type="Location" data-description="The greater distance in a range of distance from a reference surface in the vertical direction, in meters. Use positive values for locations above the surface, negative values for locations below. If depth measures are given, the reference surface is the location given by the depth, otherwise the reference surface is the location given by the elevation." data-commonname="最大表面垂直距離" data-example="-1.5 (below the surface). 4.2 (above the surface). For a 1.5 meter sediment core from the bottom of a lake (at depth 20m) at 300m elevation: verbatimElevation: 300m minimumElevationInMeters: 300, maximumElevationInMeters: 300, verbatimDepth: 20m, minimumDepthInMeters: 20, maximumDepthInMeters: 20, minimumDistanceAboveSurfaceInMeters: 0, maximumDistanceAboveSurfaceInMeters: -1.5">
-                <label>
-                    <input type="checkbox" name="maximumDistanceAboveSurfaceInMeters"/>
-                    maximumDistanceAboveSurfaceInMeters
-                </label>
-            </div>
-            <div class="checkbox" data-name="locationAccordingTo" data-type="Location" data-description="Information about the source of this Location information. Could be a publication (gazetteer), institution, or team of individuals." data-commonname="位置依據" data-example="Getty Thesaurus of Geographic Names, GADM">
-                <label>
-                    <input type="checkbox" name="locationAccordingTo"/>
-                    locationAccordingTo
-                </label>
-            </div>
-            <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="Comments or notes about the Location." data-commonname="地區註記" data-example="under water since 2005">
+            <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="地區註記" data-commonname="地區註記" data-example="under water since 2005">
                 <label>
                     <input type="checkbox" name="locationRemarks"/>
                     locationRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="decimalLatitude" data-type="Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
-                <label>
-                    <input type="checkbox" name="decimalLatitude"/>
-                    decimalLatitude
-                </label>
-            </div>
-            <div class="checkbox" data-name="decimalLongitude" data-type="Location" data-description="十進位經度" data-commonname="十進位經度" data-example="-121.1761111">
-                <label>
-                    <input type="checkbox" name="decimalLongitude"/>
-                    decimalLongitude
-                </label>
-            </div>
-            <div class="checkbox" data-name="geodeticDatum" data-type="Location" data-description="座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="大地基準、大地系統" data-example="EPSG:4326,<br>WGS84,<br>EPSG:3826 (TWD97 / TM2 臺灣),<br>EPSG:3828（TWD67 / TM2 臺灣）">
-                <label>
-                    <input type="checkbox" name="geodeticDatum"/>
-                    geodeticDatum
-                </label>
-            </div>
-            <div class="checkbox" data-name="coordinateUncertaintyInMeters" data-type="Location" data-description="The horizontal distance (in meters) from the given decimalLatitude and decimalLongitude describing the smallest circle containing the whole of the Location. Leave the value empty if the uncertainty is unknown, cannot be estimated, or is not applicable (because there are no coordinates). Zero is not a valid value for this term." data-commonname="座標誤差（公尺）" data-example="30 (reasonable lower limit on or after 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time),<br>100 (reasonable lower limit before 2020-05-01 of a GPS reading under good conditions if the actual precision was not recorded at the time),<br>71 (uncertainty for a UTM coordinate having 100 meter precision and a known spatial reference system)">
-                <label>
-                    <input type="checkbox" name="coordinateUncertaintyInMeters"/>
-                    coordinateUncertaintyInMeters
-                </label>
-            </div>
-            <div class="checkbox" data-name="coordinatePrecision" data-type="Location" data-description="A decimal representation of the precision of the coordinates given in the decimalLatitude and decimalLongitude." data-commonname="座標精準度" data-example="0.00001 (normal GPS limit for decimal degrees),<br>0.000278 (nearest second),<br>0.01667 (nearest minute),<br>1.0 (nearest degree)">
+            <div class="checkbox" data-name="coordinatePrecision" data-type="Location" data-description="依據十進位緯度（decimalLatitude）和十進位經度（decimalLongitude）中給出的座標精確度的十進位表示" data-commonname="座標精準度、座標精確度" data-example="0.00001 (normal GPS limit for decimal degrees),<br>0.000278 (nearest second),<br>0.01667 (nearest minute),<br>1.0 (nearest degree)">
                 <label>
                     <input type="checkbox" name="coordinatePrecision"/>
                     coordinatePrecision
                 </label>
             </div>
-            <div class="checkbox" data-name="pointRadiusSpatialFit" data-type="Location" data-description="The ratio of the area of the point-radius (decimalLatitude, decimalLongitude, coordinateUncertaintyInMeters) to the area of the true (original, or most specific) spatial representation of the Location. Legal values are 0, greater than or equal to 1, or undefined. A value of 1 is an exact match or 100% overlap. A value of 0 should be used if the given point-radius does not completely contain the original representation. The pointRadiusSpatialFit is undefined (and should be left empty) if the original representation is a point without uncertainty and the given georeference is not that same point (without uncertainty). If both the original and the given georeference are the same point, the pointRadiusSpatialFit is 1. " data-commonname="" data-example="0,<br>1,<br>1.5708">
-                <label>
-                    <input type="checkbox" name="pointRadiusSpatialFit"/>
-                    pointRadiusSpatialFit
-                </label>
-            </div>
-            <div class="checkbox" data-name="verbatimCoordinates" data-type="Location" data-description="The verbatim original spatial coordinates of the Location. The coordinate ellipsoid, geodeticDatum, or full Spatial Reference System (SRS) for these coordinates should be stored in verbatimSRS and the coordinate system should be stored in verbatimCoordinateSystem." data-commonname="字面上座標" data-example="41 05 54S 121 05 34W, 17T 630000 4833400">
+            <div class="checkbox" data-name="verbatimCoordinates" data-type="Location" data-description="字面上座標，意即最初採集或觀測取得紀錄的經度和緯度，且尚未被轉譯過，任何座標系統皆可" data-commonname="字面上座標" data-example="41 05 54S 121 05 34W, 17T 630000 4833400">
                 <label>
                     <input type="checkbox" name="verbatimCoordinates"/>
                     verbatimCoordinates
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLatitude" data-type="Location" data-description="字面緯度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="緯度" data-example="41d 16’N">
+            <div class="checkbox" data-name="verbatimLatitude" data-type="Location" data-description="字面緯度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="字面上緯度" data-example="41d 16’N">
                 <label>
                     <input type="checkbox" name="verbatimLatitude"/>
                     verbatimLatitude
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLongitude" data-type="Location" data-description="字面經度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="經度" data-example="121d 10’ 34" W">
+            <div class="checkbox" data-name="verbatimLongitude" data-type="Location" data-description="字面經度，採集或觀測取得紀錄的緯度，任何座標系統皆可" data-commonname="字面上經度" data-example="121d 10’ 34" W">
                 <label>
                     <input type="checkbox" name="verbatimLongitude"/>
                     verbatimLongitude
@@ -1161,559 +2028,313 @@ function updateExtensionFieldsetContent() {
                     verbatimCoordinateSystem
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimSRS" data-type="Location" data-description="The ellipsoid, geodetic datum, or spatial reference system (SRS) upon which coordinates given in verbatimLatitude and verbatimLongitude, or verbatimCoordinates are based." data-commonname="字面上空間參照系統" data-example="unknown,<br>EPSG:4326,<br>WGS84,<br>NAD27,<br>Campo Inchauspe,<br>European 1950,<br>Clarke 1866">
+            <div class="checkbox" data-name="verbatimSRS" data-type="Location" data-description="字面上座標的大地基準。建議使用控制詞彙；若全未知，則填入「未知 (unknown)」" data-commonname="字面上空間參照系統" data-example="unknown,<br>EPSG:4326,<br>WGS84,<br>NAD27,<br>Campo Inchauspe,<br>European 1950,<br>Clarke 1866">
                 <label>
                     <input type="checkbox" name="verbatimSRS"/>
                     verbatimSRS
                 </label>
             </div>
-            <div class="checkbox" data-name="footprintWKT" data-type="Location" data-description="A Well-Known Text (WKT) representation of the shape (footprint, geometry) that defines the Location. A Location may have both a point-radius representation (see decimalLatitude) and a footprint representation, and they may differ from each other." data-commonname="地理足跡WKT" data-example="POLYGON ((10 20, 11 20, 11 21, 10 21, 10 20)) (the one-degree bounding box with opposite corners at longitude=10, latitude=20 and longitude=11, latitude=21)">
+            <div class="checkbox" data-name="footprintWKT" data-type="Location" data-description="一個位置可能既有點半徑表示法（見十進位緯度），也有足跡表示法，兩者可能互不相同。若該筆紀錄無法以一個點位或點半徑記錄，則可參考使用此欄位" data-commonname="地理足跡WKT" data-example="POLYGON ((10 20, 11 20, 11 21, 10 21, 10 20)) (the one-degree bounding box with opposite corners at longitude=10, latitude=20 and longitude=11, latitude=21)">
                 <label>
                     <input type="checkbox" name="footprintWKT"/>
                     footprintWKT
                 </label>
             </div>
-            <div class="checkbox" data-name="footprintSRS" data-type="Location" data-description="The ellipsoid, geodetic datum, or spatial reference system (SRS) upon which the geometry given in footprintWKT is based." data-commonname="地理足跡SRS" data-example="epsg:4326, GEOGCS["GCS_WGS_1984", DATUM["D_WGS_1984", SPHEROID["WGS_1984",6378137,298.257223563]], PRIMEM["Greenwich",0], UNIT["Degree",0.0174532925199433]] (WKT for the standard WGS84 Spatial Reference System EPSG:4326)">
-                <label>
-                    <input type="checkbox" name="footprintSRS"/>
-                    footprintSRS
-                </label>
-            </div>
-            <div class="checkbox" data-name="footprintSpatialFit" data-type="Location" data-description="The ratio of the area of the footprint (footprintWKT) to the area of the true (original, or most specific) spatial representation of the Location. Legal values are 0, greater than or equal to 1, or undefined. A value of 1 is an exact match or 100% overlap. A value of 0 should be used if the given footprint does not completely contain the original representation. The footprintSpatialFit is undefined (and should be left empty) if the original representation is a point without uncertainty and the given georeference is not that same point (without uncertainty). If both the original and the given georeference are the same point, the footprintSpatialFit is 1." data-commonname="地理足跡SpatialFit" data-example="0,<br>1,<br>1.5708">
-                <label>
-                    <input type="checkbox" name="footprintSpatialFit"/>
-                    footprintSpatialFit
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferencedBy" data-type="Location" data-description="A list (concatenated and separated) of names of people, groups, or organizations who determined the georeference (spatial representation) for the Location." data-commonname="地理點位紀錄者" data-example="Brad Millen (ROM),<br>Kristina Yamamoto | Janet Fang">
-                <label>
-                    <input type="checkbox" name="georeferencedBy"/>
-                    georeferencedBy
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferencedDate" data-type="Location" data-description="The date on which the Location was georeferenced." data-commonname="地理點位紀錄日期" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40am UTC),<br>2018-08-29T15:19 (3:19pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007).">
-                <label>
-                    <input type="checkbox" name="georeferencedDate"/>
-                    georeferencedDate
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferenceProtocol" data-type="Location" data-description="A description or reference to the methods used to determine the spatial footprint, coordinates, and uncertainties." data-commonname="地理點位紀錄方法" data-example="Georeferencing Quick Reference Guide (Zermoglio et al. 2020, https://doi.org/10.35035/e09p-h128)">
-                <label>
-                    <input type="checkbox" name="georeferenceProtocol"/>
-                    georeferenceProtocol
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferenceSources" data-type="Location" data-description="A list (concatenated and separated) of maps, gazetteers, or other resources used to georeference the Location, described specifically enough to allow anyone in the future to use the same resources." data-commonname="地理點位紀錄平台" data-example="https://www.geonames.org/, USGS 1:24000 Florence Montana Quad 1967 | Terrametrics 2008 on Google Earth, GeoLocate">
-                <label>
-                    <input type="checkbox" name="georeferenceSources"/>
-                    georeferenceSources
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferenceRemarks" data-type="Location" data-description="Notes or comments about the spatial description determination, explaining assumptions made in addition or opposition to the those formalized in the method referred to in georeferenceProtocol." data-commonname="地理點位紀錄備註" data-example="Assumed distance by road (Hwy. 101)">
-                <label>
-                    <input type="checkbox" name="georeferenceRemarks"/>
-                    georeferenceRemarks
-                </label>
-            </div>
-            <div class="checkbox" data-name="materialSampleID" data-type="MaterialSample" data-description="An identifier for the MaterialSample (as opposed to a particular digital record of the material sample). In the absence of a persistent global unique identifier, construct one from a combination of identifiers in the record that will most closely make the materialSampleID globally unique." data-commonname="材料樣本ID" data-example="06809dc5-f143-459a-be1a-6f03e63fc083">
-                <label>
-                    <input type="checkbox" name="materialSampleID"/>
-                    materialSampleID
-                </label>
-            </div>
-            <div class="checkbox" data-name="catalogNumber" data-type="Occurrence" data-description="An identifier (preferably unique) for the record within the data set or collection." data-commonname="館藏號" data-example="145732,<br>145732a,<br>2008.1334,<br>R-4313">
+            <div class="checkbox" data-name="catalogNumber" data-type="Occurrence" data-description="通常為典藏標本納入館藏時所獲得的序號" data-commonname="館藏號" data-example="145732,<br>145732a,<br>2008.1334,<br>R-4313">
                 <label>
                     <input type="checkbox" name="catalogNumber"/>
                     catalogNumber
                 </label>
             </div>
-            <div class="checkbox" data-name="recordNumber" data-type="Occurrence" data-description="An identifier (preferably unique) for the record within the data set or collection." data-commonname="採集號" data-example="OPP 7101">
+            <div class="checkbox" data-name="recordNumber" data-type="Occurrence" data-description="採集樣本並記錄時所寫下的序號" data-commonname="採集號" data-example="OPP 7101">
                 <label>
                     <input type="checkbox" name="recordNumber"/>
                     recordNumber
                 </label>
             </div>
-            <div class="checkbox" data-name="recordedBy" data-type="Occurrence" data-description="A list (concatenated and separated) of names of people, groups, or organizations responsible for recording the original Occurrence. The primary collector or observer, especially one who applies a personal identifier (recordNumber), should be listed first." data-commonname="記錄者" data-example="José E. Crespo. Oliver P. Pearson | Anita K. Pearson (where the value in recordNumber OPP 7101 corresponds to the collector number for the specimen in the field catalog of Oliver P. Pearson)">
-                <label>
-                    <input type="checkbox" name="recordedBy"/>
-                    recordedBy
-                </label>
-            </div>
-            <div class="checkbox" data-name="recordedByID" data-type="Occurrence" data-description="A list (concatenated and separated) of the globally unique identifier for the person, people, groups, or organizations responsible for recording the original Occurrence." data-commonname="記錄者ID" data-example="https://orcid.org/0000-0002-1825-0097 (for an individual),<br>https://orcid.org/0000-0002-1825-0097 | https://orcid.org/0000-0002-1825-0098 (for a list of people)">
+            <div class="checkbox" data-name="recordedByID" data-type="Occurrence" data-description="記錄者的相關個人連結，如ORCID" data-commonname="記錄者連結、記錄者ID" data-example="https://orcid.org/0000-0002-1825-0097 (for an individual),<br>https://orcid.org/0000-0002-1825-0097 | https://orcid.org/0000-0002-1825-0098 (for a list of people)">
                 <label>
                     <input type="checkbox" name="recordedByID"/>
                     recordedByID
                 </label>
             </div>
-            <div class="checkbox" data-name="individualCount" data-type="Occurrence" data-description="出現紀錄被記錄時存在的個體數量" data-commonname="個體數量" data-example="0, 1, 25">
-                <label>
-                    <input type="checkbox" name="individualCount"/>
-                    individualCount
-                </label>
-            </div>
-            <div class="checkbox" data-name="organismQuantity" data-type="Occurrence" data-description="A number or enumeration value for the quantity of organisms." data-commonname="生物體數量" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType),<br>many (organismQuantity) with individuals (organismQuantityType).">
-                <label>
-                    <input type="checkbox" name="organismQuantity"/>
-                    organismQuantity
-                </label>
-            </div>
-            <div class="checkbox" data-name="organismQuantityType" data-type="Occurrence" data-description="The type of quantification system used for the quantity of organisms." data-commonname="生物體數量單位" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType)">
-                <label>
-                    <input type="checkbox" name="organismQuantityType"/>
-                    organismQuantityType
-                </label>
-            </div>
-            <div class="checkbox" data-name="sex" data-type="Occurrence" data-description="The sex of the biological individual(s) represented in the Occurrence." data-commonname="性別" data-example="雌性 female,<br>雄性 male,<br>雌雄同體 hermaphrodite">
+            <div class="checkbox" data-name="sex" data-type="Occurrence" data-description="該筆紀錄中生物個體的性別，建議使用控制詞彙。" data-commonname="性別" data-example="雌性 female,<br>雄性 male,<br>雌雄同體 hermaphrodite">
                 <label>
                     <input type="checkbox" name="sex"/>
                     sex
                 </label>
             </div>
-            <div class="checkbox" data-name="lifeStage" data-type="Occurrence" data-description="The age class or life stage of the Organism(s) at the time the Occurrence was recorded." data-commonname="生活史階段" data-example="zygote,<br>larva,<br>juvenile,<br>adult,<br>seedling,<br>flowering,<br>fruiting">
+            <div class="checkbox" data-name="lifeStage" data-type="Occurrence" data-description="該筆紀錄中生物的生活史階段" data-commonname="生活史階段" data-example="zygote,<br>larva,<br>juvenile,<br>adult,<br>seedling,<br>flowering,<br>fruiting">
                 <label>
                     <input type="checkbox" name="lifeStage"/>
                     lifeStage
                 </label>
             </div>
-            <div class="checkbox" data-name="reproductiveCondition" data-type="Occurrence" data-description="The reproductive condition of the biological individual(s) represented in the Occurrence." data-commonname="生殖狀態" data-example="non-reproductive,<br>pregnant,<br>in bloom,<br>fruit-bearing">
+            <div class="checkbox" data-name="reproductiveCondition" data-type="Occurrence" data-description="該筆紀錄中生物的生殖狀態" data-commonname="生殖狀態" data-example="non-reproductive,<br>pregnant,<br>in bloom,<br>fruit-bearing">
                 <label>
                     <input type="checkbox" name="reproductiveCondition"/>
                     reproductiveCondition
                 </label>
             </div>
-            <div class="checkbox" data-name="behavior" data-type="Occurrence" data-description="The behavior shown by the subject at the time the Occurrence was recorded." data-commonname="行為" data-example="roosting,<br>foraging,<br>running">
+            <div class="checkbox" data-name="behavior" data-type="Occurrence" data-description="該筆紀錄的生物被觀察時，正進行的行為" data-commonname="行為" data-example="roosting,<br>foraging,<br>running">
                 <label>
                     <input type="checkbox" name="behavior"/>
                     behavior
                 </label>
             </div>
-            <div class="checkbox" data-name="establishmentMeans" data-type="Occurrence" data-description="Statement about whether an organism or organisms have been introduced to a given place and time through the direct or indirect activity of modern humans." data-commonname="原生或引入定義評估" data-example="原生 native,<br>原生：再引進 nativeReintroduced,<br>引進（外來、非原生、非原住） introduced,<br>引進（協助拓殖） introducedAssistedColonisation,<br>流浪的 vagrant,<br>不確定的（未知、隱源性） uncertain">
+            <div class="checkbox" data-name="establishmentMeans" data-type="Occurrence" data-description="關於一種或多種生物是否藉由現代人類的直接或間接活動引入特定地點和時間的聲明或評估" data-commonname="原生或引入定義評估" data-example="原生 native,<br>原生：再引進 nativeReintroduced,<br>引進（外來、非原生、非原住） introduced,<br>引進（協助拓殖） introducedAssistedColonisation,<br>流浪的 vagrant,<br>不確定的（未知、隱源性） uncertain">
                 <label>
                     <input type="checkbox" name="establishmentMeans"/>
-                    individualCount
-                </label>establishmentMeans
+                    establishmentMeans
+                </label>
             </div>
-            <div class="checkbox" data-name="degreeOfEstablishment" data-type="Occurrence" data-description="The degree to which an Organism survives, reproduces, and expands its range at the given place and time." data-commonname="原生或引入階段評估" data-example="原生 native,<br>收容 captive,<br>栽培 cultivated,<br>野放 released,<br>衰退中 failing,<br>偶然出現的 casual,<br>繁殖中 reproducing,<br>歸化 established,<br>拓殖中 colonising,<br>入侵 invasive,<br>廣泛入侵 widespreadInvasive">
+            <div class="checkbox" data-name="degreeOfEstablishment" data-type="Occurrence" data-description="生物在特定地點和時間的生存、繁殖和擴大範圍的程度" data-commonname="原生或引入階段評估" data-example="原生 native,<br>收容 captive,<br>栽培 cultivated,<br>野放 released,<br>衰退中 failing,<br>偶然出現的 casual,<br>繁殖中 reproducing,<br>歸化 established,<br>拓殖中 colonising,<br>入侵 invasive,<br>廣泛入侵 widespreadInvasive">
                 <label>
                     <input type="checkbox" name="degreeOfEstablishment"/>
                     degreeOfEstablishment
                 </label>
             </div>
-            <div class="checkbox" data-name="pathway" data-type="Occurrence" data-description="The process by which an Organism came to be in a given place at a given time." data-commonname="生物擴散方法" data-example="releasedForUse, otherEscape, transportContaminant, transportStowaway, corridor, unaided">
-                <label>
-                    <input type="checkbox" name="pathway"/>
-                    pathway
-                </label>
-            </div>
-            <div class="checkbox" data-name="georeferenceVerificationStatus" data-type="Occurrence" data-description="A categorical description of the extent to which the georeference has been verified to represent the best possible spatial description for the Location of the Occurrence." data-commonname="地理資訊驗證狀態" data-example="unable to georeference, requires georeference, requires verification, verified by data custodian, verified by contributor">
-                <label>
-                    <input type="checkbox" name="georeferenceVerificationStatus"/>
-                    georeferenceVerificationStatus
-                </label>
-            </div>
-            <div class="checkbox" data-name="occurrenceStatus" data-type="Occurrence" data-description="A statement about the presence or absence of a Taxon at a Location." data-commonname="出現狀態" data-example="出現 present,<br>未出現 absent">
+            <div class="checkbox" data-name="occurrenceStatus" data-type="Occurrence" data-description="該筆紀錄在特定時間和地點，為生物有出現或未出現的狀態，須使用DwC規範之控制詞彙" data-commonname="出現狀態" data-example="出現 present,<br>未出現 absent">
                 <label>
                     <input type="checkbox" name="occurrenceStatus"/>
                     occurrenceStatus
                 </label>
             </div>
-            <div class="checkbox" data-name="preparations" data-type="Occurrence" data-description="A list (concatenated and separated) of preparations and preservation methods for a specimen." data-commonname="樣本狀態" data-example="fossil,<br>cast,<br>photograph,<br>DNA extract,<br>skin | skull | skeleton,<br>whole animal (ETOH) | tissue (EDTA)">
-                <label>
-                    <input type="checkbox" name="preparations"/>
-                    preparations
-                </label>
-            </div>
-            <div class="checkbox" data-name="disposition" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers (publication, global unique identifier, URI) of media associated with the Occurrence" data-commonname="樣本處置" data-example="in collection,<br>missing,<br>voucher elsewhere,<br>duplicates elsewhere">
-                <label>
-                    <input type="checkbox" name="disposition"/>
-                    disposition
-                </label>
-            </div>
-            <div class="checkbox" data-name="associatedOccurrences" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers of other Occurrence records and their associations to this Occurrence." data-commonname="相關物種出現紀錄" data-example="parasite collected from: https://arctos.database.museum/guid/MSB:Mamm:215895?seid=950760,<br>encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3175067 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177393 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177394 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177392 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3609139">
+            <div class="checkbox" data-name="associatedOccurrences" data-type="Occurrence" data-description="與該筆紀錄相關的其他出現紀錄，若有多個連結以 '|' 分隔。" data-commonname="相關物種出現紀錄" data-example="parasite collected from: https://arctos.database.museum/guid/MSB:Mamm:215895?seid=950760,<br>encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3175067 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177393 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177394 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3177392 | encounter previous to: http://arctos.database.museum/guid/MSB:Mamm:292063?seid=3609139">
                 <label>
                     <input type="checkbox" name="associatedOccurrences"/>
                     associatedOccurrences
                 </label>
             </div>
-            <div class="checkbox" data-name="associatedReferences" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers (publication, bibliographic reference, global unique identifier, URI) of literature associated with the Occurrence." data-commonname="相關參考資料" data-example="http://www.sciencemag.org/cgi/content/abstract/322/5899/261, Christopher J. Conroy, Jennifer L. Neuwald. 2008. Phylogeographic study of the California vole, Microtus californicus Journal of Mammalogy, 89(3):755-767., Steven R. Hoofer and Ronald A. Van Den Bussche. 2001. Phylogenetic Relationships of Plecotine Bats and Allies Based on Mitochondrial Ribosomal Sequences. Journal of Mammalogy 82(1):131-137. | Walker, Faith M., Jeffrey T. Foster, Kevin P. Drees, Carol L. Chambers. 2014. Spotted bat (Euderma maculatum) microsatellite discovery using illumina sequencing. Conservation Genetics Resources.">
+            <div class="checkbox" data-name="associatedReferences" data-type="Occurrence" data-description="與該筆紀錄相關的其他出現紀錄，若有多個連結以 '|' 分隔。" data-commonname="相關參考資料" data-example="http://www.sciencemag.org/cgi/content/abstract/322/5899/261, Christopher J. Conroy, Jennifer L. Neuwald. 2008. Phylogeographic study of the California vole, Microtus californicus Journal of Mammalogy, 89(3):755-767., Steven R. Hoofer and Ronald A. Van Den Bussche. 2001. Phylogenetic Relationships of Plecotine Bats and Allies Based on Mitochondrial Ribosomal Sequences. Journal of Mammalogy 82(1):131-137. | Walker, Faith M., Jeffrey T. Foster, Kevin P. Drees, Carol L. Chambers. 2014. Spotted bat (Euderma maculatum) microsatellite discovery using illumina sequencing. Conservation Genetics Resources.">
                 <label>
                     <input type="checkbox" name="associatedReferences"/>
                     associatedReferences
                 </label>
             </div>
-            <div class="checkbox" data-name="associatedSequences" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers (publication, global unique identifier, URI) of genetic sequence information associated with the Occurrence." data-commonname="相關基因序列" data-example="http://www.ncbi.nlm.nih.gov/nuccore/U34853.1, http://www.ncbi.nlm.nih.gov/nuccore/GU328060 | http://www.ncbi.nlm.nih.gov/nuccore/AF326093">
+            <div class="checkbox" data-name="associatedSequences" data-type="Occurrence" data-description="與該筆紀錄相關的基因序列（提供其於開放基因資料庫或文獻中的連結），若有多個連結則以 '|' 分隔。" data-commonname="相關基因序列" data-example="http://www.ncbi.nlm.nih.gov/nuccore/U34853.1, http://www.ncbi.nlm.nih.gov/nuccore/GU328060 | http://www.ncbi.nlm.nih.gov/nuccore/AF326093">
                 <label>
                     <input type="checkbox" name="associatedSequences"/>
                     associatedSequences
                 </label>
             </div>
-            <div class="checkbox" data-name="associatedTaxa" data-type="Occurrence" data-description="A list (concatenated and separated) of identifiers or names of taxa and the associations of this Occurrence to each of them." data-commonname="相關物種" data-example="host: Quercus alba,<br>host: gbif.org/species/2879737,<br>parasitoid of: Cyclocephala signaticollis | predator of: Apis mellifera">
+            <div class="checkbox" data-name="associatedTaxa" data-type="Occurrence" data-description="與該筆紀錄相關的物種（如有交互作用的物種），若有多個則以 '|' 分隔。" data-commonname="相關物種" data-example="host: Quercus alba,<br>host: gbif.org/species/2879737,<br>parasitoid of: Cyclocephala signaticollis | predator of: Apis mellifera">
                 <label>
                     <input type="checkbox" name="associatedTaxa"/>
                     associatedTaxa
                 </label>
             </div>
-            <div class="checkbox" data-name="otherCatalogNumbers" data-type="Occurrence" data-description="A list (concatenated and separated) of previous or alternate fully qualified catalog numbers or other human-used identifiers for the same Occurrence, whether in the current or any other data set or collection." data-commonname="其他館藏號" data-example="FMNH:Mammal:1234, NPS YELLO6778 | MBG 33424">
-                <label>
-                    <input type="checkbox" name="otherCatalogNumbers"/>
-                    otherCatalogNumbers
-                </label>
-            </div>
-            <div class="checkbox" data-name="occurrenceRemarks" data-type="Occurrence" data-description="Comments or notes about the Occurrence." data-commonname="出現紀錄註記" data-example="found dead on road">
+            <div class="checkbox" data-name="occurrenceRemarks" data-type="Occurrence" data-description="該筆出現紀錄註記、備註" data-commonname="出現紀錄註記" data-example="found dead on road">
                 <label>
                     <input type="checkbox" name="occurrenceRemarks"/>
                     occurrenceRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="organismID" data-type="Organism" data-description="An identifier for the Organism instance (as opposed to a particular digital record of the Organism). May be a globally unique identifier or an identifier specific to the data set." data-commonname="生物體ID" data-example="http://arctos.database.museum/guid/WNMU:Mamm:1249">
+            <div class="checkbox" data-name="organismID" data-type="Organism" data-description="若該筆紀錄可追溯至生物個體，則可給予生物體ID。可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)" data-commonname="生物體ID、個體ID" data-example="http://arctos.database.museum/guid/WNMU:Mamm:1249">
                 <label>
                     <input type="checkbox" name="organismID"/>
                     organismID
                 </label>
             </div>
-            <div class="checkbox" data-name="organismName" data-type="Organism" data-description="A textual name or label assigned to an Organism instance." data-commonname="生物體名" data-example="Huberta,<br>Boab Prison Tree,<br>J pod">
+            <div class="checkbox" data-name="organismName" data-type="Organism" data-description="給該生物體取的名字或標籤" data-commonname="生物體名、個體名稱" data-example="Huberta,<br>Boab Prison Tree,<br>J pod,<br>小破洞,<br>傑尼龜">
                 <label>
                     <input type="checkbox" name="organismName"/>
                     organismName
                 </label>
             </div>
-            <div class="checkbox" data-name="organismScope" data-type="Organism" data-description="A description of the kind of Organism instance. Can be used to indicate whether the Organism instance represents a discrete organism or if it represents a particular type of aggregation." data-commonname="生物體類型" data-example="multicellular organism,<br>virus,<br>clone,<br>pack,<br>colony">
-                <label>
-                    <input type="checkbox" name="organismScope"/>
-                    organismScope
-                </label>
-            </div>
-            <div class="checkbox" data-name="associatedOrganisms" data-type="Organism" data-description="A textual name or label assigned to an Organism instance." data-commonname="相關生物體" data-example="sibling of: http://arctos.database.museum/guid/DMNS:Mamm:14171,<br>parent of: http://arctos.database.museum/guid/MSB:Mamm:196208 | parent of: http://arctos.database.museum/guid/MSB:Mamm:196523 | sibling of: http://arctos.database.museum/guid/MSB:Mamm:142638">
+            <div class="checkbox" data-name="associatedOrganisms" data-type="Organism" data-description="與該生物體相關的其他生物個體" data-commonname="相關生物體、相關個體" data-example="sibling of: http://arctos.database.museum/guid/DMNS:Mamm:14171,<br>parent of: http://arctos.database.museum/guid/MSB:Mamm:196208 | parent of: http://arctos.database.museum/guid/MSB:Mamm:196523 | sibling of: http://arctos.database.museum/guid/MSB:Mamm:142638">
                 <label>
                     <input type="checkbox" name="associatedOrganisms"/>
                     associatedOrganisms
                 </label>
             </div>
-            <div class="checkbox" data-name="previousIdentifications" data-type="Organism" data-description="A list (concatenated and separated) of previous assignments of names to the Organism." data-commonname="過往鑑定" data-example="Chalepidae, Pinus abies, Anthus sp., field ID by G. Iglesias | Anthus correndera, expert ID by C. Cicero 2009-02-12 based on morphology">
-                <label>
-                    <input type="checkbox" name="previousIdentifications"/>
-                    previousIdentifications
-                </label>
-            </div>
-            <div class="checkbox" data-name="organismRemarks" data-type="Organism" data-description="Comments or notes about the Organism instance." data-commonname="生物體註記" data-example="One of a litter of six">
+            <div class="checkbox" data-name="organismRemarks" data-type="Organism" data-description="該生物體的註記、備註" data-commonname="生物體註記" data-example="One of a litter of six">
                 <label>
                     <input type="checkbox" name="organismRemarks"/>
                     organismRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="type" data-type="Record-level" data-description="The nature or genre of the resource." data-commonname="資源類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
+            <div class="checkbox" data-name="type" data-type="Record-level" data-description="該筆資源/媒體的性質或類型，必須填入 DCMI 類型詞彙表中的值(http://dublincore.org/documents/2010/10/11/dcmi-type-vocabulary/)" data-commonname="資源類型、媒體類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
                 <label>
                     <input type="checkbox" name="type"/>
                     type
                 </label>
             </div>
-            <div class="checkbox" data-name="modified" data-type="Record-level" data-description="The most recent date-time on which the resource was changed." data-commonname="IPT資料修改時間" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40am UTC),<br>2018-08-29T15:19 (3:19pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007)">
+            <div class="checkbox" data-name="modified" data-type="Record-level" data-description="該筆紀錄最近被修改的日期時間" data-commonname="IPT資料修改時間" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07 pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40 am UTC),<br>2018-08-29T15:19 (3:19 pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30 pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007)">
                 <label>
                     <input type="checkbox" name="modified"/>
                     modified
                 </label>
             </div>
-            <div class="checkbox" data-name="language" data-type="Record-level" data-description="A language of the resource." data-commonname="語言" data-example="en">
+            <div class="checkbox" data-name="language" data-type="Record-level" data-description="該紀錄所用的語言，建議使用控制詞彙(RFC 5646標準)" data-commonname="語言" data-example="en (英文),<br>zh-TW (繁體中文)">
                 <label>
                     <input type="checkbox" name="language"/>
                     language
                 </label>
             </div>
-            <div class="checkbox" data-name="license" data-type="Record-level" data-description="A legal document giving official permission to do something with the resource." data-commonname="授權標示" data-example="http://creativecommons.org/publicdomain/zero/1.0/legalcode,<br>http://creativecommons.org/licenses/by/4.0/legalcode">
+            <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="http://creativecommons.org/publicdomain/zero/1.0/legalcode,<br>http://creativecommons.org/licenses/by/4.0/legalcode">
                 <label>
                     <input type="checkbox" name="license"/>
                     license
                 </label>
             </div>
-            <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="A person or organization owning or managing rights over the resource." data-commonname="所有權" data-example="The Regents of the University of California">
+            <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="擁有或管理資料權利的個人或組織" data-commonname="所有權、所有權人" data-example="The Regents of the University of California">
                 <label>
                     <input type="checkbox" name="rightsHolder"/>
                     rightsHolder
                 </label>
             </div>
-            <div class="checkbox" data-name="accessRights" data-type="Record-level" data-description="Information about who can access the resource or an indication of its security status." data-commonname="取用權" data-example="not-for-profit use only,<br>https://www.fieldmuseum.org/field-museum-natural-history-conditions-and-suggested-norms-use-collections-data-and-images">
-                <label>
-                    <input type="checkbox" name="accessRights"/>
-                    accessRights
-                </label>
-            </div>
-            <div class="checkbox" data-name="bibliographicCitation" data-type="Record-level" data-description="A bibliographic reference for the resource as a statement indicating how this record should be cited (attributed) when used." data-commonname="引用此資料的方式" data-example="Occurrence example: Museum of Vertebrate Zoology, UC Berkeley. MVZ Mammal Collection (Arctos). Record ID: http://arctos.database.museum/guid/MVZ:Mamm:165861?seid=101356. Source: http://ipt.vertnet.org:8080/ipt/resource.do?r=mvz_mammal,<br>Taxon example: https://www.gbif.org/species/2439608 Source: GBIF Taxonomic Backbone,<br>Event example: Rand, K.M., Logerwell, E.A. The first demersal trawl survey of benthic fish and invertebrates in the Beaufort Sea since the late 1970s. Polar Biol 34, 475–488 (2011). https://doi.org/10.1007/s00300-010-0900-2">
+            <div class="checkbox" data-name="bibliographicCitation" data-type="Record-level" data-description="此筆資料的引用方式" data-commonname="引用此資料的方式" data-example="Occurrence example: Museum of Vertebrate Zoology, UC Berkeley. MVZ Mammal Collection (Arctos). Record ID: http://arctos.database.museum/guid/MVZ:Mamm:165861?seid=101356. Source: http://ipt.vertnet.org:8080/ipt/resource.do?r=mvz_mammal,<br>Taxon example: https://www.gbif.org/species/2439608 Source: GBIF Taxonomic Backbone,<br>Event example: Rand, K.M., Logerwell, E.A. The first demersal trawl survey of benthic fish and invertebrates in the Beaufort Sea since the late 1970s. Polar Biol 34, 475–488 (2011). https://doi.org/10.1007/s00300-010-0900-2">
                 <label>
                     <input type="checkbox" name="bibliographicCitation"/>
                     bibliographicCitation
                 </label>
             </div>
-            <div class="checkbox" data-name="references" data-type="Record-level" data-description="A related resource that is referenced, cited, or otherwise pointed to by the described resource." data-commonname="資料來源參考" data-example="MaterialSample example: http://arctos.database.museum/guid/MVZ:Mamm:165861,<br>Taxon example: https://www.catalogueoflife.org/data/taxon/32664">
+            <div class="checkbox" data-name="references" data-type="Record-level" data-description="被描述的資源參考、引用或以其他方式指向的相關資源" data-commonname="資料參考來源、參考文獻、參考資源、參考來源" data-example="MaterialSample example: http://arctos.database.museum/guid/MVZ:Mamm:165861,<br>Taxon example: https://www.catalogueoflife.org/data/taxon/32664">
                 <label>
                     <input type="checkbox" name="references"/>
                     references
                 </label>
             </div>
-            <div class="checkbox" data-name="institutionID" data-type="Record-level" data-description="An identifier for the institution having custody of the object(s) or information referred to in the record." data-commonname="發布機構ID" data-example="http://biocol.org/urn:lsid:biocol.org:col:34777,<br>http://grbio.org/cool/km06-gtbn">
-                <label>
-                    <input type="checkbox" name="institutionID"/>
-                    institutionID
-                </label>
-            </div>
-            <div class="checkbox" data-name="collectionID" data-type="Record-level" data-description="An identifier for the collection or dataset from which the record was derived." data-commonname="館藏ID" data-example="http://biocol.org/urn:lsid:biocol.org:col:1001, http://grbio.org/cool/p5fp-c036">
+            <div class="checkbox" data-name="collectionID" data-type="Record-level" data-description="該筆紀錄在發布機構的典藏ID，最好為全球唯一的URL" data-commonname="館藏ID、典藏號、館藏號" data-example="http://biocol.org/urn:lsid:biocol.org:col:1001, http://grbio.org/cool/p5fp-c036">
                 <label>
                     <input type="checkbox" name="collectionID"/>
                     collectionID
                 </label>
             </div>
-            <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="An identifier for the set of data. May be a global unique identifier or an identifier specific to a collection or institution." data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
+            <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="該筆紀錄在來源資料集中的ID，最好為全球唯一或於該發布機構唯一的ID" data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
                 <label>
                     <input type="checkbox" name="datasetID"/>
                     datasetID
                 </label>
             </div>
-            <div class="checkbox" data-name="institutionCode" data-type="Record-level" data-description="The name (or acronym) in use by the institution having custody of the object(s) or information referred to in the record." data-commonname="機構代碼" data-example="MVZ,<br>FMNH,<br>CLO,<br>UCMP">
+            <div class="checkbox" data-name="institutionCode" data-type="Record-level" data-description="發布機構所使用的名稱（博物館）代碼或縮寫" data-commonname="機構代碼" data-example="GBIF,<br>TaiBIF,<br>NTM,<br>NSTC">
                 <label>
                     <input type="checkbox" name="institutionCode"/>
                     institutionCode
                 </label>
             </div>
-            <div class="checkbox" data-name="collectionCode" data-type="Record-level" data-description="The name, acronym, coden, or initialism identifying the collection or data set from which the record was derived." data-commonname="語言" data-example="Mammals,<br>Hildebrandt,<br>EBIRD,<br>VP">
-                <label>
-                    <input type="checkbox" name="collectionCode"/>
-                    collectionCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="datasetName" data-type="Record-level" data-description="The name identifying the data set from which the record was derived." data-commonname="資料集名稱" data-example="Grinnell Resurvey Mammals,<br>Lacey Ctenomys Recaptures">
+            <div class="checkbox" data-name="datasetName" data-type="Record-level" data-description="該筆紀錄來源的資料集名稱" data-commonname="資料集名稱、來源計畫名稱" data-example="Grinnell Resurvey Mammals,<br>Lacey Ctenomys Recaptures">
                 <label>
                     <input type="checkbox" name="datasetName"/>
                     datasetName
                 </label>
             </div>
-            <div class="checkbox" data-name="ownerInstitutionCode" data-type="Record-level" data-description="The name (or acronym) in use by the institution having ownership of the object(s) or information referred to in the record." data-commonname="所有者機構代碼" data-example="NPS,<br>APN,<br>InBio">
-                <label>
-                    <input type="checkbox" name="ownerInstitutionCode"/>
-                    ownerInstitutionCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="informationWithheld" data-type="Record-level" data-description="Additional information that exists, but that has not been shared in the given record." data-commonname="隱藏資訊" data-example="location information not given for endangered species, collector identities withheld | ask about tissue samples">
+            <div class="checkbox" data-name="informationWithheld" data-type="Record-level" data-description="若有隸屬於此資料集但尚未開放的其他資訊，可在此欄位補充" data-commonname="隱藏資訊" data-example="location information not given for endangered species,<br>collector identities withheld | ask about tissue samples">
                 <label>
                     <input type="checkbox" name="informationWithheld"/>
                     informationWithheld
                 </label>
             </div>
-            <div class="checkbox" data-name="dataGeneralizations" data-type="Record-level" data-description="Actions taken to make the shared data less specific or complete than in its original form. Suggests that alternative data of higher quality may be available on request." data-commonname="資料模糊化" data-example="Coordinates generalized from original GPS coordinates to the nearest half degree grid cell.">
+            <div class="checkbox" data-name="dataGeneralizations" data-type="Record-level" data-description="針對共享資料採取的措施，使其比原始形式更不具體或完整（如將點位模糊化）。可表明若有需要更高品質的替代資料可提出申請" data-commonname="資料模糊化、屏蔽資料" data-example="Coordinates generalized from original GPS coordinates to the nearest half degree grid cell">
                 <label>
                     <input type="checkbox" name="dataGeneralizations"/>
                     dataGeneralizations
                 </label>
             </div>
-            <div class="checkbox" data-name="dynamicProperties" data-type="Record-level" data-description="A list of additional measurements, facts, characteristics, or assertions about the record. Meant to provide a mechanism for structured content." data-commonname="動態屬性" data-example="{heightInMeters: 1.5}, {tragusLengthInMeters: 0.014, weightInGrams: 120}, {natureOfID: expert identification, identificationEvidence: cytochrome B sequence}, {relativeHumidity: 28, airTemperatureInCelsius: 22, sampleSizeInKilograms: 10}, {aspectHeading: 277, slopeInDegrees: 6}, {iucnStatus: vulnerable, taxonDistribution: Neuquén, Argentina}">
-                <label>
-                    <input type="checkbox" name="dynamicProperties"/>
-                    dynamicProperties
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼" data-commonname="物種分類ID" data-example="32567">
-                <label>
-                    <input type="checkbox" name="taxonID"/>
-                    taxonID
-                </label>
-            </div>
-            <div class="checkbox" data-name="scientificNameID" data-type="Taxon" data-description="An identifier for the nomenclatural (not taxonomic) details of a scientific name." data-commonname="學名ID" data-example="urn:lsid:ipni.org:names:37829-1:1.3">
-                <label>
-                    <input type="checkbox" name="scientificNameID"/>
-                    scientificNameID
-                </label>
-            </div>
-            <div class="checkbox" data-name="parentNameUsageID" data-type="Taxon" data-description="An identifier for the name usage (documented meaning of the name according to a source) in which the terminal element of the scientificName was originally established under the rules of the associated nomenclaturalCode." data-commonname="最高階學名ID" data-example="tsn:41107 (ITIS),<br>urn:lsid:ipni.org:names:320035-2 (IPNI),<br>2704179 (GBIF),<br>6W3C4 (COL)">
-                <label>
-                    <input type="checkbox" name="parentNameUsageID"/>
-                    parentNameUsageID
-                </label>
-            </div>
-            <div class="checkbox" data-name="nameAccordingToID" data-type="Taxon" data-description="An identifier for the source in which the specific taxon concept circumscription is defined or implied." data-commonname="學名依據ID" data-example="https://doi.org/10.1016/S0269-915X(97)80026-2">
-                <label>
-                    <input type="checkbox" name="nameAccordingToID"/>
-                    nameAccordingToID
-                </label>
-            </div>
-            <div class="checkbox" data-name="namePublishedInID" data-type="Taxon" data-description="An identifier for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode." data-commonname="學名發表文獻ID" data-example="">
-                <label>
-                    <input type="checkbox" name="namePublishedInID"/>
-                    namePublishedInID
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonConceptID" data-type="Taxon" data-description="An identifier for the taxonomic concept to which the record refers - not for the nomenclatural details of a taxon." data-commonname="分類觀ID" data-example="8fa58e08-08de-4ac1-b69c-1235340b7001">
-                <label>
-                    <input type="checkbox" name="taxonConceptID"/>
-                    taxonConceptID
-                </label>
-            </div>
-            <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
-                <label>
-                    <input type="checkbox" name="scientificName"/>
-                    scientificName
-                </label>
-            </div>
-            <div class="checkbox" data-name="acceptedNameUsage" data-type="Taxon" data-description="The full name, with authorship and date information if known, of the currently valid (zoological) or accepted (botanical) taxon." data-commonname="有效學名" data-example="Tamias minimus (valid name for Eutamias minimus)">
+            <div class="checkbox" data-name="acceptedNameUsage" data-type="Taxon" data-description="目前有效（動物）或接受（植物）並包含命名作者及年代（若已知）的完整學名" data-commonname="有效學名" data-example="Tamias minimus (valid name for Eutamias minimus)">
                 <label>
                     <input type="checkbox" name="acceptedNameUsage"/>
                     acceptedNameUsage
                 </label>
             </div>
-            <div class="checkbox" data-name="parentNameUsage" data-type="Taxon" data-description="The full name, with authorship and date information if known, of the direct, most proximate higher-rank parent taxon (in a classification) of the most specific element of the scientificName." data-commonname="最高階學名ID" data-example="Rubiaceae,<br>Gruiformes,<br>Testudinae">
-                <label>
-                    <input type="checkbox" name="parentNameUsage"/>
-                    parentNameUsage
-                </label>
-            </div>
-            <div class="checkbox" data-name="originalNameUsage" data-type="Taxon" data-description="The taxon name, with authorship and date information if known, as it originally appeared when first established under the rules of the associated nomenclaturalCode. The basionym (botany) or basonym (bacteriology) of the scientificName or the senior/earlier homonym for replaced names." data-commonname="原始接受名" data-example="Pinus abies, Gasterosteus saltatrix Linnaeus 1768">
-                <label>
-                    <input type="checkbox" name="originalNameUsage"/>
-                    originalNameUsage
-                </label>
-            </div>
-            <div class="checkbox" data-name="nameAccordingTo" data-type="Taxon" data-description="The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin "sensu" or "sec." (from secundum, meaning "according to"). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given." data-commonname="學名依據ID" data-example="Franz NM, Cardona-Duque J (2013) Description of two new species and phylogenetic reassessment of Perelleschus Wibmer & O’Brien, 1986 (Coleoptera: Curculionidae), with a complete taxonomic concept history of Perelleschus sec. Franz & Cardona-Duque, 2013. Syst Biodivers. 11: 209–236. (as the full citation of the Franz & Cardona-Duque (2013) in Perelleschus splendida sec. Franz & Cardona-Duque (2013))">
-                <label>
-                    <input type="checkbox" name="nameAccordingTo"/>
-                    nameAccordingTo
-                </label>
-            </div>
-            <div class="checkbox" data-name="namePublishedIn" data-type="Taxon" data-description="A reference for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode." data-commonname="學名發表文獻ID" data-example="Pearson O. P., and M. I. Christie. 1985. Historia Natural, 5(37):388, Forel, Auguste, Diagnosies provisoires de quelques espèces nouvelles de fourmis de Madagascar, récoltées par M. Grandidier., Annales de la Societe Entomologique de Belgique, Comptes-rendus des Seances 30, 1886">
-                <label>
-                    <input type="checkbox" name="namePublishedIn"/>
-                    namePublishedIn
-                </label>
-            </div>
-            <div class="checkbox" data-name="namePublishedInYear" data-type="Taxon" data-description="The four-digit year in which the scientificName was published." data-commonname="學名發表年份" data-example="1996,<br>2023">
-                <label>
-                    <input type="checkbox" name="namePublishedInYear"/>
-                    namePublishedInYear
-                </label>
-            </div>
-            <div class="checkbox" data-name="higherClassification" data-type="Taxon" data-description="A list (concatenated and separated) of taxa names terminating at the rank immediately superior to the taxon referenced in the taxon record." data-commonname="高階分類階層" data-example="Plantae | Tracheophyta | Magnoliopsida | Ranunculales | Ranunculaceae | Ranunculus, Animalia, Animalia | Chordata | Vertebrata | Mammalia | Theria | Eutheria | Rodentia | Hystricognatha | Hystricognathi | Ctenomyidae | Ctenomyini | Ctenomys">
-                <label>
-                    <input type="checkbox" name="higherClassification"/>
-                    higherClassification
-                </label>
-            </div>
-            <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="The full scientific name of the kingdom in which the taxon is classified." data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
-                <label>
-                    <input type="checkbox" name="kingdom"/>
-                    kingdom
-                </label>
-            </div>
-            <div class="checkbox" data-name="phylum" data-type="Taxon" data-description="The full scientific name of the phylum or division in which the taxon is classified." data-commonname="門" data-example="Chordata (phylum),<br>Bryophyta (division)">
+            <div class="checkbox" data-name="phylum" data-type="Taxon" data-description="門" data-commonname="門" data-example="Chordata (phylum),<br>Bryophyta (division)">
                 <label>
                     <input type="checkbox" name="phylum"/>
                     phylum
                 </label>
             </div>
-            <div class="checkbox" data-name="class" data-type="Taxon" data-description="The full scientific name of the class in which the taxon is classified." data-commonname="綱" data-example="Mammalia,<br>Hepaticopsida">
+            <div class="checkbox" data-name="class" data-type="Taxon" data-description="綱" data-commonname="綱" data-example="Mammalia,<br>Hepaticopsida">
                 <label>
                     <input type="checkbox" name="class"/>
                     class
                 </label>
             </div>
-            <div class="checkbox" data-name="order" data-type="Taxon" data-description="The full scientific name of the order in which the taxon is classified." data-commonname="目" data-example="Carnivora,<br>Monocleales">
+            <div class="checkbox" data-name="order" data-type="Taxon" data-description="目" data-commonname="目" data-example="Carnivora,<br>Monocleales">
                 <label>
                     <input type="checkbox" name="order"/>
                     order
                 </label>
             </div>
-            <div class="checkbox" data-name="family" data-type="Taxon" data-description="The full scientific name of the family in which the taxon is classified." data-commonname="科" data-example="Felidae,<br>Monocleaceae">
+            <div class="checkbox" data-name="family" data-type="Taxon" data-description="科" data-commonname="科" data-example="Felidae,<br>Monocleaceae">
                 <label>
                     <input type="checkbox" name="family"/>
                     family
                 </label>
             </div>
-            <div class="checkbox" data-name="subfamily" data-type="Taxon" data-description="The full scientific name of the subfamily in which the taxon is classified." data-commonname="亞科" data-example="Periptyctinae,<br>Orchidoideae,<br>Sphindociinae">
+            <div class="checkbox" data-name="subfamily" data-type="Taxon" data-description="亞科" data-commonname="亞科" data-example="Periptyctinae,<br>Orchidoideae,<br>Sphindociinae">
                 <label>
                     <input type="checkbox" name="subfamily"/>
                     subfamily
                 </label>
             </div>
-            <div class="checkbox" data-name="genus" data-type="Taxon" data-description="The full scientific name of the genus in which the taxon is classified." data-commonname="屬" data-example="Puma,<br>Monoclea">
+            <div class="checkbox" data-name="genus" data-type="Taxon" data-description="屬" data-commonname="屬" data-example="Puma,<br>Monoclea">
                 <label>
                     <input type="checkbox" name="genus"/>
                     genus
                 </label>
             </div>
-            <div class="checkbox" data-name="genericName" data-type="Taxon" data-description="The genus part of the scientificName without authorship." data-commonname="屬名" data-example="Felis (for scientificName "Felis concolor", with accompanying values of "Puma concolor" in acceptedNameUsage and "Puma" in genus)">
+            <div class="checkbox" data-name="genericName" data-type="Taxon" data-description="屬名" data-commonname="屬名" data-example="Felis (for scientificName 'Felis concolor', with accompanying values of 'Puma concolor' in acceptedNameUsage and 'Puma' in genus)">
                 <label>
                     <input type="checkbox" name="genericName"/>
                     genericName
                 </label>
             </div>
-            <div class="checkbox" data-name="subgenus" data-type="Taxon" data-description="The full scientific name of the subgenus in which the taxon is classified." data-commonname="亞屬" data-example="Strobus,<br>Amerigo,<br>Pilosella">
+            <div class="checkbox" data-name="subgenus" data-type="Taxon" data-description="亞屬" data-commonname="亞屬" data-example="Strobus,<br>Amerigo,<br>Pilosella">
                 <label>
                     <input type="checkbox" name="subgenus"/>
                     subgenus
                 </label>
             </div>
-            <div class="checkbox" data-name="infragenericEpithet" data-type="Taxon" data-description="The infrageneric part of a binomial name at ranks above species but below genus." data-commonname="屬以下別名" data-example="Abacetillus (for scientificName 'Abacetus (Abacetillus) ambiguus',<br>Cracca (for scientificName 'Vicia sect. Cracca')">
+            <div class="checkbox" data-name="infragenericEpithet" data-type="Taxon" data-description="屬以下別名" data-commonname="屬以下別名" data-example="Abacetillus (for scientificName 'Abacetus (Abacetillus) ambiguus',<br>Cracca (for scientificName 'Vicia sect. Cracca')">
                 <label>
                     <input type="checkbox" name="infragenericEpithet"/>
                     infragenericEpithet
                 </label>
             </div>
-            <div class="checkbox" data-name="specificEpithet" data-type="Taxon" data-description="The name of the first or species epithet of the scientificName." data-commonname="種小名" data-example="concolor,<br>gottschei">
+            <div class="checkbox" data-name="specificEpithet" data-type="Taxon" data-description="種小名" data-commonname="種小名" data-example="concolor,<br>gottschei">
                 <label>
                     <input type="checkbox" name="specificEpithet"/>
                     specificEpithet
                 </label>
             </div>
-            <div class="checkbox" data-name="infraspecificEpithet" data-type="Taxon" data-description="The name of the lowest or terminal infraspecific epithet of the scientificName, excluding any rank designation." data-commonname="種以下別名" data-example="concolor (for scientificName 'Puma concolor concolor),<br>oxyadenia (for scientificName 'Quercus agrifolia var. oxyadenia'),<br>laxa (for scientificName 'Cheilanthes hirta f. laxa'),<br>scaberrima (for scientificName 'Indigofera charlieriana var. scaberrima')">
+            <div class="checkbox" data-name="infraspecificEpithet" data-type="Taxon" data-description="種以下別名" data-commonname="種以下別名" data-example="concolor (for scientificName 'Puma concolor concolor),<br>oxyadenia (for scientificName 'Quercus agrifolia var. oxyadenia'),<br>laxa (for scientificName 'Cheilanthes hirta f. laxa'),<br>scaberrima (for scientificName 'Indigofera charlieriana var. scaberrima')">
                 <label>
                     <input type="checkbox" name="infraspecificEpithet"/>
                     infraspecificEpithet
                 </label>
             </div>
-            <div class="checkbox" data-name="cultivarEpithet" data-type="Taxon" data-description="Part of the name of a cultivar, cultivar group or grex that follows the scientific name." data-commonname="字面上分類位階" data-example="King Edward (for scientificName Solanum tuberosum 'King Edward' and taxonRank 'cultivar'); Mishmiense (for scientificName Rhododendron boothii Mishmiense Group and taxonRank 'cultivar group'); Atlantis (for scientificName Paphiopedilum Atlantis grex and taxonRank 'grex')">
+            <div class="checkbox" data-name="cultivarEpithet" data-type="Taxon" data-description="字面上分類位階" data-commonname="字面上分類位階" data-example="King Edward (for scientificName Solanum tuberosum 'King Edward' and taxonRank 'cultivar'); Mishmiense (for scientificName Rhododendron boothii Mishmiense Group and taxonRank 'cultivar group'); Atlantis (for scientificName Paphiopedilum Atlantis grex and taxonRank 'grex')">
                 <label>
                     <input type="checkbox" name="cultivarEpithet"/>
                     cultivarEpithet
                 </label>
             </div>
-            <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="物種的分類階層" data-commonname="分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
-                <label>
-                    <input type="checkbox" name="taxonRank"/>
-                    taxonRank
-                </label>
-            </div>
-            <div class="checkbox" data-name="verbatimTaxonRank" data-type="Taxon" data-description="The taxonomic rank of the most specific name in the scientificName as it appears in the original record." data-commonname="字面上分類位階" data-example="Agamospecies, sub-lesus, prole, apomict, nothogrex, sp., subsp., var.">
+            <div class="checkbox" data-name="verbatimTaxonRank" data-type="Taxon" data-description="原始紀錄的學名中，最具體且尚未被轉譯過的分類位階等級。" data-commonname="字面上分類位階" data-example="Agamospecies, sub-lesus, prole, apomict, nothogrex, sp., subsp., var.">
                 <label>
                     <input type="checkbox" name="verbatimTaxonRank"/>
                     verbatimTaxonRank
                 </label>
             </div>
-            <div class="checkbox" data-name="scientificNameAuthorship" data-type="Taxon" data-description="The authorship information for the scientificName formatted according to the conventions of the applicable nomenclaturalCode." data-commonname="學名命名者" data-example="(Torr.) J.T. Howell, (Martinovský) Tzvelev, (Györfi, 1952)">
+            <div class="checkbox" data-name="scientificNameAuthorship" data-type="Taxon" data-description="學名命名者" data-commonname="學名命名者" data-example="(Torr.) J.T. Howell, (Martinovský) Tzvelev, (Györfi, 1952)">
                 <label>
                     <input type="checkbox" name="scientificNameAuthorship"/>
                     scientificNameAuthorship
                 </label>
             </div>
-            <div class="checkbox" data-name="vernacularName" data-type="Taxon" data-description="A common or vernacular name." data-commonname="俗名" data-example="Andean Condor,<br>Condor Andino,<br>American Eagle,<br>Gänsegeier">
+            <div class="checkbox" data-name="vernacularName" data-type="Taxon" data-description="俗名、中文名" data-commonname="俗名、中文名" data-example="小花蔓澤蘭,<br>大翅鯨,<br>紫斑蝶">
                 <label>
                     <input type="checkbox" name="vernacularName"/>
                     vernacularName
                 </label>
             </div>
-            <div class="checkbox" data-name="nomenclaturalCode" data-type="Taxon" data-description="物種的分類階層" data-commonname="命名代碼" data-example="ICN,<br>ICZN,<br>BC,<br>ICNCP,<br>BioCode">
-                <label>
-                    <input type="checkbox" name="nomenclaturalCode"/>
-                    nomenclaturalCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonomicStatus" data-type="Taxon" data-description="The status of the use of the scientificName as a label for a taxon. Requires taxonomic opinion to define the scope of a taxon. Rules of priority then are used to define the taxonomic status of the nomenclature contained in that scope, combined with the experts opinion. It must be linked to a specific taxonomic reference that defines the concept." data-commonname="分類狀態" data-example="invalid,<br>misapplied,<br>homotypic synonym,<br>accepted">
+            <div class="checkbox" data-name="taxonomicStatus" data-type="Taxon" data-description="學名作為分類群標籤的使用狀況。需要分類學意見來界定分類群的範圍，然後結合專家意見，使用優先權規則來定義該範圍内所含命名的分類地位。它必須與定義該概念的具體分類參考資料相互連結" data-commonname="分類狀態" data-example="invalid,<br>misapplied,<br>homotypic synonym,<br>accepted">
                 <label>
                     <input type="checkbox" name="taxonomicStatus"/>
                     taxonomicStatus
                 </label>
             </div>
-            <div class="checkbox" data-name="nomenclaturalCode" data-type="Taxon" data-description="The status related to the original publication of the name and its conformance to the relevant rules of nomenclature. It is based essentially on an algorithm according to the business rules of the code. It requires no taxonomic opinion." data-commonname="命名狀態" data-example="nom. ambig., nom. illeg., nom. subnud.">
-                <label>
-                    <input type="checkbox" name="nomenclaturalCode"/>
-                    nomenclaturalCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonRemarks" data-type="Taxon" data-description="Comments or notes about the taxon or name." data-commonname="分類註記" data-example="this name is a misspelling in common use">
+            <div class="checkbox" data-name="taxonRemarks" data-type="Taxon" data-description="分類註記" data-commonname="分類註記" data-example="this name is a misspelling in common use">
                 <label>
                     <input type="checkbox" name="taxonRemarks"/>
                     taxonRemarks
@@ -1727,85 +2348,103 @@ function updateExtensionFieldsetContent() {
         fieldsetContent += `
         <fieldset id="simple-multimedia">
             <legend>延伸資料集欄位：Simple Multimedia</legend>
-            <div class="checkbox" data-name="type" data-type="" data-description="The nature or genre of the resource." data-commonname="資源類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="type"/>
+                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
+                    eventID
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
+                    occurrenceID
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col key-col" checked/>
+                    taxonID
+                </label>
+            </div>
+            <div class="checkbox" data-name="identifier" data-type="" data-description="該筆媒體的位置URL連結" data-commonname="媒體位置連結" data-example="http://farm6.static.flickr.com/5127/5242866958_98afd8cbce_o.jpg">
+                <label>
+                    <input type="checkbox" name="identifier" class="required-col" checked/>
+                    identifier
+                </label>
+            </div>
+            <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙。" data-commonname="授權標示" data-example="http://creativecommons.org/publicdomain/zero/1.0/legalcode,<br>http://creativecommons.org/licenses/by/4.0/legalcode">
+                <label>
+                    <input type="checkbox" name="license" class="required-col" checked/>
+                    license
+                </label>
+            </div>
+            <div class="checkbox" data-name="type" data-type="" data-description="該筆資源/媒體的性質或類型，必須填入 DCMI 類型詞彙表中的值(http://dublincore.org/documents/2010/10/11/dcmi-type-vocabulary/)" data-commonname="資源類型" data-example="靜態影像 StillImage,<br>動態影像 MovingImage,<br>聲音 Sound,<br>實體物件 PhysicalObject,<br>事件 Event,<br>文字 Text">
+                <label>
+                    <input type="checkbox" name="type" checked/>
                     type
                 </label>
             </div>
-            <div class="checkbox" data-name="format" data-type="" data-description="The format the image is exposed in. It is recommended to use a IANA registered media type, but known file suffices are permissible too." data-commonname="" data-example="image/jpeg">
+            <div class="checkbox" data-name="title" data-type="" data-description="媒體的檔案名稱" data-commonname="媒體的檔案名稱" data-example="">
+                <label>
+                    <input type="checkbox" name="title" checked/>
+                    title
+                </label>
+            </div>
+            <div class="checkbox" data-name="created" data-type="" data-description="媒體獲取(拍攝、錄音等)的日期、時間" data-commonname="媒體建立日期/時間" data-example="1996-11-26">
+                <label>
+                    <input type="checkbox" name="created" checked/>
+                    created
+                </label>
+            </div>
+            <div class="checkbox" data-name="creator" data-type="" data-description="拍攝者或錄音者" data-commonname="媒體建立者" data-example="Jhu-Jyun Jhang">
+                <label>
+                    <input type="checkbox" name="creator" checked/>
+                    creator
+                </label>
+            </div>
+            <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="擁有或管理資料權利的個人或組織" data-commonname="所有權" data-example="The Regents of the University of California">
+                <label>
+                    <input type="checkbox" name="rightsHolder" checked/>
+                    rightsHolder
+                </label>
+            </div>
+            <div class="checkbox" data-name="format" data-type="" data-description="媒體的檔案格式" data-commonname="媒體的檔案格式" data-example="image/jpeg">
                 <label>
                     <input type="checkbox" name="format"/>
                     format
                 </label>
             </div>
-            <div class="checkbox" data-name="identifier" data-type="" data-description="The public URL that identifies and locates the media file directly, not the html page it might be shown on. It is highly recommended that a URL to a media file of good resolution is provided or at least dc:reference in cases no public URI exists." data-commonname="" data-example="http://farm6.static.flickr.com/5127/5242866958_98afd8cbce_o.jpg">
-                <label>
-                    <input type="checkbox" name="identifier"/>
-                    identifier
-                </label>
-            </div>
-            <div class="checkbox" data-name="references" data-type="Record-level" data-description="A related resource that is referenced, cited, or otherwise pointed to by the described resource." data-commonname="資料來源參考" data-example="MaterialSample example: http://arctos.database.museum/guid/MVZ:Mamm:165861,<br>Taxon example: https://www.catalogueoflife.org/data/taxon/32664">
+            <div class="checkbox" data-name="references" data-type="Record-level" data-description="被描述的資源參考、引用或以其他方式指向的相關資源" data-commonname="資料來源參考" data-example="MaterialSample example: http://arctos.database.museum/guid/MVZ:Mamm:165861,<br>Taxon example: https://www.catalogueoflife.org/data/taxon/32664">
                 <label>
                     <input type="checkbox" name="references"/>
                     references
                 </label>
             </div>
-            <div class="checkbox" data-name="title" data-type="" data-description="The media items title. Strongly recommended as in many cases this will be used as the hyperlink text, and should be used accrodingly." data-commonname="" data-example="">
-                <label>
-                    <input type="checkbox" name="title"/>
-                    title
-                </label>
-            </div>
-            <div class="checkbox" data-name="description" data-type="" data-description="A textual description of the content of the media item." data-commonname="" data-example="Female Tachycineta albiventer photographed in the Amazon, Brazil, in November 2010">
+            <div class="checkbox" data-name="description" data-type="" data-description="該筆媒體內容摘要描述" data-commonname="媒體描述" data-example="Female Tachycineta albiventer photographed in the Amazon, Brazil, in November 2010">
                 <label>
                     <input type="checkbox" name="description"/>
                     description
                 </label>
             </div>
-            <div class="checkbox" data-name="created" data-type="" data-description="The date and time this media item was taken." data-commonname="" data-example="1996-11-26">
-                <label>
-                    <input type="checkbox" name="created"/>
-                    created
-                </label>
-            </div>
-            <div class="checkbox" data-name="creator" data-type="" data-description="The person that took the image, recorded the video or sound." data-commonname="" data-example="Jhu-Jyun Jhang">
-                <label>
-                    <input type="checkbox" name="creator"/>
-                    creator
-                </label>
-            </div>
-            <div class="checkbox" data-name="contributor" data-type="" data-description="Any contributor in addition to the creator that helped in recording the media item." data-commonname="" data-example="Jhu-Jyun Jhang">
+            <div class="checkbox" data-name="contributor" data-type="" data-description="與媒體建立者共同參與或協助的人" data-commonname="媒體貢獻者" data-example="Jhu-Jyun Jhang">
                 <label>
                     <input type="checkbox" name="contributor"/>
                     contributor
                 </label>
             </div>
-            <div class="checkbox" data-name="publisher" data-type="" data-description="An entity responsible for making the image available." data-commonname="" data-example="Jhu-Jyun Jhang">
+            <div class="checkbox" data-name="publisher" data-type="" data-description="負責發布該媒體的人或組織" data-commonname=媒體發布者" data-example="Jhu-Jyun Jhang">
                 <label>
                     <input type="checkbox" name="publisher"/>
                     publisher
                 </label>
             </div>
-            <div class="checkbox" data-name="audience" data-type="" data-description="A class or description for whom the image is intended or useful." data-commonname="" data-example="experts,<br>general public,<br>children">
+            <div class="checkbox" data-name="audience" data-type="" data-description="該媒體適合使用的受眾" data-commonname="媒體受眾" data-example="experts,<br>general public,<br>children">
                 <label>
                     <input type="checkbox" name="audience"/>
                     audience
                 </label>
             </div>
-            <div class="checkbox" data-name="license" data-type="Record-level" data-description="A legal document giving official permission to do something with the resource." data-commonname="授權標示" data-example="http://creativecommons.org/publicdomain/zero/1.0/legalcode,<br>http://creativecommons.org/licenses/by/4.0/legalcode">
-                <label>
-                    <input type="checkbox" name="license"/>
-                    license
-                </label>
-            </div>
-            <div class="checkbox" data-name="rightsHolder" data-type="Record-level" data-description="A person or organization owning or managing rights over the resource." data-commonname="所有權" data-example="The Regents of the University of California">
-                <label>
-                    <input type="checkbox" name="rightsHolder"/>
-                    rightsHolder
-                </label>
-            </div>
-            <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="An identifier for the set of data. May be a global unique identifier or an identifier specific to a collection or institution." data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
+            <div class="checkbox" data-name="datasetID" data-type="Record-level" data-description="該筆紀錄在來源資料集中的ID，最好為全球唯一或於該發布機構唯一的ID" data-commonname="資料集ID" data-example="b15d4952-7d20-46f1-8a3e-556a512b04c5">
                 <label>
                     <input type="checkbox" name="datasetID"/>
                     datasetID
@@ -1819,79 +2458,73 @@ function updateExtensionFieldsetContent() {
         fieldsetContent += `
         <fieldset id="extended-measurement-or-facts">
             <legend>延伸資料集欄位：Extended Measurement Or Facts</legend>
-            <div class="checkbox" data-name="measurementID" data-type="" data-description="An identifier for the MeasurementOrFact (information pertaining to measurements, facts, characteristics, or assertions). May be a global unique identifier or an identifier specific to the data set." data-commonname="測量ID" data-example="">
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="measurementID"/>
-                    measurementID
+                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
+                    eventID
                 </label>
             </div>
-            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="32567">
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="occurrenceID"/>
+                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
                     occurrenceID
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementType" data-type="" data-description="The nature of the measurement, fact, characteristic, or assertion. Recommended best practice is to use a controlled vocabulary." data-commonname="測量種類" data-example="tail length,<br>temperature,<br>trap line length,<br>survey area,<br>trap type,<br>Dry weight biomass,<br>Sampling instrument name">
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="measurementType"/>
+                    <input type="checkbox" name="taxonID" class="required-col key-col" checked/>
+                    taxonID
+                </label>
+            </div>
+            <div class="checkbox" data-name="measurementID" data-type="" data-description="測量紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複" data-commonname="測量紀錄ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="measurementID" class="required-col" checked/>
+                    measurementID
+                </label>
+            </div>
+            <div class="checkbox" data-name="measurementType" data-type="" data-description="測量值的類別名稱" data-commonname="測量種類" data-example="tail length,<br>temperature,<br>trap line length,<br>survey area,<br>trap type,<br>Dry weight biomass,<br>Sampling instrument name">
+                <label>
+                    <input type="checkbox" name="measurementType" class="required-col" checked/>
                     measurementType
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementTypeID" data-type="" data-description="An identifier for the measurementType (global unique identifier, URI). The identifier should reference the measurementType in a vocabulary." data-commonname="測量種類ID" data-example="http://vocab.nerc.ac.uk/collection/P01/current/ODRYBM01/">
+            <div class="checkbox" data-name="measurementValue" data-type="" data-description="測量數值" data-commonname="測量定值" data-example="45,<br>20,<br>1,<br>14.5,<br>UV-light,<br>Van Veen grab">
                 <label>
-                    <input type="checkbox" name="measurementTypeID"/>
-                    measurementTypeID
-                </label>
-            </div>
-            <div class="checkbox" data-name="measurementValue" data-type="" data-description="The value of the measurement, fact, characteristic, or assertion." data-commonname="測量定值" data-example="45,<br>20,<br>1,<br>14.5,<br>UV-light,<br>Van Veen grab">
-                <label>
-                    <input type="checkbox" name="measurementValue"/>
+                    <input type="checkbox" name="measurementValue" class="required-col" checked/>
                     measurementValue
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementValueID" data-type="" data-description="An identifier for facts stored in the column measurementValue (global unique identifier, URI). This identifier can reference a controlled vocabulary (e.g. for sampling instrument names, methodologies, life stages) or reference a methodology paper with a DOI. When the measurementValue refers to a value and not to a fact, the measurementvalueID has no meaning and should remain empty." data-commonname="測量定值ID" data-example="http://vocab.nerc.ac.uk/collection/L22/current/TOOL0653/,<br>http://vocab.nerc.ac.uk/collection/B07/current/NDT023/,<br>http://vocab.nerc.ac.uk/collection/S11/current/S1116/">
+            <div class="checkbox" data-name="measurementUnit" data-type="" data-description="測量值的單位" data-commonname="測量值單位" data-example="mm,<br>C,<br>km,<br>ha">
                 <label>
-                    <input type="checkbox" name="measurementValueID"/>
-                    measurementValueID
+                    <input type="checkbox" name="measurementUnit" class="required-col" checked/>
+                    measurementUnit
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementAccuracy" data-type="" data-description="The description of the potential error associated with the measurementValue." data-commonname="測量準確度" data-example="0.01,<br>normal distribution with variation of 2 m">
+            <div class="checkbox" data-name="measurementDeterminedBy" data-type="" data-description="測量該筆紀錄的人、群體或組織" data-commonname="測量者" data-example="Javier de la Torre,<br>Julie Woodruff; Eileen Lacey">
+                <label>
+                    <input type="checkbox" name="measurementDeterminedBy" checked/>
+                    measurementDeterminedBy
+                </label>
+            </div>
+            <div class="checkbox" data-name="measurementAccuracy" data-type="" data-description="測量準確度" data-commonname="測量準確度" data-example="0.01,<br>normal distribution with variation of 2 m">
                 <label>
                     <input type="checkbox" name="measurementAccuracy"/>
                     measurementAccuracy
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementUnit" data-type="" data-description="The units associated with the measurementValue. Recommended best practice is to use the International System of Units (SI)." data-commonname="測量單位" data-example="mm,<br>C,<br>km,<br>ha">
-                <label>
-                    <input type="checkbox" name="measurementUnit"/>
-                    measurementUnit
-                </label>
-            </div>
-            <div class="checkbox" data-name="measurementUnitID" data-type="" data-description="An identifier for the measurementUnit (global unique identifier, URI). The identifier should reference the measurementUnit in a vocabulary." data-commonname="測量單位ID" data-example="http://vocab.nerc.ac.uk/collection/P06/current/UMSQ/,<br>http://vocab.nerc.ac.uk/collection/P06/current/UCPL/,<br>http://vocab.nerc.ac.uk/collection/P06/current/CMCM/">
-                <label>
-                    <input type="checkbox" name="measurementUnitID"/>
-                    measurementUnitID
-                </label>
-            </div>
-            <div class="checkbox" data-name="measurementDeterminedDate" data-type="" data-description="The date on which the MeasurementOrFact was made. Recommended best practice is to use an encoding scheme, such as ISO 8601:2004(E)." data-commonname="測量日期" data-example="1963-03-08T14:07-0600,<br>2009-02-20T08:40Z,<br>1809-02-12,<br>1906-06,<br>1971,<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z,<br>2007-11-13/15">
+            <div class="checkbox" data-name="measurementDeterminedDate" data-type="" data-description="該筆紀錄的測量日期" data-commonname="測量日期" data-example="1963-03-08T14:07-0600,<br>2009-02-20T08:40Z,<br>1809-02-12,<br>1906-06,<br>1971,<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z,<br>2007-11-13/15">
                 <label>
                     <input type="checkbox" name="measurementDeterminedDate"/>
                     measurementDeterminedDate
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementDeterminedBy" data-type="" data-description="A list (concatenated and separated) of names of people, groups, or organizations who determined the value of the MeasurementOrFact." data-commonname="測量人" data-example="Javier de la Torre,<br>Julie Woodruff; Eileen Lacey">
-                <label>
-                    <input type="checkbox" name="measurementDeterminedBy"/>
-                    measurementDeterminedBy
-                </label>
-            </div>
-            <div class="checkbox" data-name="measurementMethod" data-type="" data-description="A description of or reference to (publication, URI) the method or protocol used to determine the measurement, fact, characteristic, or assertion." data-commonname="測量方法" data-example="'minimum convex polygon around burrow entrances' for a home range area,<br>'barometric altimeter' for an elevation">
+            <div class="checkbox" data-name="measurementMethod" data-type="" data-description="測量方法，可提供參考文獻連結" data-commonname="測量方法" data-example="'minimum convex polygon around burrow entrances' for a home range area,<br>'barometric altimeter' for an elevation">
                 <label>
                     <input type="checkbox" name="measurementMethod"/>
                     measurementMethod
                 </label>
             </div>
-            <div class="checkbox" data-name="measurementRemarks" data-type="" data-description="Comments or notes accompanying the MeasurementOrFact." data-commonname="測量備註" data-example="tip of tail missing">
+            <div class="checkbox" data-name="measurementRemarks" data-type="" data-description="測量紀錄的註記" data-commonname="測量備註" data-example="tip of tail missing">
                 <label>
                     <input type="checkbox" name="measurementRemarks"/>
                     measurementRemarks
@@ -1905,22 +2538,52 @@ function updateExtensionFieldsetContent() {
         fieldsetContent += `
         <fieldset id="resource-relationship">
             <legend>延伸資料集欄位：Resource Relationship</legend>
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
+                    eventID
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
+                    occurrenceID
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col key-col" checked/>
+                    taxonID
+                </label>
+            </div>
             <div class="checkbox" data-name="resourceID" data-type="" data-description="這筆紀錄的主體" data-commonname="主體紀錄ID" data-example="occ_HL20070207_001">
                 <label>
-                    <input type="checkbox" name="resourceID"/>
+                    <input type="checkbox" name="resourceID" class="required-col" checked/>
                     resourceID
                 </label>
             </div>
             <div class="checkbox" data-name="relatedResourceID" data-type="" data-description="跟主體有關的紀錄" data-commonname="與主體有關係的對象ID" data-example="occ_HL20070207_001-1">
                 <label>
-                    <input type="checkbox" name="relatedResourceID"/>
+                    <input type="checkbox" name="relatedResourceID" class="required-col" checked/>
                     relatedResourceID
                 </label>
             </div>
             <div class="checkbox" data-name="relationshipOfResource" data-type="" data-description="記錄不同筆資料間的相關性，建議使用控制詞彙" data-commonname="關係描述" data-example="sameAs,<br>duplicate of,<br>mother of,<br>offspring of,<br>sibling of,<br>parasite of,<br>host of,<br>valid synonym of,<br>located within,<br>pollinator of members of taxon,<br>pollinated specific plant,<br>pollinated by members of taxon">
                 <label>
-                    <input type="checkbox" name="relationshipOfResource"/>
+                    <input type="checkbox" name="relationshipOfResource" class="required-col" checked/>
                     relationshipOfResource
+                </label>
+            </div>
+            <div class="checkbox" data-name="resourceRelationshipID" data-type="" data-description="主體與其有關係的對象間的關係ID，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)" data-commonname="關係紀錄ID" data-example="04b16710-b09c-11e8-96f8-529269fb1459">
+                <label>
+                    <input type="checkbox" name="resourceRelationshipID" class="required-col" checked/>
+                    resourceRelationshipID
+                </label>
+            </div>
+            <div class="checkbox" data-name="relationshipAccordingTo" data-type="" data-description="定義該筆主體與對象關係的人" data-commonname="關係定義人" data-example="Jhu-Jyun Jhang">
+                <label>
+                    <input type="checkbox" name="relationshipAccordingTo" checked/>
+                    relationshipAccordingTo
                 </label>
             </div>
             <div class="checkbox" data-name="relationshipRemarks" data-type="" data-description="relationshipOfResource的其他文字註記" data-commonname="關係備註" data-example="mother and offspring collected from the same nest,<br>pollinator captured in the act">
@@ -1929,25 +2592,7 @@ function updateExtensionFieldsetContent() {
                     relationshipRemarks
                 </label>
             </div>
-            <div class="checkbox" data-name="relationshipOfResourceID" data-type="" data-description="An identifier for the relationship type (predicate) that connects the subject identified by resourceID to its object identified by relatedResourceID." data-commonname="主體紀錄的關係ID" data-example="http://purl.obolibrary.org/obo/RO_0002456 (for the relation 'pollinated by'),<br>http://purl.obolibrary.org/obo/RO_0002455 (for the relation 'pollinates'),<br>https://www.inaturalist.org/observation_fields/879 (for the relation 'eaten by')'">
-                <label>
-                    <input type="checkbox" name="relationshipOfResourceID"/>
-                    relationshipOfResourceID
-                </label>
-            </div>
-            <div class="checkbox" data-name="resourceRelationshipID" data-type="" data-description="An identifier for an instance of relationship between one resource (the subject) and another (relatedResource, the object)." data-commonname="出現紀錄ID" data-example="04b16710-b09c-11e8-96f8-529269fb1459">
-                <label>
-                    <input type="checkbox" name="resourceRelationshipID"/>
-                    resourceRelationshipID
-                </label>
-            </div>
-            <div class="checkbox" data-name="relationshipAccordingTo" data-type="" data-description="The source (person, organization, publication, reference) establishing the relationship between the two resources." data-commonname="關係定義人" data-example="Jhu-Jyun Jhang">
-                <label>
-                    <input type="checkbox" name="relationshipAccordingTo"/>
-                    relationshipAccordingTo
-                </label>
-            </div>
-            <div class="checkbox" data-name="relationshipEstablishedDate" data-type="" data-description="The date-time on which the relationship between the two resources was established." data-commonname="關係定義日期" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40am UTC),<br>2018-08-29T15:19 (3:19pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007)">
+            <div class="checkbox" data-name="relationshipEstablishedDate" data-type="" data-description="定義該筆主體與對象關係的日期時間" data-commonname="關係定義日期" data-example="1963-03-08T14:07-0600 (8 Mar 1963 at 2:07pm in the time zone six hours earlier than UTC),<br>2009-02-20T08:40Z (20 February 2009 8:40am UTC),<br>2018-08-29T15:19 (3:19pm local time on 29 August 2018),<br>1809-02-12 (some time during 12 February 1809),<br>1906-06 (some time in June 1906),<br>1971 (some time in the year 1971),<br>2007-03-01T13:00:00Z/2008-05-11T15:30:00Z (some time during the interval between 1 March 2007 1pm UTC and 11 May 2008 3:30pm UTC),<br>1900/1909 (some time during the interval between the beginning of the year 1900 and the end of the year 1909),<br>2007-11-13/15 (some time in the interval between 13 November 2007 and 15 November 2007)">
                 <label>
                     <input type="checkbox" name="relationshipEstablishedDate"/>
                     relationshipEstablishedDate
@@ -1961,67 +2606,181 @@ function updateExtensionFieldsetContent() {
         fieldsetContent += `
         <fieldset id="dna-derived-data">
             <legend>延伸資料集欄位：DNA derived data</legend>
-            <div class="checkbox" data-name="samp_name" data-type="" data-description="Sample Name is a name that you choose for the sample. It can have any format, but we suggest that you make it concise, unique and consistent within your lab, and as informative as possible. Every Sample Name from a single Submitter must be unique." data-commonname="" data-example="">
+            <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
+                    eventID
+                </label>
+            </div>
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
+                    occurrenceID
+                </label>
+            </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col key-col" checked/>
+                    taxonID
+                </label>
+            </div>
+            <div class="checkbox" data-name="annealingTemp" data-type="" data-description="PCR引子黏合反應所設定的溫度" data-commonname="PCR引子黏合溫度" data-example="60">
+                <label>
+                    <input type="checkbox" name="annealingTemp" checked/>
+                    annealingTemp
+                </label>
+            </div>
+            <div class="checkbox" data-name="annealingTempUnit" data-type="" data-description="PCR引子黏合反應所設定的溫度單位" data-commonname="PCR引子黏合溫度單位" data-example="Degrees celsius">
+                <label>
+                    <input type="checkbox" name="annealingTempUnit" checked/>
+                    annealingTempUnit
+                </label>
+            </div>
+            <div class="checkbox" data-name="target_gene" data-type="" data-description="Cloning vector type(s) used in construction of libraries" data-commonname="" data-example="12S rRNA,<br>16S rRNA,<br>18S rRNA,<br>nif,<br>amoA,<br>rpo">
+                <label>
+                    <input type="checkbox" name="target_gene" checked/>
+                    target_gene
+                </label>
+            </div>
+            <div class="checkbox" data-name="target_subfragment" data-type="" data-description="基因或子片段的名稱。對於識別基因上的特定區域（例如16S rRNA上的V6）等方面很重要" data-commonname="目標基因片段名稱" data-example="V6, V9, ITS">
+                <label>
+                    <input type="checkbox" name="target_subfragment" checked/>
+                    target_subfragment
+                </label>
+            </div>
+            <div class="checkbox" data-name="pcr_primers" data-type="" data-description="Specify whether to expect single, paired, or other configuration of reads" data-commonname="" data-example="FWD: GTCGGTAAAACTCGTGCCAGC;<br>REV: CATAGTGGGGTATCTAATCCCAGTTTG">
+                <label>
+                    <input type="checkbox" name="pcr_primers" checked/>
+                    pcr_primers
+                </label>
+            </div>
+            <div class="checkbox" data-name="seq_meth" data-type="" data-description="使用的定序方法，例如 Sanger, ABI-solid 等，建議使用控制詞彙" data-commonname="定序方法" data-example="Illumina HiSeq 1500">
+                <label>
+                    <input type="checkbox" name="seq_meth" checked/>
+                    seq_meth
+                </label>
+            </div>
+            <div class="checkbox" data-name="otu_class_appr" data-type="" data-description="在將新的UViGs聚類到'物種級'OTUs時使用的截止值和方法。即使在分析過程中主要使用了其他方法或截至值來定義OTUs，應該提供使用標準的95% ANI / 85% AF聚類的結果。" data-commonname="" data-example="95% ANI;85% AF; greedy incremental clustering">
+                <label>
+                    <input type="checkbox" name="otu_class_appr" checked/>
+                    otu_class_appr
+                </label>
+            </div>
+            <div class="checkbox" data-name="otu_seq_comp_appr" data-type="" data-description="OTU分群工具與臨界點，用來計算'物種級'OTU" data-commonname="OTU分群工具" data-example="blastn;2.6.0+;e-value cutoff: 0.001">
+                <label>
+                    <input type="checkbox" name="otu_seq_comp_appr" checked/>
+                    otu_seq_comp_appr
+                </label>
+            </div>
+            <div class="checkbox" data-name="otu_db" data-type="" data-description="在'物種級' OTUs 中聚類新基因體時使用的參考資料庫" data-commonname="OTU分類參考資料庫" data-example="NCBI Viral RefSeq;83">
+                <label>
+                    <input type="checkbox" name="otu_db" checked/>
+                    otu_db
+                </label>
+            </div>
+            <div class="checkbox" data-name="sop" data-type="" data-description="Standard operating procedures used in assembly and/or annotation of genomes, metagenomes or environmental sequences" data-commonname="" data-example="http://press.igsb.anl.gov/earthmicrobiome/protocols-and-standards/its/">
+                <label>
+                    <input type="checkbox" name="sop" checked/>
+                    sop
+                </label>
+            </div>
+            <div class="checkbox" data-name="pcr_primer_forward" data-type="" data-description="用於擴增目標基因或子片段序列的前向PCR引子序列。如果在單個PCR反應中存在多個前向或反向引子，則每個引子應該完整列出，並與相同的DwC出現紀錄做關聯。引子序列應以大寫字母報告" data-commonname="PCR前向引子序列" data-example="GTCGGTAAAACTCGTGCCAGC">
+                <label>
+                    <input type="checkbox" name="pcr_primer_forward" checked/>
+                    pcr_primer_forward
+                </label>
+            </div>
+            <div class="checkbox" data-name="pcr_primer_reverse" data-type="" data-description="用於擴增目標基因或子片段序列的後向PCR引子序列。如果在單個PCR反應中存在多個前向或反向引子，則每個引子應該完整列出，並與相同的DwC出現紀錄做關聯。引子序列應以大寫字母報告" data-commonname="PCR後向引子序列" data-example="CATAGTGGGGTATCTAATCCCAGTTTG">
+                <label>
+                    <input type="checkbox" name="pcr_primer_reverse" checked/>
+                    pcr_primer_reverse
+                </label>
+            </div>
+            <div class="checkbox" data-name="pcr_primer_name_forward" data-type="" data-description="用於擴增目標基因或子片段序列的前向PCR引子名稱。如果在單個PCR反應中存在多個前向或反向引子，則每個引子應該完整列出，並與相同的DwC出現紀錄做關聯。引子序列應以大寫字母報告" data-commonname="PCR前向引子名稱" data-example="MiFishU-F">
+                <label>
+                    <input type="checkbox" name="pcr_primer_name_forward" checked/>
+                    pcr_primer_name_forward
+                </label>
+            </div>
+            <div class="checkbox" data-name="pcr_primer_name_reverse" data-type="" data-description="用於擴增目標基因或子片段序列的後向PCR引子名稱。如果在單個PCR反應中存在多個前向或反向引子，則每個引子應該完整列出，並與相同的DwC出現紀錄做關聯。引子序列應以大寫字母報告" data-commonname="PCR後向引子名稱" data-example="MiFishU-R">
+                <label>
+                    <input type="checkbox" name="pcr_primer_name_reverse" checked/>
+                    pcr_primer_name_reverse
+                </label>
+            </div>
+            <div class="checkbox" data-name="DNA_sequence" data-type="" data-description="DNA序列" data-commonname="DNA序列" data-example="TCTATCCTCAATTATAGGTCATAATTCACCATCAGTAGATTTAGGAATTTTCTCTATTCATATTGCAGGTGTATCATCAATTATAGGATCAATTAATTTTATTGTAACAATTTTAAATATACATACAAAAACTCATTCATTAAACTTTTTACCATTATTTTCATGATCAGTTCTAGTTACAGCAATTCTCCTTTTATTATCATTA">
+                <label>
+                    <input type="checkbox" name="DNA_sequence" checked/>
+                    DNA_sequence
+                </label>
+            </div>
+            <div class="checkbox" data-name="ampliconSize" data-type="" data-description="擴增子的長度，鹼基對為單位" data-commonname="擴增子長度" data-example="83">
+                <label>
+                    <input type="checkbox" name="ampliconSize"/>
+                    ampliconSize
+                </label>
+            </div>
+            <div class="checkbox" data-name="samp_name" data-type="" data-description="樣本名稱是您為樣本選擇的名稱。它可以有任何格式，但建議您使用簡潔、獨特以及一致性，並盡可能地列出足夠資訊。每個樣本名稱都必須是獨一的" data-commonname="樣本名稱" data-example="ST1,<br>ST2,<br>ST3">
                 <label>
                     <input type="checkbox" name="samp_name"/>
                     samp_name
                 </label>
             </div>
-            <div class="checkbox" data-name="env_broad_scale" data-type="" data-description="In this field, report which major environmental system your sample or specimen came from. The systems identified should have a coarse spatial grain, to provide the general environmental context of where the sampling was done (e.g. were you in the desert or a rainforest?). We recommend using subclasses of ENVO’s biome class: http://purl.obolibrary.org/obo/ENVO_00000428. Format (one term): termLabel [termID], Format (multiple terms): termLabel [termID]|termLabel [termID]|termLabel [termID]. Example: Annotating a water sample from the photic zone in middle of the Atlantic Ocean, consider: oceanic epipelagic zone biome [ENVO:01000033]. Example: Annotating a sample from the Amazon rainforest consider: tropical moist broadleaf forest biome [ENVO:01000228]. If needed, request new terms on the ENVO tracker, identified here: http://www.obofoundry.org/ontology/envo.html" data-commonname="" data-example="forest biome [ENVO:01000174]">
+            <div class="checkbox" data-name="env_broad_scale" data-type="" data-description="列出樣本或標本來自哪個主要的環境系統。以粗糙的空間尺度來描述採樣地點的大概環境背景，例如，沙漠還是雨林中？我們建議使用ENVO生物群系類的子類的控制詞彙術語：http://purl.obolibrary.org/obo/ENVO_00000428。 輸入一個術語的格式：termLabel [termID]。輸入多個術語的格式：termLabel [termID]|termLabel [termID]|termLabel [termID]。 例如：對大西洋中部光層水樣本進行標註，考慮使用：oceanic epipelagic zone biome [ENVO:01000033]、對亞馬遜雨林樣本進行標註，考慮使用：tropical moist broadleaf forest biome [ENVO:01000228]。如有需要，請在ENVO跟踪器上提出新的term，會在這裡列出：http://www.obofoundry.org/ontology/envo.html" data-commonname="概略大環境種類" data-example="forest biome [ENVO:01000174]">
                 <label>
                     <input type="checkbox" name="env_broad_scale"/>
                     env_broad_scale
                 </label>
             </div>
-            <div class="checkbox" data-name="env_local_scale" data-type="" data-description="In this field, report the entity or entities which are in your sample or specimen’s local vicinity and which you believe have significant causal influences on your sample or specimen. Please use terms that are present in ENVO and which are of smaller spatial grain than your entry for env_broad_scale. Format (one term): termLabel [termID]; Format (multiple terms): termLabel [termID]|termLabel [termID]|termLabel [termID]. Example: Annotating a pooled sample taken from various vegetation layers in a forest consider: canopy [ENVO:00000047]|herb and fern layer [ENVO:01000337]|litter layer [ENVO:01000338]|understory [01000335]|shrub layer [ENVO:01000336]. If needed, request new terms on the ENVO tracker, identified here: http://www.obofoundry.org/ontology/envo.html" data-commonname="" data-example="litter layer [ENVO:01000338]">
+            <div class="checkbox" data-name="env_local_scale" data-type="" data-description="列出樣本或標本的當地或附近的環境種類，並對樣本或標本具有影響。請使用存在於ENVO中且比env_broad_scale具更細空間尺度的術語。 輸入一個術語的格式：termLabel [termID]。輸入多個術語的格式：termLabel [termID]|termLabel [termID]|termLabel [termID]。 例如：對從森林中各種植被層中提取的混合樣本進行標註，考慮使用：canopy [ENVO:00000047]|herb and fern layer [ENVO:01000337]|litter layer [ENVO:01000338]|understory [ENVO:01000335]|shrub layer [ENVO:01000336]。 如有需要，請在ENVO跟踪器上提出新的term，會在這裡列出：http://www.obofoundry.org/ontology/envo.html" data-commonname="當地環境種類" data-example="litter layer [ENVO:01000338]">
                 <label>
                     <input type="checkbox" name="env_local_scale"/>
                     env_local_scale
                 </label>
             </div>
-            <div class="checkbox" data-name="env_medium" data-type="" data-description="In this field, report which environmental material or materials (pipe separated) immediately surrounded your sample or specimen prior to sampling, using one or more subclasses of ENVO’s environmental material class: http://purl.obolibrary.org/obo/ENVO_00010483. Format (one term): termLabel [termID]; Format (multiple terms): termLabel [termID]|termLabel [termID]|termLabel [termID]. Example: Annotating a fish swimming in the upper 100 m of the Atlantic Ocean, consider: ocean water [ENVO:00002151]. Example: Annotating a duck on a pond consider: pond water [ENVO:00002228]|air ENVO_00002005. If needed, request new terms on the ENVO tracker, identified here: http://www.obofoundry.org/ontology/envo.html" data-commonname="" data-example="soil [ENVO:00001998]">
+            <div class="checkbox" data-name="env_medium" data-type="" data-description="列出採樣之前直接環繞著樣本或標本的環境材料，使用ENVO的環境材料類的一個或多個子類（http://purl.obolibrary.org/obo/ENVO_00010483）。 輸入一個術語的格式：termLabel [termID]。輸入多個術語的格式：termLabel [termID]|termLabel [termID]|termLabel [termID]。 例如：對於在大西洋上部100米游泳的魚進行標註，考慮使用：ocean water [ENVO:00002151]、對於在池塘上的鴨進行標註，考慮使用：pond water [ENVO:00002228]|air [ENVO_00002005]。 如有需要，請在ENVO跟踪器上提出新的term，會在這裡列出：http://www.obofoundry.org/ontology/envo.html" data-commonname="環境介質種類" data-example="soil [ENVO:00001998]">
                 <label>
                     <input type="checkbox" name="env_medium"/>
                     env_medium
                 </label>
             </div>
-            <div class="checkbox" data-name="project_name" data-type="" data-description="Name of the project within which the sequencing was organized" data-commonname="" data-example="Forest soil metagenome">
+            <div class="checkbox" data-name="project_name" data-type="" data-description="進行樣本定序的計畫名稱" data-commonname="計畫名稱" data-example="Forest soil metagenome">
                 <label>
                     <input type="checkbox" name="project_name"/>
                     project_name
                 </label>
             </div>
-            <div class="checkbox" data-name="experimental_factor" data-type="" data-description="Experimental factors are essentially the variable aspects of an experiment design which can be used to describe an experiment, or set of experiments, in an increasingly detailed manner. This field accepts ontology terms from Experimental Factor Ontology (EFO) and/or Ontology for Biomedical Investigations (OBI). For a browser of EFO (v 2.95) terms, please see http://purl.bioontology.org/ontology/EFO; for a browser of OBI (v 2018-02-12) terms please see http://purl.bioontology.org/ontology/OBI" data-commonname="" data-example="time series design [EFO:EFO_0001779]">
+            <div class="checkbox" data-name="experimental_factor" data-type="" data-description="實驗參數是實驗設計裡的可變因素，用於以越來越詳細的方式來描述實驗或一組實驗。此欄位接受來自實驗因素本體控制詞彙（EFO）和/或生物醫學調查本體（OBI）的本體術語。對於EFO（v 2.95）術語的瀏覽器，請參見http://purl.bioontology.org/ontology/EFO；對於OBI（v 2018-02-12）術語的瀏覽器，請參見http://purl.bioontology.org/ontology/OBI" data-commonname="實驗參數" data-example="time series design [EFO:EFO_0001779]">
                 <label>
                     <input type="checkbox" name="experimental_factor"/>
                     experimental_factor
                 </label>
             </div>
-            <div class="checkbox" data-name="concentration" data-type="" data-description="Concentration of DNA (weight ng/volume µl)" data-commonname="" data-example="67.5">
+            <div class="checkbox" data-name="concentration" data-type="" data-description="DNA濃度。單位為奈克/微升" data-commonname="濃度" data-example="67.5">
                 <label>
                     <input type="checkbox" name="concentration"/>
                     concentration
                 </label>
             </div>
-            <div class="checkbox" data-name="concentrationUnit" data-type="" data-description="Unit used for concentration measurement" data-commonname="" data-example="ng/µl">
+            <div class="checkbox" data-name="concentrationUnit" data-type="" data-description="DNA濃度單位" data-commonname="濃度單位" data-example="ng/µl">
                 <label>
                     <input type="checkbox" name="concentrationUnit"/>
                     concentrationUnit
                 </label>
             </div>
-            <div class="checkbox" data-name="methodDeterminationConcentrationAndRatios" data-type="" data-description="Description of method used for concentration measurement" data-commonname="" data-example="Nanodrop,<br>Qubit">
+            <div class="checkbox" data-name="methodDeterminationConcentrationAndRatios" data-type="" data-description="DNA測量濃度與比例的方法" data-commonname="測量濃度與比例的方法" data-example="Nanodrop,<br>Qubit">
                 <label>
                     <input type="checkbox" name="methodDeterminationConcentrationAndRatios"/>
                     methodDeterminationConcentrationAndRatios
                 </label>
             </div>
-            <div class="checkbox" data-name="ratioOfAbsorbance260_230" data-type="" data-description="Ratio of absorbance at 260 nm and 230 nm assessing DNA purity (mostly secondary measure, indicates mainly EDTA, carbohydrates, phenol), (DNA samples only)." data-commonname="" data-example="1.89">
+            <div class="checkbox" data-name="ratioOfAbsorbance260_230" data-type="" data-description="在DNA純度評估中，以260nm和230nm的吸光度比值為主要指標" data-commonname="260/230吸收光譜比值" data-example="1.89">
                 <label>
                     <input type="checkbox" name="ratioOfAbsorbance260_230"/>
                     ratioOfAbsorbance260_230
                 </label>
             </div>
-            <div class="checkbox" data-name="ratioOfAbsorbance260_280" data-type="" data-description="Ratio of absorbance at 280 nm and 230 nm assessing DNA purity (mostly secondary measure, indicates mainly EDTA, carbohydrates, phenol), (DNA samples only)." data-commonname="" data-example="1.91">
+            <div class="checkbox" data-name="ratioOfAbsorbance260_280" data-type="" data-description="在DNA純度評估中，以260nm和280nm的吸光度比值為主要指標" data-commonname="260/280吸收光譜比值" data-example="1.91">
                 <label>
                     <input type="checkbox" name="ratioOfAbsorbance260_280"/>
                     ratioOfAbsorbance260_280
@@ -2051,37 +2810,37 @@ function updateExtensionFieldsetContent() {
                     extrachrom_elements
                 </label>
             </div>
-            <div class="checkbox" data-name="estimated_size" data-type="" data-description="The estimated size of the genome prior to sequencing. Of particular importance in the sequencing of (eukaryotic) genome which could remain in draft form for a long or unspecified period." data-commonname="" data-example="300000 bp">
+            <div class="checkbox" data-name="estimated_size" data-type="" data-description="基因體定序之前預估的大小。在（真核）基因體的定序中尤為重要，因爲它可能會以草稿形式存在很長時間或未指定的期間" data-commonname="基因體的預估大小" data-example="300000 bp">
                 <label>
                     <input type="checkbox" name="estimated_size"/>
                     estimated_size
                 </label>
             </div>
-            <div class="checkbox" data-name="ref_biomaterial" data-type="" data-description="Primary publication if isolated before genome publication; otherwise, primary genome report" data-commonname="" data-example="doi:10.1016/j.syapm.2018.01.009">
+            <div class="checkbox" data-name="ref_biomaterial" data-type="" data-description="樣本或分離物在基因體定序前的主要參考文獻，如已定序，則引用基因體發表文獻" data-commonname="生物材料參考文獻" data-example="doi:10.1016/j.syapm.2018.01.009">
                 <label>
                     <input type="checkbox" name="ref_biomaterial"/>
                     ref_biomaterial
                 </label>
             </div>
-            <div class="checkbox" data-name="source_mat_id" data-type="" data-description="A unique identifier assigned to a material sample (as defined by http://rs.tdwg.org/dwc/terms/materialSampleID, and as opposed to a particular digital record of a material sample) used for extracting nucleic acids, and subsequent sequencing. The identifier can refer either to the original material collected or to any derived sub-samples. The INSDC qualifiers /specimen_voucher, /bio_material, or /culture_collection may or may not share the same value as the source_mat_id field. For instance, the /specimen_voucher qualifier and source_mat_id may both contain ´UAM:Herps:14´ , referring to both the specimen voucher and sampled tissue with the same identifier. However, the /culture_collection qualifier may refer to a value from an initial culture (e.g. ATCC:11775) while source_mat_id would refer to an identifier from some derived culture from which the nucleic acids were extracted (e.g. xatc123 or ark:/2154/R2)." data-commonname="" data-example="MPI012345">
+            <div class="checkbox" data-name="source_mat_id" data-type="" data-description="這編號用於給材料樣本將後續萃取核酸和隨後定序的唯一識別編號。該編號可以是用於原始收集的材料，也可以是任何衍生的子樣本。INSDC裡的欄位，例如 /specimen_voucher、/bio_material 或 /culture_collection 裡的值是否與 source_mat_id 術語共享可能取決於情況。例如，/specimen_voucher 和 source_mat_id 可能都包含´UAM:Herps:14´，既指標本憑證又指相同標本憑證的取樣組織。但是，/culture_collection 可能指的是從初始培養（例如ATCC:11775）獲得的值，而 source_mat_id 將指的是從中萃取核酸的某個衍生培養的標識（例如xatc123或ark:/2154/R2）。" data-commonname="樣本材料來源ID" data-example="MPI012345">
                 <label>
                     <input type="checkbox" name="source_mat_id"/>
                     source_mat_id
                 </label>
             </div>
-            <div class="checkbox" data-name="pathogenicity" data-type="" data-description="To what is the entity pathogenic" data-commonname="" data-example="human,<br>animal,<br>plant,<br>fungi,<br>bacteria">
+            <div class="checkbox" data-name="pathogenicity" data-type="" data-description="可致病於什麼宿主" data-commonname="宿主" data-example="human,<br>animal,<br>plant,<br>fungi,<br>bacteria">
                 <label>
                     <input type="checkbox" name="pathogenicity"/>
                     pathogenicity
                 </label>
             </div>
-            <div class="checkbox" data-name="biotic_relationship" data-type="" data-description="Description of relationship(s) between the subject organism and other organism(s) it is associated with. E.g., parasite on species X; mutualist with species Y. The target organism is the subject of the relationship, and the other organism(s) is the object" data-commonname="" data-example="free living">
+            <div class="checkbox" data-name="biotic_relationship" data-type="" data-description="主體生物與其它相關生物之間的關係描述。例如，寄生在物種X；與物種Y共生。目標生物是關係的主體，而其它生物是客體。建議使用控制詞彙" data-commonname="生物關係" data-example="free living">
                 <label>
                     <input type="checkbox" name="biotic_relationship"/>
                     biotic_relationship
                 </label>
             </div>
-            <div class="checkbox" data-name="specific_host" data-type="" data-description="If there is a host involved, please provide its taxid (or environmental if not actually isolated from the dead or alive host - i.e. a pathogen could be isolated from a swipe of a bench etc) and report whether it is a laboratory or natural host)" data-commonname="" data-example="9606">
+            <div class="checkbox" data-name="specific_host" data-type="" data-description="如有宿主，請提供其 taxid。如果該生物不是在死亡或活著的宿主分離出來，例如，病原體可能是從實驗臺上的擦拭中分離出來的，就輸入 environmental (環境)。並報告它是實驗室宿主還是自然宿主" data-commonname="宿主" data-example="9606">
                 <label>
                     <input type="checkbox" name="specific_host"/>
                     specific_host
@@ -2093,13 +2852,13 @@ function updateExtensionFieldsetContent() {
                     host_spec_range
                 </label>
             </div>
-            <div class="checkbox" data-name="host_disease_stat" data-type="" data-description="List of diseases with which the host has been diagnosed; can include multiple diagnoses. The value of the field depends on host; for humans the terms should be chosen from the DO (Human Disease Ontology) at https://www.disease-ontology.org, non-human host diseases are free text" data-commonname="" data-example="dead">
+            <div class="checkbox" data-name="host_disease_stat" data-type="" data-description="已被診斷宿主的疾病清單；可以包含多個。值取決於宿主；對於人類，術語應從https://www.disease-ontology.org 的DO（Human Disease Ontology）中選擇，非人類宿主疾病則無控制詞彙" data-commonname="宿主疾病狀態" data-example="dead">
                 <label>
                     <input type="checkbox" name="host_disease_stat"/>
                     host_disease_stat
                 </label>
             </div>
-            <div class="checkbox" data-name="trophic_level" data-type="" data-description="Trophic levels are the feeding position in a food chain. Microbes can be a range of producers (e.g. chemolithotroph)" data-commonname="" data-example="heterotroph">
+            <div class="checkbox" data-name="trophic_level" data-type="" data-description="食物階層是食物鏈中餵食的位置。微生物可以是各種生產者（例如，化能無機營養生物）。建議使用控制詞彙" data-commonname="食物階層" data-example="heterotroph">
                 <label>
                     <input type="checkbox" name="trophic_level"/>
                     trophic_level
@@ -2129,37 +2888,37 @@ function updateExtensionFieldsetContent() {
                     isol_growth_condt
                 </label>
             </div>
-            <div class="checkbox" data-name="samp_collec_device" data-type="" data-description="The device used to collect an environmental sample. This field accepts terms listed under environmental sampling device (http://purl.obolibrary.org/obo/ENVO). This field also accepts terms listed under specimen collection device (http://purl.obolibrary.org/obo/GENEPIO_0002094)." data-commonname="" data-example="environmental swab sampling,<br>biopsy,<br>niskin bottle,<br>push core">
+            <div class="checkbox" data-name="samp_collec_device" data-type="" data-description="用於收集環境樣本的設備。建議輸入列在environmental sampling device（http://purl.obolibrary.org/obo/ENVO）下的術語。此值也接受列在specimen collection device（http://purl.obolibrary.org/obo/GENEPIO_0002094）下的術語" data-commonname="樣本採集裝置" data-example="environmental swab sampling,<br>biopsy,<br>niskin bottle,<br>push core">
                 <label>
                     <input type="checkbox" name="samp_collec_device"/>
                     samp_collec_device
                 </label>
             </div>
-            <div class="checkbox" data-name="samp_collec_method" data-type="" data-description="The method employed for collecting the sample" data-commonname="" data-example="environmental swab sampling,<br>biopsy,<br>niskin bottle,<br>push core">
+            <div class="checkbox" data-name="samp_collec_method" data-type="" data-description="樣本採集的方法" data-commonname="樣本採集的方法" data-example="environmental swab sampling,<br>biopsy,<br>niskin bottle,<br>push core">
                 <label>
                     <input type="checkbox" name="samp_collec_method"/>
                     samp_collec_method
                 </label>
             </div>
-            <div class="checkbox" data-name="samp_mat_process" data-type="" data-description="Any processing applied to the sample during or after retrieving the sample from environment. This field accepts OBI, for a browser of OBI (v 2018-02-12) terms please see http://purl.bioontology.org/ontology/OBI" data-commonname="" data-example="filtering of seawater,<br>storing samples in ethanol">
+            <div class="checkbox" data-name="samp_mat_process" data-type="" data-description="從環境中採樣本期間或之後對樣本進行的任何處理。此值接受OBI術語，請見http://purl.bioontology.org/ontology/OBI" data-commonname="採樣過程處理" data-example="filtering of seawater,<br>storing samples in ethanol">
                 <label>
                     <input type="checkbox" name="samp_mat_process"/>
                     samp_mat_process
                 </label>
             </div>
-            <div class="checkbox" data-name="size_frac" data-type="" data-description="Filtering pore size used in sample preparation" data-commonname="" data-example="0-0.22 micrometer">
+            <div class="checkbox" data-name="size_frac" data-type="" data-description="樣本製備中使用的過濾孔徑大小" data-commonname="過濾孔徑大小" data-example="0-0.22 micrometer">
                 <label>
                     <input type="checkbox" name="size_frac"/>
                     size_frac
                 </label>
             </div>
-            <div class="checkbox" data-name="samp_size" data-type="" data-description="Amount or size of sample (volume, mass or area) that was collected" data-commonname="" data-example="5 liter">
+            <div class="checkbox" data-name="samp_size" data-type="" data-description="收集的樣本的量或大小（體積、質量或面積）" data-commonname="收集樣本量" data-example="5 liter">
                 <label>
                     <input type="checkbox" name="samp_size"/>
                     samp_size
                 </label>
             </div>
-            <div class="checkbox" data-name="samp_vol_we_dna_ext" data-type="" data-description="Volume (ml) or mass (g) of total collected sample processed for DNA extraction. Note: total sample collected should be entered under the term Sample Size (MIXS:0000001)." data-commonname="" data-example="1500 milliliter">
+            <div class="checkbox" data-name="samp_vol_we_dna_ext" data-type="" data-description="DNA萃取的總樣本體積（毫升）或質量（克）。注意：應將收集的總樣本輸入到術語 samp_size 下" data-commonname="用來萃取DNA的樣本量" data-example="1500 milliliter">
                 <label>
                     <input type="checkbox" name="samp_vol_we_dna_ext"/>
                     samp_vol_we_dna_ext
@@ -2177,18 +2936,6 @@ function updateExtensionFieldsetContent() {
                     virus_enrich_appr
                 </label>
             </div>
-            <div class="checkbox" data-name="annealingTemp" data-type="" data-description="The reaction temperature during the annealing phase of PCR." data-commonname="" data-example="60">
-                <label>
-                    <input type="checkbox" name="annealingTemp"/>
-                    annealingTemp
-                </label>
-            </div>
-            <div class="checkbox" data-name="annealingTempUnit" data-type="" data-description="Measurement unit of the reaction temperature during the annealing phase of PCR." data-commonname="" data-example="Degrees celsius">
-                <label>
-                    <input type="checkbox" name="annealingTempUnit"/>
-                    annealingTempUnit
-                </label>
-            </div>
             <div class="checkbox" data-name="probeReporter" data-type="" data-description="Type of fluorophore (reporter) used. Probe anneals within amplified target DNA. Polymerase activity degrades the probe that has annealed to the template, and the probe releases the fluorophore from it and breaks the proximity to the quencher, thus allowing fluorescence of the fluorophore." data-commonname="" data-example="FAM">
                 <label>
                     <input type="checkbox" name="probeReporter"/>
@@ -2199,12 +2946,6 @@ function updateExtensionFieldsetContent() {
                 <label>
                     <input type="checkbox" name="probeQuencher"/>
                     probeQuencher
-                </label>
-            </div>
-            <div class="checkbox" data-name="ampliconSize" data-type="" data-description="The length of the amplicon in basepairs." data-commonname="" data-example="83">
-                <label>
-                    <input type="checkbox" name="ampliconSize"/>
-                    ampliconSize
                 </label>
             </div>
             <div class="checkbox" data-name="thresholdQuantificationCycle" data-type="" data-description="Threshold for change in fluorescence signal between cycles" data-commonname="" data-example="0.3">
@@ -2255,13 +2996,13 @@ function updateExtensionFieldsetContent() {
                     estimatedNumberOfCopies
                 </label>
             </div>
-            <div class="checkbox" data-name="amplificationReactionVolume" data-type="" data-description="PCR reaction volume" data-commonname="" data-example="22">
+            <div class="checkbox" data-name="amplificationReactionVolume" data-type="" data-description="PCR擴增反應的體積大小" data-commonname="擴增反應體積" data-example="22">
                 <label>
                     <input type="checkbox" name="amplificationReactionVolume"/>
                     amplificationReactionVolume
                 </label>
             </div>
-            <div class="checkbox" data-name="amplificationReactionVolumeUnit" data-type="" data-description="Unit used for PCR reaction volume. Many of the instruments require preparation of a much larger initial sample volume than is actually analyzed." data-commonname="" data-example="µl">
+            <div class="checkbox" data-name="amplificationReactionVolumeUnit" data-type="" data-description="PCR擴增反應的體積大小單位" data-commonname="擴增反應體積單位" data-example="µl">
                 <label>
                     <input type="checkbox" name="amplificationReactionVolumeUnit"/>
                     amplificationReactionVolumeUnit
@@ -2291,13 +3032,13 @@ function updateExtensionFieldsetContent() {
                     pcr_primer_loq
                 </label>
             </div>
-            <div class="checkbox" data-name="nucl_acid_ext" data-type="" data-description="A link to a literature reference, electronic resource or a standard operating procedure (SOP), that describes the material separation to recover the nucleic acid fraction from a sample" data-commonname="" data-example="https://mobio.com/media/wysiwyg/pdfs/protocols/12888.pdf">
+            <div class="checkbox" data-name="nucl_acid_ext" data-type="" data-description="描述從樣本中透過物質分離來萃取核酸的文獻參考、電子資源或標準操作程序（SOP）的連結" data-commonname="核酸萃取方法引用文獻" data-example="https://mobio.com/media/wysiwyg/pdfs/protocols/12888.pdf">
                 <label>
                     <input type="checkbox" name="nucl_acid_ext"/>
                     nucl_acid_ext
                 </label>
             </div>
-            <div class="checkbox" data-name="nucl_acid_amp" data-type="" data-description="A link to a literature reference, electronic resource or a standard operating procedure (SOP), that describes the enzymatic amplification (PCR, TMA, NASBA) of specific nucleic acids" data-commonname="" data-example="https://phylogenomics.me/protocols/16s-pcr-protocol/">
+            <div class="checkbox" data-name="nucl_acid_amp" data-type="" data-description="描述從核酸擴增過程與方法的文獻參考、電子資源或標準操作程序（SOP）的連結" data-commonname="核酸擴增方法引用文獻" data-example="https://phylogenomics.me/protocols/16s-pcr-protocol/">
                 <label>
                     <input type="checkbox" name="nucl_acid_amp"/>
                     nucl_acid_amp
@@ -2333,46 +3074,22 @@ function updateExtensionFieldsetContent() {
                     lib_screen
                 </label>
             </div>
-            <div class="checkbox" data-name="target_gene" data-type="" data-description="Cloning vector type(s) used in construction of libraries" data-commonname="" data-example="12S rRNA,<br>16S rRNA,<br>18S rRNA,<br>nif,<br>amoA,<br>rpo">
-                <label>
-                    <input type="checkbox" name="target_gene"/>
-                    target_gene
-                </label>
-            </div>
-            <div class="checkbox" data-name="target_subfragment" data-type="" data-description="Name of subfragment of a gene or locus. Important to e.g. identify special regions on marker genes like V6 on 16S rRNA" data-commonname="" data-example="V6, V9, ITS">
-                <label>
-                    <input type="checkbox" name="target_subfragment"/>
-                    target_subfragment
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primers" data-type="" data-description="Specify whether to expect single, paired, or other configuration of reads" data-commonname="" data-example="FWD: GTCGGTAAAACTCGTGCCAGC;<br>REV: CATAGTGGGGTATCTAATCCCAGTTTG">
-                <label>
-                    <input type="checkbox" name="pcr_primers"/>
-                    pcr_primers
-                </label>
-            </div>
             <div class="checkbox" data-name="mid" data-type="" data-description="Molecular barcodes, called Multiplex Identifiers (MIDs), that are used to specifically tag unique samples in a sequencing run. Sequence should be reported in uppercase letters" data-commonname="" data-example="GTGAATAT">
                 <label>
                     <input type="checkbox" name="mid"/>
                     mid
                 </label>
             </div>
-            <div class="checkbox" data-name="adapters" data-type="" data-description="Adapters provide priming sequences for both amplification and sequencing of the sample-library fragments. Both adapters should be reported; in uppercase letters" data-commonname="" data-example="AATGATACGGCGACCACCGAGATCTACACGCT;CAAGCAGAAGACGGCATACGAGAT">
+            <div class="checkbox" data-name="adapters" data-type="" data-description="轉接子為樣本library片段的擴增和定序提供引物序列。應列出兩個轉接子並使用大寫字母" data-commonname="轉接子序列" data-example="AATGATACGGCGACCACCGAGATCTACACGCT;CAAGCAGAAGACGGCATACGAGAT">
                 <label>
                     <input type="checkbox" name="adapters"/>
                     adapters
                 </label>
             </div>
-            <div class="checkbox" data-name="pcr_cond" data-type="" data-description="Description of reaction conditions and components of PCR in the form of ´initial denaturation:94degC_1.5min; annealing=..." data-commonname="" data-example="initial denaturation: 94_3;<br>annealing: 50_1;<br>elongation: 72_1.5;<br>final elongation: 72_10;<br>35">
+            <div class="checkbox" data-name="pcr_cond" data-type="" data-description="PCR反應放法的描述：´initial denaturation:94degC_1.5min; annealing=.." data-commonname="PCR反應方法" data-example="initial denaturation: 94_3;<br>annealing: 50_1;<br>elongation: 72_1.5;<br>final elongation: 72_10;<br>35">
                 <label>
                     <input type="checkbox" name="pcr_cond"/>
                     pcr_cond
-                </label>
-            </div>
-            <div class="checkbox" data-name="seq_meth" data-type="" data-description="Sequencing method used; e.g. Sanger, ABI-solid" data-commonname="" data-example="Illumina HiSeq 1500">
-                <label>
-                    <input type="checkbox" name="seq_meth"/>
-                    seq_meth
                 </label>
             </div>
             <div class="checkbox" data-name="seq_quality_check" data-type="" data-description="Indicate if the sequence has been called by automatic systems (none) or undergone a manual editing procedure (e.g. by inspecting the raw data or chromatograms). Applied only for sequences that are not submitted to SRA,ENA or DRA" data-commonname="" data-example="none">
@@ -2387,7 +3104,7 @@ function updateExtensionFieldsetContent() {
                     chimera_check
                 </label>
             </div>
-            <div class="checkbox" data-name="tax_ident" data-type="" data-description="The phylogenetic marker(s) used to assign an organism name to the SAG or MAG" data-commonname="" data-example="other: rpoB gene">
+            <div class="checkbox" data-name="tax_ident" data-type="" data-description="所使用的遺傳標記基因名稱，建議使用控制詞彙" data-commonname="遺傳標記基因名稱" data-example="other: rpoB gene">
                 <label>
                     <input type="checkbox" name="tax_ident"/>
                     tax_ident
@@ -2399,19 +3116,19 @@ function updateExtensionFieldsetContent() {
                     assembly_qual
                 </label>
             </div>
-            <div class="checkbox" data-name="assembly_name" data-type="" data-description="Name/version of the assembly provided by the submitter that is used in the genome browsers and in the community" data-commonname="" data-example="HuRef,<br>JCVI_ISG_i3_1.0">
+            <div class="checkbox" data-name="assembly_name" data-type="" data-description="基因組組裝的名稱或版本，發布者分享此基因組至基因體平台所使用的基因組組裝名稱" data-commonname="基因組組裝名稱" data-example="HuRef,<br>JCVI_ISG_i3_1.0">
                 <label>
                     <input type="checkbox" name="assembly_name"/>
                     assembly_name
                 </label>
             </div>
-            <div class="checkbox" data-name="assembly_software" data-type="" data-description="Tool(s) used for assembly, including version number and parameters" data-commonname="" data-example="metaSPAdes;3.11.0;kmer set 21,33,55,77,99,121, default parameters otherwise">
+            <div class="checkbox" data-name="assembly_software" data-type="" data-description="基因組組裝軟體或工具的名稱，應包括版本與使用參數" data-commonname="基因組組裝工具" data-example="metaSPAdes;3.11.0;kmer set 21,33,55,77,99,121, default parameters otherwise">
                 <label>
                     <input type="checkbox" name="assembly_software"/>
                     assembly_software
                 </label>
             </div>
-            <div class="checkbox" data-name="annot" data-type="" data-description="Tool used for annotation, or for cases where annotation was provided by a community jamboree or model organism database rather than by a specific submitter" data-commonname="" data-example="prokka">
+            <div class="checkbox" data-name="annot" data-type="" data-description="基因體註解軟體或工具的名稱" data-commonname="基因體註解工具" data-example="prokka">
                 <label>
                     <input type="checkbox" name="annot"/>
                     annot
@@ -2591,24 +3308,6 @@ function updateExtensionFieldsetContent() {
                     detec_type
                 </label>
             </div>
-            <div class="checkbox" data-name="otu_class_appr" data-type="" data-description="Cutoffs and approach used when clustering new UViGs in 'species-level' OTUs. Note that results from standard 95% ANI / 85% AF clustering should be provided alongside OTUS defined from another set of thresholds, even if the latter are the ones primarily used during the analysis" data-commonname="" data-example="95% ANI;85% AF; greedy incremental clustering">
-                <label>
-                    <input type="checkbox" name="otu_class_appr"/>
-                    otu_class_appr
-                </label>
-            </div>
-            <div class="checkbox" data-name="otu_seq_comp_appr" data-type="" data-description="Tool and thresholds used to compare sequences when computing 'species-level' OTUs" data-commonname="" data-example="blastn;2.6.0+;e-value cutoff: 0.001">
-                <label>
-                    <input type="checkbox" name="otu_seq_comp_appr"/>
-                    otu_seq_comp_appr
-                </label>
-            </div>
-            <div class="checkbox" data-name="otu_db" data-type="" data-description="Reference database (i.e. sequences not generated as part of the current study) used to cluster new genomes in 'species-level' OTUs, if any" data-commonname="" data-example="NCBI Viral RefSeq;83">
-                <label>
-                    <input type="checkbox" name="otu_db"/>
-                    otu_db
-                </label>
-            </div>
             <div class="checkbox" data-name="host_pred_appr" data-type="" data-description="Tool or approach used for host prediction" data-commonname="" data-example="CRISPR spacer match">
                 <label>
                     <input type="checkbox" name="host_pred_appr"/>
@@ -2627,46 +3326,10 @@ function updateExtensionFieldsetContent() {
                     host_pred_appr
                 </label>
             </div>
-            <div class="checkbox" data-name="sop" data-type="" data-description="Standard operating procedures used in assembly and/or annotation of genomes, metagenomes or environmental sequences" data-commonname="" data-example="http://press.igsb.anl.gov/earthmicrobiome/protocols-and-standards/its/">
-                <label>
-                    <input type="checkbox" name="sop"/>
-                    sop
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primer_forward" data-type="" data-description="Forward PCR primer that were used to amplify the sequence of the targeted gene, locus or subfragment. If multiple multiple forward or reverse primers are present in a single PCR reaction, there should be a full row for each of these linked to the same DWC Occurrence. The primer sequence should be reported in uppercase letters" data-commonname="" data-example="GTCGGTAAAACTCGTGCCAGC">
-                <label>
-                    <input type="checkbox" name="pcr_primer_forward"/>
-                    pcr_primer_forward
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primer_reverse" data-type="" data-description="Reverse PCR primer that were used to amplify the sequence of the targeted gene, locus or subfragment. If multiple multiple forward or reverse primers are present in a single PCR reaction, there should be a full row for each of these linked to the same DWC Occurrence. The primer sequence should be reported in uppercase letters" data-commonname="" data-example="CATAGTGGGGTATCTAATCCCAGTTTG">
-                <label>
-                    <input type="checkbox" name="pcr_primer_reverse"/>
-                    pcr_primer_reverse
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primer_name_forward" data-type="" data-description="Name of the forward PCR primer that were used to amplify the sequence of the targeted gene, locus or subfragment. If multiple multiple forward or reverse primers are present in a single PCR reaction, there should be a full row for each of these linked to the same DWC Occurrence." data-commonname="" data-example="MiFishU-F">
-                <label>
-                    <input type="checkbox" name="pcr_primer_name_forward"/>
-                    pcr_primer_name_forward
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primer_name_reverse" data-type="" data-description="Name of the reverse PCR primer that were used to amplify the sequence of the targeted gene, locus or subfragment. If multiple multiple forward or reverse primers are present in a single PCR reaction, there should be a full row for each of these linked to the same DWC Occurrence." data-commonname="" data-example="MiFishU-R">
-                <label>
-                    <input type="checkbox" name="pcr_primer_name_reverse"/>
-                    pcr_primer_name_reverse
-                </label>
-            </div>
-            <div class="checkbox" data-name="pcr_primer_reference" data-type="" data-description="Reference for the PCR primers that were used to amplify the sequence of the targeted gene, locus or subfragment." data-commonname="" data-example="https://doi.org/10.1186/1742-9994-10-34">
+            <div class="checkbox" data-name="pcr_primer_reference" data-type="" data-description="用於擴增目標基因或子片段序列的PCR引子的參考文獻" data-commonname="PCR引子參考文獻" data-example="https://doi.org/10.1186/1742-9994-10-34">
                 <label>
                     <input type="checkbox" name="pcr_primer_reference"/>
                     pcr_primer_reference
-                </label>
-            </div>
-            <div class="checkbox" data-name="DNA_sequence" data-type="" data-description="The DNA sequence" data-commonname="" data-example="TCTATCCTCAATTATAGGTCATAATTCACCATCAGTAGATTTAGGAATTTTCTCTATTCATATTGCAGGTGTATCATCAATTATAGGATCAATTAATTTTATTGTAACAATTTTAAATATACATACAAAAACTCATTCATTAAACTTTTTACCATTATTTTCATGATCAGTTCTAGTTACAGCAATTCTCCTTTTATTATCATTA">
-                <label>
-                    <input type="checkbox" name="DNA_sequence"/>
-                    DNA_sequence
                 </label>
             </div>
         </fieldset>

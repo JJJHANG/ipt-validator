@@ -1,18 +1,39 @@
 var checkboxNames = [];
 
-// $(document).ready(function() {
-//     var example = document.getElementById('example1');
-//     var hot1 = new Handsontable(example, {
-//     data: Handsontable.helper.createSpreadsheetData(100000, 20), //row, columns
-//     colWidths: 100,
-//     width: '100%',
-//     dropdownMenu: true,
-//     filters: true,
-//     height: 320,
-//     rowHeights: 23,
-//     rowHeaders: true,
-//     colHeaders: true
-//   });
+$(document).ready(function() {
+    $(function(){
+        var $li = $('ul.tab-title li');
+            $($li. eq(0) .addClass('active').find('a').attr('href')).siblings('.tab-inner').hide();
+        
+            $li.click(function(){
+                $($(this).find('a'). attr ('href')).show().siblings ('.tab-inner').hide();
+                $(this).addClass('active'). siblings ('.active').removeClass('active');
+            });
+        });
+
+    // var example = document.getElementById('example1');
+    // var hot1 = new Handsontable(example, {
+    //     data: Handsontable.helper.createSpreadsheetData(100000, 20), //row, columns
+    //     colWidths: 100,
+    //     width: '100%',
+    //     dropdownMenu: true,
+    //     filters: true,
+    //     height: 320,
+    //     rowHeights: 23,
+    //     rowHeaders: true,
+    //     colHeaders: true
+    // });
+
+    // *deprecated* 按鈕事件：新增十列  
+    // $('#add-ten-rows').click(function () {
+    //     window.addTenRow(); 
+    // });
+
+    // *deprecated* 按鈕事件：刪除指定列  
+    // $('#delete-row').click(function () {
+    //     window.deleteRow(); 
+    // });
+
 
     // 收集從後端傳來的欄位名稱
     $(".checkbox-name").each(function() {
@@ -30,16 +51,6 @@ var checkboxNames = [];
         const insertRowNumber = $('#insert-row-number').val()
         window.addRow(insertRowNumber); 
     });
-
-    // *deprecated* 按鈕事件：新增十列  
-    // $('#add-ten-rows').click(function () {
-    //     window.addTenRow(); 
-    // });
-
-    // *deprecated* 按鈕事件：刪除指定列  
-    // $('#delete-row').click(function () {
-    //     window.deleteRow(); 
-    // });
 
     // 按鈕事件：獲取行資料
     $('#get-data-col').click(function () {
@@ -93,6 +104,19 @@ var checkboxNames = [];
     }) 
 });
 
+// 功能：測試匯入資料
+// function updateHandsontable(data) {
+//     var container = document.getElementById('grid');
+//     var hot2 = new Handsontable(container, {
+//         colHeaders: data[0],
+//         rowHeaders: true,
+//         width: '100%',
+//         height: '100%',
+//         licenseKey: 'non-commercial-and-evaluation'
+//     });
+//     hot2.loadData(data.slice(1));
+// }
+
 // 功能：把編輯表格的資料傳遞到後端
 function transferDataToBackend (getColHeader, getData) {
     $.ajax({
@@ -138,18 +162,6 @@ function updateColContent(colName, colData) {
     }
 };
 
-function updateHandsontable(data) {
-    var container = document.getElementById('grid');
-    var hot2 = new Handsontable(container, {
-        colHeaders: data[0],
-        rowHeaders: true,
-        width: '100%',
-        height: '100%',
-        licenseKey: 'non-commercial-and-evaluation'
-    });
-    hot2.loadData(data.slice(1));
-}
-
 // 功能：初始化編輯表格
 function initializeHandsontable(data) {
     var container = document.getElementById('grid');
@@ -176,6 +188,36 @@ function initializeHandsontable(data) {
                     return {
                         type: 'dropdown',
                         source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
+                    };
+                } else if (name === 'language') {
+                    return {
+                        type: 'dropdown',
+                        source: ['en', 'zh-TW'],  
+                    };
+                } else if (name === 'license') {
+                    return {
+                        type: 'dropdown',
+                        source: ['CC0 1.0', 'CC BY 4.0', 'CC BY-NC 4.0', '無授權標示', '無法辨識'],  
+                    };
+                } else if (name === 'sex') {
+                    return {
+                        type: 'dropdown',
+                        source: ['female', 'male', 'hermaphrodite'],  
+                    };
+                } else if (name === 'establishmentMeans') {
+                    return {
+                        type: 'dropdown',
+                        source: ['native', 'nativeReintroduced', 'introduced', 'introducedAssistedColonisation', 'vagrant', 'uncertain'],  
+                    };
+                } else if (name === 'degreeOfEstablishment') {
+                    return {
+                        type: 'dropdown',
+                        source: ['native', 'captive', 'cultivated', 'released', 'failing', 'casual', 'reproducing', 'established', 'colonising', 'invasive', 'widespreadInvasive'],  
+                    };
+                } else if (name === 'typeStatus') {
+                    return {
+                        type: 'dropdown',
+                        source: ['holotype', 'paratype', 'isotype', 'allotype', 'syntype', 'lectotype', 'paralectotype', 'neotype', 'topotype'],  
                     };
                 } else if (name === 'decimalLongitude') {
                     return {
@@ -228,6 +270,36 @@ function initializeHandsontable(data) {
                         type: 'dropdown',
                         source: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],  
                     };
+                } else if (name === 'language') {
+                    return {
+                        type: 'dropdown',
+                        source: ['en', 'zh-TW'],  
+                    };
+                } else if (name === 'license') {
+                    return {
+                        type: 'dropdown',
+                        source: ['CC0 1.0', 'CC BY 4.0', 'CC BY-NC 4.0', '無授權標示', '無法辨識'],  
+                    };
+                } else if (name === 'sex') {
+                    return {
+                        type: 'dropdown',
+                        source: ['female', 'male', 'hermaphrodite'],  
+                    };
+                } else if (name === 'establishmentMeans') {
+                    return {
+                        type: 'dropdown',
+                        source: ['native', 'nativeReintroduced', 'introduced', 'introducedAssistedColonisation', 'vagrant', 'uncertain'],  
+                    };
+                } else if (name === 'degreeOfEstablishment') {
+                    return {
+                        type: 'dropdown',
+                        source: ['native', 'captive', 'cultivated', 'released', 'failing', 'casual', 'reproducing', 'established', 'colonising', 'invasive', 'widespreadInvasive'],  
+                    };
+                } else if (name === 'typeStatus') {
+                    return {
+                        type: 'dropdown',
+                        source: ['holotype', 'paratype', 'isotype', 'allotype', 'syntype', 'lectotype', 'paralectotype', 'neotype', 'topotype'],  
+                    };
                 } else if (name === 'decimalLongitude') {
                     return {
                         type: 'numeric',
@@ -235,6 +307,26 @@ function initializeHandsontable(data) {
                 } else if (name === 'decimalLatitude') {
                     return {
                         type: 'numeric',
+                    };
+                } else if (name === 'eventDate') {
+                    return {
+                        validator: 'custom-date-validator',
+                    };
+                } else if (name === 'individualCount') {
+                    return {
+                        validator: 'custom-int-validator',
+                    };
+                }  else if (name === 'year') {
+                    return {
+                        validator: 'custom-int-validator',
+                    };
+                }  else if (name === 'month') {
+                    return {
+                        validator: 'custom-int-validator',
+                    };
+                }  else if (name === 'day') {
+                    return {
+                        validator: 'custom-int-validator',
                     };
                 } else {
                     return {};
@@ -255,6 +347,38 @@ function initializeHandsontable(data) {
             licenseKey: 'non-commercial-and-evaluation'
         });
     }
+
+    (function(Handsontable){
+        function dateValidator(value, callback) {
+            // 檢查是否是有效的日期格式
+            if (isValidDate(value)) {
+                callback(true);  // 如果是有效的日期格式，回傳true
+            } else {
+                callback(false); // 如果不是有效的日期格式，回傳false
+            }
+        }
+
+        function positiveIntegerValidator(value, callback) {
+            const positiveIntRegex = /^[1-9]\d*$/;  // 以非零開頭的數字序列
+            callback(positiveIntRegex.test(value));
+        }
+        
+        // 檢查日期的有效性
+        function isValidDate(dateStr) {
+            const ISO2014 = /^\d{4}-\d{2}-\d{2}$/; // 1996-11-26
+            const ISO2014_var = /^\d{4}-\d{2}$/; // 1996-11
+            const ISO8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}[-+]\d{4}$/; // 1996-11-26T11:26+0800
+            const ISO8601_var = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/; // 1996-11-26T11:26Z
+            const ISO8601_var2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/; // 1996-11-26T11:26
+            const dateRange = /^\d{4}-\d{2}-\d{2}\/\d{2}$/; // 1996-11-26/30
+            const dateRange_var2 = /^\d{4}-\d{2}\/\d{2}$/; // 1996-11/12
+            return ISO2014.test(dateStr) || ISO2014_var.test(dateStr) || ISO8601.test(dateStr) || ISO8601_var.test(dateStr) || ISO8601_var2.test(dateStr) || dateRange.test(dateStr) || dateRange_var2.test(dateStr);
+        }
+
+        Handsontable.validators.registerValidator('custom-date-validator', dateValidator);
+        Handsontable.validators.registerValidator('custom-int-validator', positiveIntegerValidator);
+
+    })(Handsontable);
 
     // 取得被選取的行、列的 index
     hot.updateSettings({
@@ -324,5 +448,4 @@ function initializeHandsontable(data) {
         });
     });
 };
-
 
