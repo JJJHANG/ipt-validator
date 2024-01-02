@@ -1,6 +1,8 @@
 var allCheckedCheckboxNames = [];
-var checkedExtensionCheckboxNames = [];
-var checkedCheckboxNames = [];
+var coreCheckedCheckboxNames = [];
+// var extensionCheckedcheckboxNames = [];
+var CheckedcheckboxNames = {};
+var TemplateNames = [];
 
 $(document).ready(function () {
 
@@ -167,13 +169,16 @@ $(document).ready(function () {
     // 按鈕事件：下一步（建立模板，轉跳到編輯資料頁面）
     $(".next-btn").click(function () {
         if ($('#core').val() !== '' || $('#custom').val() !== '') { // 檢查有沒有選擇資料集類型，有的話才能下一步
-            updateCheckedCheckboxNames()
+            updateCheckedCheckboxNames();
+            getTemplateNames();
+            console.log(TemplateNames);
+            console.log(CheckedcheckboxNames);
         
             $.ajax({
                 type: "POST",
                 url: "/data-template",
                 contentType: 'application/json;charset=UTF-8',
-                data: JSON.stringify({ 'checkbox_names': allCheckedCheckboxNames }),
+                data: JSON.stringify({ 'checkbox_names': CheckedcheckboxNames, 'template_names': TemplateNames }),
                 success: function(data) {
                     console.log("Data submitted.");
                     window.location.href = "/data-edit";
@@ -339,7 +344,11 @@ function updateCheckedCheckboxNames() {
     var checkedCheckboxNames = $("#requiredFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含主題、資料集類型欄位
     }).get();
-    
+
+    var coreTemplateName = $('#core option:selected').val();
+
+    CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
+
     var checkedCustomCheckboxNames = $("#customFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含自訂、自訂模板欄位
     }).get();
@@ -347,11 +356,34 @@ function updateCheckedCheckboxNames() {
     var checkedExtensionCheckboxNames = $("#extensionFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含延伸資料集欄位
     }).get();
+    $("#extensionFieldset fieldset").each(function() {
+        var fieldsetId = $(this).attr('id'); // 假設每個 fieldset 都有一個唯一的 id
+        console.log(fieldsetId);
+    
+        // 收集該 fieldset 下被勾選的 checkbox 名稱
+        var checkedNames = $(this).find(".checkbox input[type='checkbox']:checked").map(function () {
+            return $(this).attr("name");
+        }).get();
+    
+        // 將收集到的名稱存儲到物件中
+        CheckedcheckboxNames[fieldsetId] = checkedNames;
+    });
     
     // 更新全域變數
-    checkedCheckboxNames = checkedCheckboxNames
-    checkedExtensionCheckboxNames = checkedExtensionCheckboxNames
+    coreCheckedCheckboxNames = checkedCheckboxNames
+    CheckedcheckboxNames = CheckedcheckboxNames
+    // extensionCheckedcheckboxNames = checkedExtensionCheckboxNames
     allCheckedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames, checkedExtensionCheckboxNames);
+}
+
+function getTemplateNames() {
+    var coreTemplateName = $('#core option:selected').val();
+    var extensionTemplateName = $('.fs-option.selected').map(function() {
+        return $(this).data('value');
+    }).get();
+
+    coreTemplateName = [coreTemplateName];
+    TemplateNames = coreTemplateName.concat(extensionTemplateName);
 }
 
 // 功能：檢查欄位勾選是否重複
@@ -749,12 +781,6 @@ function updateFieldsetContent() {
                     municipality 
                 </label>
             </div>
-            <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="" data-commonname="字面上地區" data-example="">
-                <label>
-                    <input type="checkbox" name="verbatimLocality"/>
-                    verbatimLocality 
-                </label>
-            </div>
             <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="最低海拔（公尺）" data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
                 <label>
                     <input type="checkbox" name="minimumElevationInMeters"/>
@@ -783,12 +809,6 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="maximumDepthInMeters"/>
                     maximumDepthInMeters 
-                </label>
-            </div>
-            <div class="checkbox" data-name="verbatimDepth" data-type="Location" data-description="" data-commonname="字面上深度" data-example="100-200 m">
-                <label>
-                    <input type="checkbox" name="verbatimDepth"/>
-                    verbatimDepth 
                 </label>
             </div>
             <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="地區註記" data-commonname="字面地區註記上深度" data-example="under water since 2005">
@@ -1253,12 +1273,6 @@ function updateFieldsetContent() {
                         locality 
                     </label>
                 </div>
-                <div class="checkbox" data-name="verbatimLocality" data-type="Location" data-description="" data-commonname="字面上地區" data-example="">
-                    <label>
-                        <input type="checkbox" name="verbatimLocality"/>
-                        verbatimLocality 
-                    </label>
-                </div>
                 <div class="checkbox" data-name="minimumElevationInMeters" data-type="Location" data-description="最低海拔（公尺）" data-commonname="最低海拔（公尺）" data-example="-100,<br>3952">
                     <label>
                         <input type="checkbox" name="minimumElevationInMeters"/>
@@ -1281,12 +1295,6 @@ function updateFieldsetContent() {
                     <label>
                         <input type="checkbox" name="maximumDepthInMeters"/>
                         maximumDepthInMeters 
-                    </label>
-                </div>
-                <div class="checkbox" data-name="verbatimDepth" data-type="Location" data-description="" data-commonname="字面上深度" data-example="100-200 m">
-                    <label>
-                        <input type="checkbox" name="verbatimDepth"/>
-                        verbatimDepth 
                     </label>
                 </div>
                 <div class="checkbox" data-name="locationRemarks" data-type="Location" data-description="地區註記" data-commonname="字面地區註記上深度" data-example="under water since 2005">

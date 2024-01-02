@@ -9,372 +9,403 @@
 
 
 {% block box2 %}
-<div class="template-title">STEP4. 資料驗證</div>
+<div class="template-title">STEP5. 檢視資料</div>
 {% endblock %}
 
 {% block box3 %}
 
-<div id="error-message-container">
-    <p class="error-message-title">錯誤訊息</p>
-    {% if controlled_column_stats %}
-        {% for key, value in controlled_column_stats.items() %}
-            {% if value['valid_percentage'] < 100 %}
-                <div class="error-message-box">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['invalid_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-        {% endfor %} 
-    {% endif %} 
 
-    {% if unique_column_stats %}
-        {% for key, value in unique_column_stats.items() %}
-            {% if value['valid_percentage'] < 100 %}
-                <div class="error-message-box">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['invalid_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %} 
+<ul class="tab-title">
+    {% for template_name in table_stats.keys() %}
+        <!-- <li><a href="#{{ template_name }}">{{ template_name }}</a><p class="editing-mark d-none">●</p></li> -->
+        <li data-targets="#{{ template_name }}-error-message, #{{ template_name }}-term-frequency">{{ template_name }}<p class="editing-mark d-none">●</p></li>
+    {% endfor %}
+</ul>
 
-    {% if lon_lat_stats %}
-        {% for key, value in lon_lat_stats.items() %}
-            {% if value['invalid_rows']['count'] >= 1%}
-                <div class="error-message-box">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>{{ key }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['invalid_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% if value['zero_rows']['count'] >= 1%}
+{% for key, value in table_stats.items() %}
+    <div id="{{ key }}-error-message" class="tab-inner error-message-container">
+        <p class="error-message-title">錯誤訊息</p>
+        {% if value.controlled_stats.items() %}
+            {% for inner_key, inner_value in value.controlled_stats.items() %}
+                {% if inner_value['valid_percentage'] < 100 %}
                     <div class="error-message-box">
-                        <span>{{ value['zero_rows']['error_message'] }}</span>
-                        <span class="invalid_rows">{{ value['zero_rows']['count'] }}</span>
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
                     </div>
                     <div class="accordion-menu d-none">
                         <table class="accordion-table">
                             <thead>
                                 <tr>
                                     <th>Index</th>
-                                    <th>{{ key }}</th>
+                                    <th>Value</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in range(value['zero_rows']['count']) %}
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
                                     <tr>
-                                        <td>{{ value['zero_rows']['indexes'][i] }}</td>
-                                        <td>{{ value['zero_rows']['values'] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endif %} 
+            {% endfor %} 
+        {% endif %} 
 
-    {% if datetime_column_stats %}
-        {% for key, value in datetime_column_stats.items() %}
-            {% if value['valid_percentage'] < 100 %}
-                <div class="error-message-box">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['invalid_rows']['count']) %}
+        {% if value.unique_stats.items() %}
+            {% for inner_key, inner_value in value.unique_stats.items() %}
+                {% if inner_value['valid_percentage'] < 100 %}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
+                                    <th>Index</th>
+                                    <th>Value</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-            {% if value['mismatched_year_rows'] is not none and value['mismatched_year_rows']['count'] >= 1 %}
-                <div class="error-message-box mismatch">
-                    <span>{{ value['mismatched_year_rows']['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['mismatched_year_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table three-col">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>{{ key }}</th>
-                                <th>year</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['mismatched_year_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['mismatched_year_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['mismatched_year_rows']['raw_eventDate'][i] }}</td>
-                                    <td>{{ value['mismatched_year_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-            {% if value['mismatched_month_rows'] is not none and value['mismatched_month_rows']['count'] >= 1 %}
-                <div class="error-message-box mismatch">
-                    <span>{{ value['mismatched_month_rows']['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['mismatched_month_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table three-col">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>{{ key }}</th>
-                                <th>month</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['mismatched_month_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['mismatched_month_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['mismatched_month_rows']['raw_eventDate'][i] }}</td>
-                                    <td>{{ value['mismatched_month_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-            {% if value['mismatched_day_rows'] is not none and value['mismatched_day_rows']['count'] >= 1 %}
-                <div class="error-message-box mismatch">
-                    <span>{{ value['mismatched_day_rows']['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['mismatched_day_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table three-col">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>{{ key }}</th>
-                                <th>day</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['mismatched_day_rows']['count']) %}
-                                <tr>
-                                    <td>{{ value['mismatched_day_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['mismatched_day_rows']['raw_eventDate'][i] }}</td>
-                                    <td>{{ value['mismatched_day_rows']['values'][i] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %} 
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %} 
 
-    {% if date_column_stats %}
-        {% for key, value in date_column_stats.items() %}
-            {% if value['valid_percentage'] < 100 %}
-                <div class="error-message-box">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['invalid_rows']['count'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['invalid_rows']['count']) %}
+        {% if value.lon_stats.items() %}
+            {% for inner_key, inner_value in value.lon_stats.items() %}
+                {% if inner_value['invalid_rows']['count'] >= 1%}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ value['invalid_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['invalid_rows']['values'][i] }}</td>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %} 
-        {% endfor %}
-    {% endif %} 
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %} 
 
-    {% if remain_column_stats %}
-        {% for key, value in remain_column_stats.items() %}
-            {% if value['blank_rows']['counts'] > 0 %}
-                <div class="error-message-box blank">
-                    <span>{{ value['error_message'] }}</span>
-                    <span class="invalid_rows">{{ value['blank_rows']['counts'] }}</span>
-                </div>
-                <div class="accordion-menu d-none">
-                    <table class="accordion-table">
-                        <thead>
-                            <tr>
-                                <th>Index</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in range(value['blank_rows']['counts']) %}
+        {% if value.lat_stats.items() %}
+            {% for inner_key, inner_value in value.lon_stats.items() %}
+                {% if inner_value['invalid_rows']['count'] >= 1%}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ value['blank_rows']['indexes'][i] }}</td>
-                                    <td>{{ value['blank_rows']['values'][i] }}</td>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %} 
-        {% endfor %}
-    {% endif %} 
-</div>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %} 
+
+        {% if value.datetime_stats.items() %}
+            {% for inner_key, inner_value in value.datetime_stats.items() %}
+                {% if inner_value['valid_percentage'] < 100 %}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                {% if inner_value['mismatched_year_rows'] is not none and inner_value['mismatched_year_rows']['count'] >= 1 %}
+                    <div class="error-message-box mismatch">
+                        <span>{{ inner_value['mismatched_year_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['mismatched_year_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table three-col">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                    <th>year</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['mismatched_year_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['mismatched_year_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_year_rows']['raw_eventDate'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_year_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                {% if inner_value['mismatched_month_rows'] is not none and inner_value['mismatched_month_rows']['count'] >= 1 %}
+                    <div class="error-message-box mismatch">
+                        <span>{{ inner_value['mismatched_month_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['mismatched_month_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table three-col">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                    <th>month</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['mismatched_month_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['mismatched_month_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_month_rows']['raw_eventDate'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_month_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                {% if inner_value['mismatched_day_rows'] is not none and inner_value['mismatched_day_rows']['count'] >= 1 %}
+                    <div class="error-message-box mismatch">
+                        <span>{{ inner_value['mismatched_day_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['mismatched_day_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table three-col">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                    <th>day</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['mismatched_day_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['mismatched_day_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_day_rows']['raw_eventDate'][i] }}</td>
+                                        <td>{{ inner_value['mismatched_day_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %} 
+
+        {% if value.date_column_stats.items() %}
+            {% for inner_key, inner_value in value.date_column_stats.items() %}
+                {% if inner_value['valid_percentage'] < 100 %}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %} 
+            {% endfor %}
+        {% endif %} 
+
+        {% if value.remain_column_stats.items() %}
+            {% for inner_key, inner_value in value.remain_column_stats.items() %}
+                {% if inner_value['blank_rows']['counts'] > 0 %}
+                    <div class="error-message-box blank">
+                        <span>{{ inner_value['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['blank_rows']['counts'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['blank_rows']['counts']) %}
+                                    <tr>
+                                        <td>{{ inner_value['blank_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['blank_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %} 
+            {% endfor %}
+        {% endif %} 
+    </div>
+{% endfor %}
+
 {% endblock %}
 
 {% block box4 %}
-<div id="term-frequency">
-    <div id="table-title">欄位頻率</div>
-    <table id="term-frequency-table">
-        <thead>
-            <tr>
-                <th>欄位名稱</th>
-                <th class="center">計數</th>
-                <th class="center">驗證百分比</th>
-                <th class="center">驗證數</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if controlled_column_stats %}
-                {% for key, value in controlled_column_stats.items() %}
-                <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['counts_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
-                </tr>
-                {% endfor %}
-            {% endif %}  
 
-            {% if unique_column_stats %}
-                {% for key, value in unique_column_stats.items() %}
+{% for key, value in table_stats.items() %}
+    <div id="{{ key }}-term-frequency" class="tab-inner term-frequency">
+        <div class="table-title">欄位頻率</div>
+        <table class="term-frequency-table">
+            <thead>
                 <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['total_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
+                    <th>欄位名稱</th>
+                    <th class="center">計數</th>
+                    <th class="center">驗證百分比</th>
+                    <th class="center">驗證數</th>
                 </tr>
-                {% endfor %}
-            {% endif %}
+            </thead>
+            <tbody>
+                {% if value.controlled_stats.items() %}
+                    {% for inner_key, inner_value in value.controlled_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}  
 
-            {% if lon_lat_stats %}
-                {% for key, value in lon_lat_stats.items() %}
-                <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['counts_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
-                </tr>
-                {% endfor %}
-            {% endif %}
+                {% if value.unique_stats.items() %}
+                    {% for inner_key, inner_value in value.unique_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['total_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
 
-            {% if datetime_column_stats %}
-                {% for key, value in datetime_column_stats.items() %}
-                <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['counts_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
-                </tr>
-                {% endfor %}
-            {% endif %}
+                {% if value.lon_stats.items() %}
+                    {% for inner_key, inner_value in value.lon_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
 
-            {% if date_column_stats %}
-                {% for key, value in date_column_stats.items() %}
-                <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['counts_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
-                </tr>
-                {% endfor %}
-            {% endif %}
+                {% if value.lat_stats.items() %}
+                    {% for inner_key, inner_value in value.lat_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
 
-            {% if remain_column_stats %}
-                {% for key, value in remain_column_stats.items() %}
-                <tr>
-                    <th>{{ key }}</th>
-                    <th class="center">{{ value['counts_rows'] }}</th>
-                    <th class="center">{{ value['valid_percentage'] }}%</th>
-                    <th class="center">{{ value['valid_rows'] }}</th>
-                </tr>
-                {% endfor %}
-            {% endif %}
-        </tbody>
-    </table>
-</div>
+                {% if value.datetime_stats.items() %}
+                    {% for inner_key, inner_value in value.datetime_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+
+                {% if value.date_column_stats.items() %}
+                    {% for inner_key, inner_value in value.date_column_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+
+                {% if value.remain_column_stats.items() %}
+                    {% for inner_key, inner_value in value.remain_column_stats.items() %}
+                    <tr>
+                        <th>{{ inner_key }}</th>
+                        <th class="center">{{ inner_value['counts_rows'] }}</th>
+                        <th class="center">{{ inner_value['valid_percentage'] }}%</th>
+                        <th class="center">{{ inner_value['valid_rows'] }}</th>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
+
 {% endblock %}
 
 {% block box6 %}

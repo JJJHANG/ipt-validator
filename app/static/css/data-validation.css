@@ -83,31 +83,32 @@
     font-size: 14px;
 }
 
-#table-title {
+.table-title {
     font-weight: 600;
     margin-bottom: 15px;
+    margin-left: 15px;
 }
 
-#term-frequency {
+.term-frequency {
     padding: 0px 5px 0px 5px;
 }
 
-#term-frequency-table {
+.term-frequency-table {
     border-collapse:collapse;
 }
 
-#term-frequency-table thead tr th {
-    background-color: #6CFBCE;
+.term-frequency-table thead tr th {
+    background-color: #EEE8A9;
     font-weight: 600 !important;
     color: #2B59C3;
     width:25vw;
     height:50px;
     text-align: left;
-    padding-left: 10px;
+    padding-left: 20px;
     font-size: 14px;
 }
 
-#term-frequency-table tbody tr th{
+.term-frequency-table tbody tr th{
     font-weight: 400 !important;
     background-color: #FFF0E1;
     width:25vw;
@@ -115,11 +116,23 @@
     text-align:left;
     font-size: 14px;
     color: #2B59C3;
-    padding-left: 10px;
+    padding-left: 20px;
 }
 
-#term-frequency-table tbody tr:nth-of-type(even) th {
-    background-color:#6CFBCE;
+.term-frequency-table tbody tr:nth-of-type(even) th {
+    background-color:#EEE8A9;
+}
+
+/* 對第一個th應用左上左下的border-radius */
+.term-frequency-table th:first-child {
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+}
+
+/* 對最後一個th應用右上右下的border-radius */
+.term-frequency-table th:last-child {
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 .accordion-table thead tr th {
@@ -182,4 +195,36 @@
 
 .back-btn:hover {
     background-color: #F9F871 !important;
+}
+
+.tab-title {
+margin-bottom: 15px;
+}
+
+.tab-title li {
+    list-style-type: none;
+    margin-bottom: 10px;
+
+    font-weight: 600;
+    font-size: 12px;
+    background-color: #F88F70;
+    margin-bottom: 5px;
+    padding: 10px 20px 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-between;
+}
+
+.tab-title li a:link {
+    text-decoration: none;;
+}
+
+.tab-title li:hover {
+    cursor: pointer;
+}
+
+.editing-mark {
+    font-size: 600 !important;
+    color: #2B59C3;
 }

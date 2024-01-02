@@ -16,8 +16,10 @@ def data_template():
     if request.method == 'POST':
         data = request.get_json()
         checkbox_names = data['checkbox_names']
-        # app.logger.info(f'checkbox_names in data_template: {checkbox_names}')
+        template_names = data['template_names']
+        app.logger.info(f'checkbox_names in data_template: {data}')
         session['checkbox_names'] = checkbox_names
+        session['template_names'] = template_names
         return redirect('/data-edit')
     else:
         return render_template('data-template.html')
@@ -49,38 +51,26 @@ def convert_csv_to_json():
 @app.route('/data-edit', methods=['GET', 'POST'])
 def data_edit():
     checkbox_names = session.get('checkbox_names', [])
-    # app.logger.info(f'checkbox_names in data_edit: {checkbox_names}')
-    return render_template('data-edit.html', checkbox_names=checkbox_names)
+    # extension_checkbox_names = session.get('extension_checkbox_names', [])
+    template_names = session.get('template_names', [])
+    app.logger.info(f'checkbox_names in data_edit: {checkbox_names}')
+    return render_template('data-edit.html', checkbox_names=checkbox_names, template_names=template_names)
 
 
 @app.route('/process-validation', methods=['POST'])
 def process_validation():
-    controlled_column_stats = {}
-    unique_column_stats = {}
-    lon_lat_stats = {}
-    datetime_column_stats = {}
-    date_column_stats = {}
-    remain_column_stats = {}
 
-    if request.method == 'POST':
-        data = request.get_json()
-        table_header = data['table_header']
-        table_data = data['table_data']
-        # app.logger.info(f'header: {table_header}, data: {table_data}')
+    CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus', 'continent']
+    UNIQUE_ID_COLUMNS = ['occurrenceID', 'taxonID', 'samp_name']
+    LON_LAT_COLUMNS = ['decimalLongitude', 'decimalLatitude']
+    DATETIME_COLUMNS = ['eventDate']
+    DATE_COLUMNS = ['year', 'month', 'day']
 
-        # *****開始清理流程*****
-        df = pd.DataFrame(table_data, columns=table_header)
-        app.logger.info(df)
 
-        CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus', 'continent']
-        UNIQUE_ID_COLUMNS = ['occurrenceID', 'taxonID', 'samp_name']
-        LON_LAT_COLUMNS = ['decimalLongitude', 'decimalLatitude']
-        DATETIME_COLUMNS = ['eventDate']
-        DATE_COLUMNS = ['year', 'month', 'day']
-
+    # *****檢查控制詞彙欄位*****
+    def validate_controll_column(df, table_header, CONTROLLED_VOCABULARY_COLUMNS):
+        controlled_column_stats = {}
         TOTAL_ROWS = len(df) # 計算空白值會用到
-
-        # *****檢查控制詞彙欄位*****
         common_columns = set(table_header) & set(CONTROLLED_VOCABULARY_COLUMNS)
         for col in common_columns:
             if col == 'basisOfRecord':
@@ -121,8 +111,13 @@ def process_validation():
                 'valid_percentage': valid_percentage,
                 'error_message': error_message
             }
-
-        # *****檢查單一值欄位*****
+        
+        return controlled_column_stats
+        
+    # *****檢查單一值欄位*****
+    def validate_unique_column(df, table_header, UNIQUE_ID_COLUMNS):
+        unique_column_stats = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到
         unique_columns = set(table_header) & set(UNIQUE_ID_COLUMNS)
         for col in unique_columns:
             is_unique = df[col].is_unique
@@ -167,7 +162,12 @@ def process_validation():
                     'error_message': error_message
                 }
 
-        # *****檢查經緯度欄位*****
+        return unique_column_stats
+    
+    # *****檢查經緯度欄位*****
+    def validte_lon_column(df, table_header, LON_LAT_COLUMNS):
+        lon_stats = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到
         lon_lat_columns = set(table_header) & set(LON_LAT_COLUMNS)
         for col in lon_lat_columns:
             if col == 'decimalLongitude':
@@ -183,7 +183,7 @@ def process_validation():
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
                 error_message = 'Longitude out of range'
 
-                lon_lat_stats[col] = {
+                lon_stats[col] = {
                     'counts_rows': counts_rows,
                     'invalid_rows': {
                         'count': invalid_rows,
@@ -201,7 +201,14 @@ def process_validation():
                     'error_message': error_message
                 }
 
-            elif col == 'decimalLatitude':
+        return lon_stats
+    
+    def validte_lat_column(df, table_header, LON_LAT_COLUMNS):
+        lat_stats = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到
+        lon_lat_columns = set(table_header) & set(LON_LAT_COLUMNS)
+        for col in lon_lat_columns:
+            if col == 'decimalLatitude':
                 df['decimalLatitude'] = pd.to_numeric(df['decimalLatitude'], errors='coerce')
                 invalid_latitude_rows = df[(df['decimalLatitude'] < -90) | (df['decimalLatitude'] > 90)]
                 zero_latitude_rows = df[df['decimalLatitude'] == 0]
@@ -214,7 +221,7 @@ def process_validation():
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
                 error_message = 'Latitude out of range'
 
-                lon_lat_stats[col] = {
+                lat_stats[col] = {
                     'counts_rows': counts_rows,
                     'invalid_rows': {
                         'count': invalid_rows,
@@ -232,27 +239,32 @@ def process_validation():
                     'error_message': error_message
                 }
 
-        # *****檢查日期欄位*****
-        def custom_date_parser(date_str):
-            try:
-                if pd.notna(date_str):  # 先檢查是否為 None 或 NaT
-                    dt = pd.to_datetime(date_str)
-                    return dt.strftime('%Y-%m-%d')
-                else:
-                    return pd.NaT
-            except ValueError:
-                # 如果轉換失敗，根據需要進行自定義處理
-                if '/' in date_str:
-                    # 如果是時間區間，取區間的開始日期
-                    start_date_str = date_str.split('/')[0]
-                    return pd.to_datetime(start_date_str, errors='coerce').strftime('%Y-%m-%d')
-                elif len(date_str) == 4:
-                    # 如果只有年份，返回一月一日的日期
-                    return pd.to_datetime(date_str + '-01-01', errors='coerce').strftime('%Y-%m-%d')
-                else:
-                    # 其他情況，返回 NaT
-                    return pd.NaT
-                
+        return lat_stats
+            
+    def custom_date_parser(date_str):
+                try:
+                    if pd.notna(date_str):  # 先檢查是否為 None 或 NaT
+                        dt = pd.to_datetime(date_str)
+                        return dt.strftime('%Y-%m-%d')
+                    else:
+                        return pd.NaT
+                except ValueError:
+                    # 如果轉換失敗，根據需要進行自定義處理
+                    if '/' in date_str:
+                        # 如果是時間區間，取區間的開始日期
+                        start_date_str = date_str.split('/')[0]
+                        return pd.to_datetime(start_date_str, errors='coerce').strftime('%Y-%m-%d')
+                    elif len(date_str) == 4:
+                        # 如果只有年份，返回一月一日的日期
+                        return pd.to_datetime(date_str + '-01-01', errors='coerce').strftime('%Y-%m-%d')
+                    else:
+                        # 其他情況，返回 NaT
+                        return pd.NaT
+            
+    # *****檢查日期欄位*****
+    def validate_datetime_coulmn(df, table_header):  
+        datetime_column_stats = {}    
+        TOTAL_ROWS = len(df) # 計算空白值會用到     
         if 'eventDate' in df.columns:
             blank_rows = df[df['eventDate'].isna()] # 轉換前的 na 代表空白值
 
@@ -346,7 +358,12 @@ def process_validation():
                 'error_message': 'Recorded date invalid'
             }
 
-        # *****檢查年、月、日欄位*****
+        return datetime_column_stats
+        
+    # *****檢查年、月、日欄位*****
+    def validate_date_column(df, table_header, DATE_COLUMNS):
+        date_column_stats = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到    
         date_columns = set(table_header) & set(DATE_COLUMNS)
 
         today = datetime.date.today()
@@ -416,7 +433,12 @@ def process_validation():
                     'error_message': error_message
                 }
 
-        # *****檢查空白欄位*****
+        return date_column_stats
+            
+    # *****檢查空白欄位*****
+    def validate_blank_column(df, table_header, CONTROLLED_VOCABULARY_COLUMNS, UNIQUE_ID_COLUMNS, LON_LAT_COLUMNS, DATETIME_COLUMNS,DATE_COLUMNS):
+        remain_column_stats = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到  
         remain_columns = set(table_header) - set(CONTROLLED_VOCABULARY_COLUMNS + 
                                                     UNIQUE_ID_COLUMNS +
                                                     LON_LAT_COLUMNS +
@@ -431,6 +453,7 @@ def process_validation():
             error_message = f'{col} is blank'
 
             remain_column_stats[col] = {
+                # 'column_name': col,
                 'counts_rows': counts_rows,
                 'valid_rows': valid_rows,
                 'blank_rows': {
@@ -442,35 +465,73 @@ def process_validation():
                 'error_message': error_message
             }
 
-    app.logger.info(datetime_column_stats)
-            
+        return remain_column_stats
 
-    session['controlled_column_stats'] = controlled_column_stats
-    session['unique_column_stats'] = unique_column_stats
-    session['lon_lat_stats'] = lon_lat_stats
-    session['datetime_column_stats'] = datetime_column_stats
-    session['date_column_stats'] = date_column_stats
-    session['remain_column_stats'] = remain_column_stats
-        
+
+    if request.method == 'POST':
+        data = request.get_json()
+        table_name = data['table_name']
+        table_header = data['table_header']
+        table_data = data['table_data']
+
+        table_stats = {}
+
+        # *****開始清理流程*****
+        for name, header, rows in zip(table_name, table_header, table_data):
+            df = pd.DataFrame(rows, columns=header)
+            
+            stats_dict = {}
+
+            # 執行控制詞彙欄位的統計並存入字典
+            controlled_stats = validate_controll_column(df, header, CONTROLLED_VOCABULARY_COLUMNS)
+            stats_dict['controlled_stats'] = controlled_stats
+            
+            # 執行唯一ID欄位的統計並存入字典
+            unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+            stats_dict['unique_stats'] = unique_stats
+
+            lon_stats = validte_lon_column(df, header, LON_LAT_COLUMNS)
+            stats_dict['lon_stats'] = lon_stats
+
+            lat_stats = validte_lat_column(df, header, LON_LAT_COLUMNS)
+            stats_dict['lat_stats'] = lat_stats
+
+            datetime_stats = validate_datetime_coulmn(df, header)
+            stats_dict['datetime_stats'] = datetime_stats
+
+            date_column_stats = validate_date_column(df, header, DATE_COLUMNS)
+            stats_dict['date_column_stats'] = date_column_stats 
+
+            remain_column_stats = validate_blank_column(df, header, CONTROLLED_VOCABULARY_COLUMNS, UNIQUE_ID_COLUMNS, LON_LAT_COLUMNS, DATETIME_COLUMNS,DATE_COLUMNS)
+            stats_dict['remain_column_stats'] = remain_column_stats 
+
+            # 將該字典存入主字典中，對應於當前的name
+            table_stats[name] = stats_dict
+
+            # app.logger.info(f'name: {table_name}, header: {table_header}, data: {table_data}')
+        print(f'table_stats: {table_stats}')
+    
+    # session['controlled_column_stats'] = controlled_column_stats
+    # session['unique_column_stats'] = unique_column_stats
+    # session['lon_lat_stats'] = lon_lat_stats
+    # session['datetime_column_stats'] = datetime_column_stats
+    # session['date_column_stats'] = date_column_stats
+    # session['remain_column_stats'] = remain_column_stats
+    session['table_stats'] = table_stats
+    
     return redirect(url_for('data_validation'))
 
 @app.route('/data-validation', methods=['GET'])
 def data_validation():
-    controlled_column_stats = session.get('controlled_column_stats')
-    unique_column_stats = session.get('unique_column_stats')
-    lon_lat_stats = session.get('lon_lat_stats')
-    datetime_column_stats = session.get('datetime_column_stats')
-    date_column_stats = session.get('date_column_stats')
-    remain_column_stats = session.get('remain_column_stats')
+    # controlled_column_stats = session.get('controlled_column_stats')
+    # unique_column_stats = session.get('unique_column_stats')
+    # lon_lat_stats = session.get('lon_lat_stats')
+    # datetime_column_stats = session.get('datetime_column_stats')
+    # date_column_stats = session.get('date_column_stats')
+    # remain_column_stats = session.get('remain_column_stats')
+    table_stats = session.get('table_stats')
     
-    return render_template('data-validation.html', 
-                           controlled_column_stats=controlled_column_stats, 
-                           unique_column_stats=unique_column_stats, 
-                           lon_lat_stats=lon_lat_stats,
-                           datetime_column_stats=datetime_column_stats,
-                           date_column_stats=date_column_stats,
-                           remain_column_stats=remain_column_stats)
-
+    return render_template('data-validation.html', table_stats=table_stats)
 
 
 if __name__ == '__main__':

@@ -95,6 +95,7 @@ body {
     font-size: 16px;
     padding: 10px;
     justify-content: space-between;
+    overflow-y: auto;
 }
 
 .box select {
@@ -156,14 +157,14 @@ body {
     /* color:#2B59C3 */
 }
 
-.template-title {
+.template-title, .sheet-title {
     border-right: 1.5px solid #FFF;
     padding-left: 5px;
     display: flex;
     align-items: center;
 }
 
-.column-title {
+.column-title, .edit-title{
     padding-left: 5px;
     /* border-right: 1.5px solid #FFF; */
     display: flex;

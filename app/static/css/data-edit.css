@@ -6,6 +6,10 @@ span {
     display: none;
 }
 
+.template-name {
+    display: none;
+}
+
 .box1 {
     /* background-color: blue; */
     grid-column: 1 / 5;
@@ -76,7 +80,7 @@ span {
 }
 
 .box6 {
-    grid-column: 2 / 6 !important;
+    grid-column: 3 / 6 !important;
     grid-row: 47 / 48 !important;
     border: none !important;
     border-left: none !important;
@@ -96,19 +100,6 @@ span {
     grid-column: 4 / 5 ;
     color: #FFF;
     border-left: 1px solid #2B59C3 !important;
-}
-
-.export-data-btn {
-    background-color: #FFF0E1 !important;
-    color: #2B59C3;
-}
-
-.export-data-btn:hover {
-    cursor: pointer;
-    background-color: #F9F871 !important;
-    color: #2B59C3;
-    transition: 0.3s;
-    /* color:#2B59C3 */
 }
 
 .template-title {
@@ -133,7 +124,8 @@ span {
     line-height: 1.5;
     margin: 0;
     outline: none;
-    padding: 5px 15px 5px 15px;
+    /* padding: 5px 15px 5px 15px; */
+    padding: 10px 20px 10px 20px;
     position: relative;
     text-align: center;
     text-decoration: none;
@@ -206,7 +198,7 @@ span {
     border-radius: 20px;
 }
 
-#insert-row-number {
+.insert-row-number {
     width: 150px;
     top: 6%;
     padding: 3px 6px 3px 6px;
@@ -215,14 +207,14 @@ span {
     background-color: #EEE8A9;
 }
 
-#insert-row-number:focus {
+.insert-row-number:focus {
     outline: none;
 }
 
-#add-row { 
+.add-row-button { 
     position: absolute;
     right: 5px;
-    top: 8%;
+    top: 16%;
     z-index: 999;
     background-color: #EEE8A9;
     border: 1px solid #EEE8A9;
@@ -237,18 +229,8 @@ span {
     padding: 3px 10px 3px 10px;
 }
 
-#add-row:hover {
+.add-row-button:hover {
     cursor: pointer;
-}
-
-.import-btn {
-    background-color: #FFF0E1 !important;
-    border-left: none !important;
-    color: #2B59C3;
-}
-
-.import-btn:hover {
-    background-color: #F9F871 !important;
 }
 
 .back-btn {
@@ -264,4 +246,41 @@ span {
 
 .upload {
     display: none !important;
+}
+
+.tab-title li {
+    list-style-type: none;
+    margin-bottom: 10px;
+
+    font-weight: 600;
+    font-size: 12px;
+    background-color: #F88F70;
+    margin-bottom: 5px;
+    padding: 10px 20px 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-between;
+}
+
+.tab-title li a:link {
+    text-decoration: none;;
+}
+
+.tab-title li:hover {
+    cursor: pointer;
+}
+
+.editing-mark {
+    font-size: 600 !important;
+    color: #2B59C3;
+}
+
+.row-count {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 5px;
 }
