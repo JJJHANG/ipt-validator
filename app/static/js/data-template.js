@@ -6,6 +6,56 @@ var TemplateNames = [];
 
 $(document).ready(function () {
 
+    // IndexedDB instance
+    var request = window.indexedDB.open('IndexedDB', 1);
+    var db;
+
+    request.onsuccess = function (event) {
+        db = request.result;
+        console.log('IndexedDB: up');
+    };
+
+    request.onupgradeneeded = function(event) {
+        db = event.target.result;
+    
+        if (!db.objectStoreNames.contains('col_description')) {
+            var objectStore = db.createObjectStore('col_description', { keyPath: 'name' });
+            objectStore.createIndex('type', 'type', { unique: false });
+            objectStore.createIndex('description', 'description', { unique: false });
+            objectStore.createIndex('commonname', 'commonname', { unique: false });
+            objectStore.createIndex('example', 'example', { unique: false });
+        }
+    };
+
+    function addToIndexedDB() {
+        var transaction = db.transaction(['col_description'], 'readwrite');
+        var objectStore = transaction.objectStore('col_description');
+        
+        $('.checkbox input[type="checkbox"]:checked').each(function () {
+            var name = $(this).parents('.checkbox').data('name');
+            var type = $(this).parents('.checkbox').data('type');
+            var description = $(this).parents('.checkbox').data('description');
+            var commonname = $(this).parents('.checkbox').data('commonname');
+            var example = $(this).parents('.checkbox').data('example');
+    
+            var request = objectStore.put({
+                name: name,
+                type: type, 
+                description: description, 
+                commonname: commonname,  
+                example: example
+            });
+    
+            request.onsuccess = function (event) {
+                console.log(`IndexedDB: ${name} write successfully`);
+            };
+    
+            request.onerror = function (event) {
+                console.log(`IndexedDB: ${name} write fail, ${event.target.error}`);
+            };
+        });
+    }
+    
     // 初始化多選下拉選單
     $('#extension').fSelect();
 
@@ -171,12 +221,13 @@ $(document).ready(function () {
         if ($('#core').val() !== '' || $('#custom').val() !== '') { // 檢查有沒有選擇資料集類型，有的話才能下一步
             updateCheckedCheckboxNames();
             getTemplateNames();
-            console.log(TemplateNames);
-            console.log(CheckedcheckboxNames);
-        
+            // console.log(TemplateNames);
+            // console.log(CheckedcheckboxNames);
+            addToIndexedDB();
+
             $.ajax({
-                type: "POST",
-                url: "/data-template",
+                type: 'POST',
+                url: '/data-template',
                 contentType: 'application/json;charset=UTF-8',
                 data: JSON.stringify({ 'checkbox_names': CheckedcheckboxNames, 'template_names': TemplateNames }),
                 success: function(data) {

@@ -83,7 +83,29 @@
         {% endfor %}
     </ul>
     
-    <div class="col-content d-none" ></div>
+    <div>
+        <div id="description-container">
+            <div id="description-name"></div>
+            <div class="description-content">
+                <div class="description-title">所屬類別</div>
+                <div id="description-type" class="description"></div>
+            </div>
+            <div class="description-content">
+                <div class="description-title">定義</div>
+                <div id="description" class="description"></div>
+            </div>
+            <div class="description-content">
+                <div class="description-title">常見對應名稱</div>
+                <div id="description-commonname" class="description"></div>
+            </div>
+            <div class="description-content">
+                <div class="description-title">範例</div>
+                <div id="description-example" class="description"></div>
+            </div>
+        </div>
+        <div class="col-content d-none" ></div>
+    </div>
+    
     <form class="upload">
         <input type="file" name="uploadFile" accept=".csv" id="import-file"/>
         <br/><br/>

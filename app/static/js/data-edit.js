@@ -259,6 +259,124 @@ $(document).ready(function() {
     $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
     }) 
+
+    // IndexedDB instance
+    var request = window.indexedDB.open('IndexedDB', 1);
+    var db;
+
+    request.onsuccess = function (event) {
+        db = request.result;
+        console.log('IndexedDB: Up');
+    };
+
+    function readFromIndexedDB(key) {
+        return new Promise(function(resolve, reject) {
+            var transaction = db.transaction(['col_description']);
+            var objectStore = transaction.objectStore('col_description');
+            var request = objectStore.get(key);
+    
+            request.onerror = function(event) {
+                console.log('IndexedDB: Fetch error');
+                reject(new Error('Fetch error'));
+            };
+    
+            request.onsuccess = function(event) {
+                if (request.result) {
+                    var data = {
+                        name: request.result.name,
+                        type: request.result.type,
+                        description: request.result.description,
+                        commonname: request.result.commonname,
+                        example: request.result.example
+                    };
+                    resolve(data);
+                } else {
+                    console.log('indexedDB: No data');
+                    resolve('by JJJ');
+                }
+            };
+        });
+    }
+    
+    // $('thead .relative').on('mouseenter', async function() {
+    //     var key = $(this).find('span.colHeader').text();
+    //     console.log(key);
+
+    //     try {
+    //         var data = await readFromIndexedDB(key);
+    //         if (data) {
+    //             $('#description-name').html(data.name).show();
+    //             $('#description-type').html(data.type).show();
+    //             $('#description-description').html(data.description).show();
+    //             $('#description-commonname').html(data.commonname).show();
+    //             $('#description-example').html(data.example).show();
+    //         } else {
+    //             $('#description-container').hide();
+    //         }
+    //     } catch (error) {
+    //         console.log('IndexedDB: Error,', error.message);
+    //     }
+    // });
+
+    // 滑鼠事件之前隱藏樣式
+    $("#description-container").hide();
+    $("#description-name").hide();
+    $("#description-type").hide();
+    $("#description").hide();
+    $("#description-commonname").hide();
+    $("#description-example").hide();
+    $(".description-title").hide();
+
+    $(document).on('mouseenter', 'thead .relative', async function() {
+        var key = $(this).find('span.colHeader').text();
+        console.log(key);
+
+        try {
+            var data = await readFromIndexedDB(key);
+            if (data) {
+                $("#description-container").show();
+                if (data.name) {
+                    $("#description-name").html(data.name);
+                    $("#description-name").show();
+                    $(".description-title").show();
+                }
+                if (data.type) {
+                    $("#description-type").html(data.type);
+                    $("#description-type").show();
+                    $(".description-title").show();
+                }
+                if (data.description) {   
+                    $("#description-description").html(data.description);
+                    $("#description-description").show();
+                    $(".description-title").show();
+                }
+                if (data.commonname) {   
+                    $("#description-commonname").html(data.commonname);
+                    $("#description-commonname").show();
+                    $(".description-title").show();
+                }
+                if (data.example) {   
+                    $("#description-example").html(data.example);
+                    $("#description-example").show();
+                    $(".description-title").show();
+                }
+            } else {
+                // $('#description-container').hide();
+            }
+        } catch (error) {
+            console.log('IndexedDB: Error,', error.message);
+        }
+    });
+
+    $(document).on('mouseleave', 'thead .relative', async function() {
+        $("#description-container").hide();
+        $("#description-name").hide();
+        $("#description-type").hide();
+        $("#description").hide();
+        $("#description-commonname").hide();
+        $("#description-example").hide();
+        $(".description-title").hide();
+    });
 });
 
 // 功能：測試匯入資料
