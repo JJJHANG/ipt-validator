@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify, send_file
 import os
 import pandas as pd
 import numpy as np
 import datetime
+import tempfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -60,11 +61,12 @@ def data_edit():
 @app.route('/process-validation', methods=['POST'])
 def process_validation():
 
-    CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus', 'continent']
-    UNIQUE_ID_COLUMNS = ['occurrenceID', 'taxonID', 'samp_name']
+    CONTROLLED_VOCABULARY_COLUMNS = ['basisOfRecord', 'type', 'occurrenceStatus', 'continent', 'language', 'license', 'sex', 'establishmentMeans', 'degreeOfEstablishment', 'typeStatus', 'kingdom']
+    UNIQUE_ID_COLUMNS = ['eventID', 'occurrenceID', 'taxonID', 'samp_name']
     LON_LAT_COLUMNS = ['decimalLongitude', 'decimalLatitude']
     DATETIME_COLUMNS = ['eventDate']
     DATE_COLUMNS = ['year', 'month', 'day']
+    INT_COLUMNS = ['individualCount', 'maximumElevationMeters', 'minimumElevationInMeters', 'maximumDepthInMeters', 'minimumDepthInMeters']
 
 
     # *****檢查控制詞彙欄位*****
@@ -75,16 +77,37 @@ def process_validation():
         for col in common_columns:
             if col == 'basisOfRecord':
                 valid_values = ['MaterialEntity', 'PreservedSpecimen', 'FossilSpecimen', 'LivingSpecimen', 'MaterialSample', 'Event', 'HumanObservation', 'MachineObservation', 'Taxon', 'Occurrence', 'MaterialCitation']
-                error_message = 'Basis of record invalid'
+                error_message = 'basisOfRecord 無效'
             elif col == 'type':
                 valid_values = ['Collection', 'Dataset', 'Event', 'Image', 'MovingImage', 'PhysicalObject', 'Sound', 'StillImage', 'Text']
-                error_message = 'Type status invalid'
+                error_message = 'type 無效'
             elif col == 'occurrenceStatus':
                 valid_values = ['absent', 'present']
-                error_message = 'Occurrence status invalid'
+                error_message = 'occurrenceStatus 無效'
             elif col == 'continent':
                 valid_values = ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America']
-                error_message = 'Continent invalid'
+                error_message = 'continent 無效'
+            elif col == 'language':
+                valid_values = ['en', 'zh-TW']
+                error_message = 'language 無效'
+            elif col == 'license':
+                valid_values = ['CC0 1.0', 'CC BY 4.0', 'CC BY-NC 4.0', 'No license']
+                error_message = 'license 無效'
+            elif col == 'sex':
+                valid_values = ['female', 'male', 'hermaphrodite']
+                error_message = 'sex 無效'
+            elif col == 'establishmentMeans':
+                valid_values = ['native', 'nativeReintroduced', 'introduced', 'introducedAssistedColonisation', 'vagrant', 'uncertain']
+                error_message = 'establishmentMeans 無效'
+            elif col == 'degreeOfEstablishment':
+                valid_values = ['native', 'captive', 'cultivated', 'released', 'failing', 'casual', 'reproducing', 'established', 'colonising', 'invasive', 'widespreadInvasive']
+                error_message = 'degreeOfEstablishment 無效'
+            elif col == 'typeStatus':
+                valid_values = ['holotype', 'paratype', 'isotype', 'allotype', 'syntype', 'lectotype', 'paralectotype', 'neotype', 'topotype']
+                error_message = 'typeStatus 無效'
+            elif col == 'kingdom':
+                valid_values = ['Animalia', 'Archaea', 'Bacteria', 'Chromista', 'Fungi', 'Plantae', 'Protozoa', 'Viruses']
+                error_message = 'kingdom 無效'
             
             # 檢查欄位值是否在 valid_values 中
             invalid_rows = df[~df[col].isin(valid_values)]
@@ -94,6 +117,8 @@ def process_validation():
             valid_rows = TOTAL_ROWS - len(invalid_rows) # None 會直接算到 invalid_rows 裡面，所以不扣 blank
             counts_rows = TOTAL_ROWS - len(blank_rows)
             valid_percentage = round((valid_rows / TOTAL_ROWS) * 100, 1)
+            if valid_percentage == 0.0:
+                valid_percentage = 0
 
             # 提取不符合的值和索引號
             invalid_values = invalid_rows[col].tolist()
@@ -102,14 +127,14 @@ def process_validation():
             # 儲存統計結果到字典
             controlled_column_stats[col] = {
                 'counts_rows': counts_rows,
+                'valid_rows': valid_rows,
+                'valid_percentage': valid_percentage,
                 'invalid_rows': {
                     'count': len(invalid_rows),
+                    'error_message': error_message,
                     'values': invalid_values,
                     'indexes': invalid_indexes,
                 },
-                'valid_rows': valid_rows,
-                'valid_percentage': valid_percentage,
-                'error_message': error_message
             }
         
         return controlled_column_stats
@@ -145,21 +170,26 @@ def process_validation():
                 # 拆分回 index 和 value
                 sorted_indexes, sorted_values = zip(*sorted_pairs)
 
+                blank_rows = df[df[col].isna()]
+                counts_rows = TOTAL_ROWS - len(blank_rows)
+
                 invalid_rows = len(duplicated_values)
                 valid_rows = TOTAL_ROWS - invalid_rows
                 valid_percentage = round((valid_rows / TOTAL_ROWS) * 100, 1)
-                error_message = f'{col} is not unique'
+                if valid_percentage == 0.0:
+                    valid_percentage = 0
+                error_message = f'{col} 有重複'
 
                 unique_column_stats[col] = {
-                    'total_rows': TOTAL_ROWS,
+                    'counts_rows': counts_rows,
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
                     'invalid_rows': {
                         'count': invalid_rows,
+                        'error_message': error_message,
                         'values': list(sorted_values),
                         'indexes': list(sorted_indexes),
                     },
-                    'valid_rows': valid_rows,
-                    'valid_percentage': valid_percentage,
-                    'error_message': error_message
                 }
 
         return unique_column_stats
@@ -181,24 +211,30 @@ def process_validation():
                 counts_rows = TOTAL_ROWS - len(blank_rows)
                 valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows) - zero_rows 
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-                error_message = 'Longitude out of range'
+                error_message = 'decimalLongitude 超出範圍'
 
                 lon_stats[col] = {
                     'counts_rows': counts_rows,
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
                     'invalid_rows': {
                         'count': invalid_rows,
                         'values': invalid_longitude_rows['decimalLongitude'].tolist(),
                         'indexes': (invalid_longitude_rows.index + 1).tolist(),
+                        'error_message': error_message
                     },
                     'zero_rows': {  
                         'count': zero_rows,
-                        'values': 0,
+                        'values': [0] * zero_rows,
                         'indexes': (zero_longitude_rows.index + 1).tolist(),
-                        'error_message': 'Longitude zero coordinate'
+                        'error_message': 'decimalLongitude 零座標'
                     },
-                    'valid_rows': valid_rows,
-                    'valid_percentage': valid_percentage,
-                    'error_message': error_message
+                    'blank_rows': {
+                        'count': len(blank_rows),
+                        'values': [None] * len(blank_rows),
+                        'indexes': (blank_rows.index + 1).tolist(),
+                        'error_message': 'decimalLongitude 有空值'
+                    },
                 }
 
         return lon_stats
@@ -219,24 +255,30 @@ def process_validation():
                 valid_rows = TOTAL_ROWS - invalid_rows - len(blank_rows) - zero_rows
                 counts_rows = TOTAL_ROWS - len(blank_rows)
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-                error_message = 'Latitude out of range'
+                error_message = 'decimalLatitude 超出範圍'
 
                 lat_stats[col] = {
                     'counts_rows': counts_rows,
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
                     'invalid_rows': {
                         'count': invalid_rows,
                         'values': invalid_latitude_rows['decimalLatitude'].tolist(),
                         'indexes': (invalid_latitude_rows.index + 1).tolist(),
+                        'error_message': error_message
                     },
                     'zero_rows': {  
                         'count': zero_rows,
-                        'values': 0,
+                        'values': [0] * zero_rows,
                         'indexes': (zero_latitude_rows.index + 1).tolist(),
-                        'error_message': 'Latitude zero coordinate'
+                        'error_message': 'decimalLatitude 零座標'
                     },
-                    'valid_rows': valid_rows,
-                    'valid_percentage': valid_percentage,
-                    'error_message': error_message
+                    'blank_rows': {
+                        'count': len(blank_rows),
+                        'values': [None] * len(blank_rows),
+                        'indexes': (blank_rows.index + 1).tolist(),
+                        'error_message': 'decimalLatitude 有空值'
+                    },
                 }
 
         return lat_stats
@@ -273,7 +315,7 @@ def process_validation():
             invalid_rows = df[df['parsed_eventDate'].isna()] # 轉換後的 na 代表無效值
             valid_rows = TOTAL_ROWS - len(invalid_rows)
             counts_rows = TOTAL_ROWS - len(blank_rows)
-            valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
+            valid_percentage = round((valid_rows / TOTAL_ROWS) * 100, 1) if counts_rows != 0 else 0
 
             df['parsed_eventDate'] = pd.to_datetime(df['parsed_eventDate'])
             df['parsed_year'] = df['parsed_eventDate'].dt.year.fillna(-1).astype(int)
@@ -327,35 +369,35 @@ def process_validation():
 
             datetime_column_stats['eventDate'] = {
                 'counts_rows': counts_rows,
+                'valid_rows': valid_rows,
+                'valid_percentage': valid_percentage,
                 'invalid_rows': {
                     'count': len(invalid_rows),
                     'values': invalid_rows['eventDate'].tolist(),
                     'indexes': (invalid_rows.index + 1).tolist(),
+                    'error_message': 'eventDate 無效'
                 },
                 'mismatched_year_rows': None if mismatched_year_rows is None or mismatched_year_rows.empty else {
                     'count': len(mismatched_year_rows),
                     'values': mismatched_year_values,
                     'indexes': mismatched_year_indexes,
                     'raw_eventDate': mismatched_year_eventDate,
-                    'error_message': 'Recorded year mismatch'
+                    'error_message': 'year 不匹配'
                 },
                 'mismatched_month_rows': None if mismatched_month_rows is None or mismatched_month_rows.empty else {
                     'count': len(mismatched_month_rows),
                     'values': mismatched_month_values,
                     'indexes': mismatched_month_indexes,
                     'raw_eventDate': mismatched_month_eventDate,
-                    'error_message': 'Recorded month mismatch'
+                    'error_message': 'month 不匹配'
                 },
                 'mismatched_day_rows': None if mismatched_day_rows is None or mismatched_day_rows.empty else {
                     'count': len(mismatched_day_rows),
                     'values': mismatched_day_values,
                     'indexes': mismatched_day_indexes,
                     'raw_eventDate': mismatched_day_eventDate,
-                    'error_message': 'Recorded day mismatch'
-                },
-                'valid_rows': valid_rows,
-                'valid_percentage': valid_percentage,
-                'error_message': 'Recorded date invalid'
+                    'error_message': 'day 不匹配'
+                },           
             }
 
         return datetime_column_stats
@@ -377,18 +419,18 @@ def process_validation():
                 valid_rows = TOTAL_ROWS - len(invalid_rows) - len(blank_rows)
                 counts_rows = TOTAL_ROWS - len(blank_rows)
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-                error_message = 'Recorded year invalid'
+                error_message = 'year 無效'
 
                 date_column_stats[col] = {
                     'counts_rows': counts_rows,
-                    'invalid_rows': {
-                        'count': len(invalid_rows),
-                        'values': invalid_rows['year'].tolist(),
-                        'indexes': (invalid_rows.index + 1).tolist(),
-                    },
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,
-                    'error_message': error_message
+                    'invalid_rows': {
+                        'count': len(invalid_rows),
+                        'error_message': error_message,
+                        'values': invalid_rows['year'].tolist(),
+                        'indexes': (invalid_rows.index + 1).tolist(),
+                    },   
                 }
 
             if col == 'month' and col in df.columns:
@@ -398,18 +440,18 @@ def process_validation():
                 valid_rows = TOTAL_ROWS - len(invalid_rows) - len(blank_rows)
                 counts_rows = TOTAL_ROWS - len(blank_rows)
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-                error_message = 'Recorded month invalid'
+                error_message = 'month 無效'
 
                 date_column_stats[col] = {
                     'counts_rows': counts_rows,
-                    'invalid_rows': {
-                        'count': len(invalid_rows),
-                        'values': invalid_rows['month'].tolist(),
-                        'indexes': (invalid_rows.index + 1).tolist(),
-                    },
                     'valid_rows': valid_rows,
                     'valid_percentage': valid_percentage,
-                    'error_message': error_message
+                    'invalid_rows': {
+                        'count': len(invalid_rows),
+                        'error_message': error_message,
+                        'values': invalid_rows['month'].tolist(),
+                        'indexes': (invalid_rows.index + 1).tolist(),
+                    },                   
                 }
 
             if col == 'day' and col in df.columns:
@@ -419,50 +461,89 @@ def process_validation():
                 valid_rows = TOTAL_ROWS - len(invalid_rows) - len(blank_rows)
                 counts_rows = TOTAL_ROWS - len(blank_rows)
                 valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-                error_message = 'Recorded day invalid'
+                error_message = 'day 無效'
 
                 date_column_stats[col] = {
                     'counts_rows': counts_rows,
+                    'valid_rows': valid_rows,
+                    'valid_percentage': valid_percentage,
                     'invalid_rows': {
                         'count': len(invalid_rows),
+                        'error_message': error_message,
                         'values': invalid_rows['day'].tolist(),
                         'indexes': (invalid_rows.index + 1).tolist(),
                     },
-                    'valid_rows': valid_rows,
-                    'valid_percentage': valid_percentage,
-                    'error_message': error_message
                 }
 
         return date_column_stats
+    
+    # *****檢查正整數欄位*****
+    def validate_int_column(df, table_header, INT_COLUMNS):
+        validate_int_column = {}
+        TOTAL_ROWS = len(df) # 計算空白值會用到
+        common_columns = set(table_header) & set(INT_COLUMNS)
+
+        valid_values = set(range(0, int(1e5)))
+
+        for col in common_columns:
+            
+            # 檢查欄位值是否在 valid_values 中
+            invalid_rows = df[~(df[col].isin(valid_values))]
+            blank_rows = df[df[col].isna()]
+
+            # 計算統計資訊
+            valid_rows = TOTAL_ROWS - len(invalid_rows) # None 會直接算到 invalid_rows 裡面，所以不扣 blank
+            counts_rows = TOTAL_ROWS - len(blank_rows)
+            valid_percentage = round((valid_rows / TOTAL_ROWS) * 100, 1)
+
+            # 提取不符合的值和索引號
+            invalid_values = invalid_rows[col].tolist()
+            invalid_indexes = (invalid_rows.index + 1).tolist() # pandas 從 0 開始，但 Handsontable 從 1 開始
+
+            error_message = f'{col} 無效'
+
+            # 儲存統計結果到字典
+            validate_int_column[col] = {
+                'counts_rows': counts_rows,
+                'invalid_rows': {
+                    'count': len(invalid_rows),
+                    'values': invalid_values,
+                    'indexes': invalid_indexes,
+                },
+                'valid_rows': valid_rows,
+                'valid_percentage': valid_percentage,
+                'error_message': error_message
+            }
+        
+        return validate_int_column
             
     # *****檢查空白欄位*****
     def validate_blank_column(df, table_header, CONTROLLED_VOCABULARY_COLUMNS, UNIQUE_ID_COLUMNS, LON_LAT_COLUMNS, DATETIME_COLUMNS,DATE_COLUMNS):
         remain_column_stats = {}
         TOTAL_ROWS = len(df) # 計算空白值會用到  
         remain_columns = set(table_header) - set(CONTROLLED_VOCABULARY_COLUMNS + 
-                                                    UNIQUE_ID_COLUMNS +
-                                                    LON_LAT_COLUMNS +
-                                                    DATETIME_COLUMNS +
-                                                    DATE_COLUMNS)
+                                                UNIQUE_ID_COLUMNS +
+                                                LON_LAT_COLUMNS +
+                                                DATETIME_COLUMNS +
+                                                DATE_COLUMNS)
         for col in remain_columns:
             blank_rows = df[df[col].isna()]
 
             valid_rows = TOTAL_ROWS - len(blank_rows)
             counts_rows = TOTAL_ROWS - len(blank_rows) # 沒有做額外檢查的話，valid_rows 等於 counts_rows
             valid_percentage = round((valid_rows / counts_rows) * 100, 1) if counts_rows != 0 else 0
-            error_message = f'{col} is blank'
+            error_message = f'{col} 有空值'
 
             remain_column_stats[col] = {
-                # 'column_name': col,
                 'counts_rows': counts_rows,
                 'valid_rows': valid_rows,
+                'valid_percentage': valid_percentage,
                 'blank_rows': {
                     'counts': len(blank_rows),
+                    'error_message': error_message,
                     'values': blank_rows[col].tolist(),
                     'indexes': (blank_rows.index + 1).tolist(),
                 },
-                'valid_percentage': valid_percentage,
-                'error_message': error_message
             }
 
         return remain_column_stats
@@ -474,6 +555,7 @@ def process_validation():
         table_header = data['table_header']
         table_data = data['table_data']
 
+        print(table_name)
         table_stats = {}
 
         # *****開始清理流程*****
@@ -482,13 +564,17 @@ def process_validation():
             
             stats_dict = {}
 
+            if name in ['checklist', 'occurrence', 'samplingevent']: # 只有核心才檢查 ID 類欄位
+                UNIQUE_ID_COLUMNS = ['eventID', 'occurrenceID', 'taxonID', 'samp_name']
+                unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+                stats_dict['unique_stats'] = unique_stats
+            else:
+                UNIQUE_ID_COLUMNS = []
+                stats_dict['unique_stats'] = {}
+
             # 執行控制詞彙欄位的統計並存入字典
             controlled_stats = validate_controll_column(df, header, CONTROLLED_VOCABULARY_COLUMNS)
             stats_dict['controlled_stats'] = controlled_stats
-            
-            # 執行唯一ID欄位的統計並存入字典
-            unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
-            stats_dict['unique_stats'] = unique_stats
 
             lon_stats = validte_lon_column(df, header, LON_LAT_COLUMNS)
             stats_dict['lon_stats'] = lon_stats
@@ -500,9 +586,12 @@ def process_validation():
             stats_dict['datetime_stats'] = datetime_stats
 
             date_column_stats = validate_date_column(df, header, DATE_COLUMNS)
-            stats_dict['date_column_stats'] = date_column_stats 
+            stats_dict['date_column_stats'] = date_column_stats
 
-            remain_column_stats = validate_blank_column(df, header, CONTROLLED_VOCABULARY_COLUMNS, UNIQUE_ID_COLUMNS, LON_LAT_COLUMNS, DATETIME_COLUMNS,DATE_COLUMNS)
+            # int_column_stats = validate_int_column(df, header, INT_COLUMNS)
+            # stats_dict['int_column_stats'] = int_column_stats 
+
+            remain_column_stats = validate_blank_column(df, header, CONTROLLED_VOCABULARY_COLUMNS, UNIQUE_ID_COLUMNS, LON_LAT_COLUMNS, DATETIME_COLUMNS, DATE_COLUMNS)
             stats_dict['remain_column_stats'] = remain_column_stats 
 
             # 將該字典存入主字典中，對應於當前的name
@@ -510,28 +599,54 @@ def process_validation():
 
             # app.logger.info(f'name: {table_name}, header: {table_header}, data: {table_data}')
         print(f'table_stats: {table_stats}')
-    
-    # session['controlled_column_stats'] = controlled_column_stats
-    # session['unique_column_stats'] = unique_column_stats
-    # session['lon_lat_stats'] = lon_lat_stats
-    # session['datetime_column_stats'] = datetime_column_stats
-    # session['date_column_stats'] = date_column_stats
-    # session['remain_column_stats'] = remain_column_stats
+
     session['table_stats'] = table_stats
+    session['table_name'] = table_name
     
     return redirect(url_for('data_validation'))
 
 @app.route('/data-validation', methods=['GET'])
 def data_validation():
-    # controlled_column_stats = session.get('controlled_column_stats')
-    # unique_column_stats = session.get('unique_column_stats')
-    # lon_lat_stats = session.get('lon_lat_stats')
-    # datetime_column_stats = session.get('datetime_column_stats')
-    # date_column_stats = session.get('date_column_stats')
-    # remain_column_stats = session.get('remain_column_stats')
+    template_names = session.get('template_names', [])
     table_stats = session.get('table_stats')
+    table_name = session.get('table_name')
     
-    return render_template('data-validation.html', table_stats=table_stats)
+    return render_template('data-validation.html', table_stats=table_stats, table_name=table_name, template_names=template_names)
+
+@app.route('/download-result', methods=['POST'])
+def download_result():
+
+    table_stats = session.get('table_stats')
+
+    # 初始化一個空的列表來保存每個欄位的資料
+    data = []
+
+    for main_key, sub_dict in table_stats.items():
+    # 遍歷子字典中的鍵值對
+        for sub_key, values in sub_dict.items():
+            for sub_sub_key, sub_values in values.items():
+                if sub_values.get('valid_percentage') != 100:  # 如果 valid_percentage 不等於 100
+                    row_data = {
+                        'Template': main_key,
+                        'Term': sub_sub_key,
+                        **sub_values  # 使用 ** 來展開子字典中的所有鍵值對
+                    }
+                data.append(row_data)
+
+    # 將列表轉換為 DataFrame
+    df = pd.DataFrame(data)
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
+    df.to_csv(temp_file.name, index=False)
+
+    try:
+        return send_file(temp_file.name,
+                        mimetype='"text/csv"',
+                        as_attachment=True,
+                        download_name='test.csv')
+
+    except FileNotFoundError:
+        print('404')
 
 
 if __name__ == '__main__':

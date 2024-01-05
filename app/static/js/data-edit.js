@@ -8,7 +8,8 @@ $(document).ready(function() {
     var $li = $('ul.tab-title li');
 
     // 初始化第一個 li 為 active
-    $($li.eq(0).addClass('active').find('a').attr('href')).siblings('.tab-inner').hide();
+    $($li.eq(0).addClass('active now').find('a').attr('href')).siblings('.tab-inner').hide();
+    $li.eq(0).find('a').addClass('now');
     $li.filter('.active:first').find('.editing-mark').removeClass('d-none');
 
     // 點擊 li 時的事件
@@ -19,10 +20,15 @@ $(document).ready(function() {
 
         // 顯示當前點擊的 li 對應的 tab-inner
         $($(this).find('a').attr('href')).show();
+        $(this).find('a').addClass('now');
+        $(this).addClass('now');
 
         // 切換 active 狀態
         $(this).addClass('active')
+        $(this).siblings().find('a.now').removeClass('now');
         $(this).siblings('.active').removeClass('active');
+        $(this).siblings('.now').removeClass('now');
+        
 
         // 顯示當前點擊的 li 中的 editing-mark
         if ($(this).hasClass('active')) {
@@ -380,6 +386,12 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                         source: ['holotype', 'paratype', 'isotype', 'allotype', 'syntype', 'lectotype', 'paralectotype', 'neotype', 'topotype'], 
                         trimDropdown: false 
                     };
+                } else if (name === 'kingdom') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Animalia', 'Archaea', 'Bacteria', 'Chromista', 'Fungi', 'Plantae', 'Protozoa', 'Viruses'], 
+                        trimDropdown: false 
+                    };
                 } else if (name === 'decimalLongitude') {
                     return {
                         type: 'numeric',
@@ -469,6 +481,12 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                     return {
                         type: 'dropdown',
                         source: ['holotype', 'paratype', 'isotype', 'allotype', 'syntype', 'lectotype', 'paralectotype', 'neotype', 'topotype'], 
+                        trimDropdown: false 
+                    };
+                } else if (name === 'kingdom') {
+                    return {
+                        type: 'dropdown',
+                        source: ['Animalia', 'Archaea', 'Bacteria', 'Chromista', 'Fungi', 'Plantae', 'Protozoa', 'Viruses'], 
                         trimDropdown: false 
                     };
                 } else if (name === 'decimalLongitude') {

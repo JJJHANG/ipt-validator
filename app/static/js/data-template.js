@@ -26,6 +26,7 @@ $(document).ready(function () {
         $('.fs-label').text('');
         $('.fs-option').removeClass('selected');
         $('#extensionFieldset').html('');
+        CheckedcheckboxNames = {}; // 每換一次核心就清空前一次的數據
 
         updateFieldsetContent(); // 更新對應的核心欄位內容
 
@@ -49,6 +50,7 @@ $(document).ready(function () {
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // handleCheckboxClick(); // 檢查欄位是否重複勾選
+        console.log(CheckedcheckboxNames);
     });
 
     // 下拉選單事件：更新延伸資料集的欄位內容
@@ -57,7 +59,6 @@ $(document).ready(function () {
         updateExtensionFieldsetContent();
         handelSpecificColumn(); // 處理特定欄位的規則
         // updateCheckedCheckboxNames();
-        console.log(allCheckedCheckboxNames);
 
         // 檢查延伸資料集和其他重複的欄位
         if ($('#core option:selected').text() !== '' || $('#custom option:selected').text() !== '') {
@@ -71,9 +72,7 @@ $(document).ready(function () {
         }
         
         // updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
-        console.log(allCheckedCheckboxNames);
-        handleCheckboxClick(); // 檢查 checkbox 是否重複勾選
-        
+        // handleCheckboxClick(); // 檢查 checkbox 是否重複勾選  
     });
 
     // 下拉選單事件：更新自訂模板的欄位內容
@@ -85,7 +84,6 @@ $(document).ready(function () {
             $('#custom-template-container span:nth-child(2)').addClass('d-none');
         }
         
-        updateFieldsetContent(); // 更新對應的核心欄位內容
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
 
         if ($('#requiredFieldset').length > 0) { // 只要重選自訂模板，其他的下拉選單一起重置
@@ -95,6 +93,8 @@ $(document).ready(function () {
             $('#requiredFieldset').html('');
             $('#extensionFieldset').html('');
         }
+
+        updateFieldsetContent(); // 更新對應的核心欄位內容
 
         // 檢查自訂模板和延伸資料集重複的欄位
         var selectedOptions = $('.fs-option.selected');
@@ -243,18 +243,15 @@ $(document).ready(function () {
         $('.save-popup').removeClass('d-none');
     }) 
 
-    $('.xx').on('click', function (event) {
-        $('.popup-container').addClass('d-none');
-    }) 
-
     $('#save-btn').on('click', function (event) {
         updateCheckedCheckboxNames();
+        console.log(CheckedcheckboxNames);
         const templateName = $('#template-name').val();
         const newOption = $("<option>")
-        .attr('value', allCheckedCheckboxNames.join(','))
+        // .attr('value', CheckedcheckboxNames.join(','))
         .text(templateName);
 
-        localStorage.setItem(templateName, JSON.stringify(allCheckedCheckboxNames));
+        localStorage.setItem(templateName, JSON.stringify(CheckedcheckboxNames));
 
         $('.save-popup').addClass('d-none');
         $('#custom').append(newOption);
@@ -275,6 +272,10 @@ $(document).ready(function () {
         $('.delete-template-popup').addClass('d-none');
         location.reload();
     });
+
+    $('.xx').on('click', function (event) {
+        $('.popup-container').addClass('d-none');
+    }) 
 });
 
 // 功能：處理必選欄位、ID類欄位
@@ -309,7 +310,7 @@ function renderSavedOptions() {
         const checkboxNames = JSON.parse(localStorage.getItem(templateName));
 
         const newOption = $("<option>")
-            .attr('value', checkboxNames.join(','))
+            // .attr('value', checkboxNames.join(','))
             .text(templateName);
         $('#custom').append(newOption);
     }
@@ -346,6 +347,10 @@ function updateCheckedCheckboxNames() {
     }).get();
 
     var coreTemplateName = $('#core option:selected').val();
+    if (coreTemplateName === 'None' || !coreTemplateName) {
+        // 如果coreTemplateName是None或為空，則設定它為custom option的值
+        coreTemplateName = $('#custom option:selected').val();
+    }
 
     CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
 
@@ -377,14 +382,35 @@ function updateCheckedCheckboxNames() {
 }
 
 function getTemplateNames() {
-    var coreTemplateName = $('#core option:selected').val();
-    var extensionTemplateName = $('.fs-option.selected').map(function() {
+    var coreTemplateNameValue = $('#core option:selected').val();
+    var coreTemplateName = {
+        '資料集類型': [coreTemplateNameValue]
+    };
+
+    if (coreTemplateNameValue === 'None' || !coreTemplateNameValue) {
+        // 如果coreTemplateName是None或為空，則設定它為custom option的值
+        var customTemplateNameValue = $('#custom option:selected').val();
+        coreTemplateName = {
+            '資料集類型': [customTemplateNameValue]
+        };
+    }
+
+    var extensionTemplateNameValue = $('.fs-option.selected').map(function() {
         return $(this).data('value');
     }).get();
+    
+    var extensionTemplateName = {
+        '延伸資料集': extensionTemplateNameValue.length > 0 ? extensionTemplateNameValue : $('#extensionFieldset').find('fieldset').map(function() {
+            return $(this).attr('id');
+        }).get()
+    };
 
-    coreTemplateName = [coreTemplateName];
-    TemplateNames = coreTemplateName.concat(extensionTemplateName);
+    TemplateNames = {
+        '資料集類型': coreTemplateName['資料集類型'],
+        '延伸資料集': extensionTemplateName['延伸資料集']
+    };
 }
+
 
 // 功能：檢查欄位勾選是否重複
 function handleCheckboxClick() {
@@ -1681,29 +1707,48 @@ function updateFieldsetContent() {
 
     if (selectedCustom !== '') {
         // console.log(selectedCustom)
-        var checkboxNames = selectedCustom.split(',');
+        // var checkboxNames = selectedCustom.split(',');
         // console.log(checkboxNames)
         
         var customTemplateName = $("#custom option:selected").text();
-        var customFieldset = `<fieldset id="custom"><legend>自訂模板：${customTemplateName}</legend>`;
+        var fieldsetContent = `<fieldset id="custom-core" class="required-fieldset"><legend>${customTemplateName}：資料集類型欄位</legend>`;
+        var customExtensionFieldsetContent = '';
 
-        for (var i = 0; i < checkboxNames.length; i++) {
-            var checkboxName = checkboxNames[i];
-            
-            var customFieldsetContent = `
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="${checkboxName}" checked/>
-                        ${checkboxName}
-                    </label>
-                </div>
-            `;
-        
-            customFieldset += customFieldsetContent ;
+        const storedData = JSON.parse(localStorage.getItem(customTemplateName));
+
+        for (const key in storedData) {
+            if (Array.isArray(storedData[key])) {
+                console.log(`${key}:`, storedData[key]);
+                if (['checklist', 'samplingevent', 'occurrence'].includes(key)) {
+                    for (let i = 0; i < storedData[key].length; i++) {
+                        fieldsetContent += `
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="${storedData[key][i]}" checked />
+                                    ${storedData[key][i]}
+                                </label>
+                            </div>
+                        `;
+                    }
+                } else if (['darwin-core-occurrence', 'simple-multimedia', 'extended-measurement-or-facts', 'resource-relationship', 'dna-derived-data'].includes(key)) {
+                    customExtensionFieldsetContent += `<fieldset id="${key}"><legend>${customTemplateName} ${key}：延伸資料集欄位</legend>`;
+                    for (let i = 0; i < storedData[key].length; i++) {
+                        customExtensionFieldsetContent += `
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="${storedData[key][i]}" checked />
+                                    ${storedData[key][i]}
+                                </label>
+                            </div>
+                        `;
+                    }
+                    customExtensionFieldsetContent += '</fieldset>';
+                }
+            }
         }
-        customFieldset += '</fieldset>';
-        $("#customFieldset").html(customFieldset);
-        // fieldsetContent += customFieldset
+        customExtensionFieldsetContent += '</fieldset>';
+        $("#extensionFieldset").html(customExtensionFieldsetContent);
+        fieldsetContent += '</fieldset>';
     } else {
         $("#customFieldset").html('');
     }

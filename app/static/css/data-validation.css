@@ -47,10 +47,11 @@
 
 .error-message-box {
     font-weight: 400;
-    font-size: 12px;
-    background-color: #EEE8A9;
+    font-size: 14px;
+    /* background-color: #EEE8A9; */
+    border: 1px solid #2B59C3;
     margin-bottom: 5px;
-    padding: 5px 15px 5px 15px;
+    padding: 10px 25px 10px 25px;
     border-radius: 20px;
     display: flex;
     justify-content: space-between;
@@ -63,11 +64,11 @@
 
 .mismatch {
     /* background-color: #C0A975; */
-    background-color: #FFC05C;
+    /* background-color: #FFC05C; */
 }
 
 .blank {
-     background-color: #B9CCFF;
+    /* background-color: #B9CCFF; */
 }
 
 .invalid_rows {
@@ -76,7 +77,7 @@
 }
 
 .accordion-menu {
-    padding-left: 15px;
+    padding-left: 25px;
     margin-top: 5px;
     margin-bottom: 15px;
     font-weight: 300;
@@ -86,11 +87,8 @@
 .table-title {
     font-weight: 600;
     margin-bottom: 15px;
-    margin-left: 15px;
-}
-
-.term-frequency {
-    padding: 0px 5px 0px 5px;
+    margin-top: 15px;
+    margin-left: 10px;
 }
 
 .term-frequency-table {
@@ -101,22 +99,44 @@
     background-color: #EEE8A9;
     font-weight: 600 !important;
     color: #2B59C3;
-    width:25vw;
-    height:50px;
+    /* width:20vw; */
+    height:35px;
     text-align: left;
-    padding-left: 20px;
-    font-size: 14px;
+    /* padding-left: 15px;
+    padding-right: 15px; */
+    font-size: 12px;
 }
 
 .term-frequency-table tbody tr th{
     font-weight: 400 !important;
     background-color: #FFF0E1;
-    width:25vw;
-    height:50px;
+    /* width:20vw; */
+    height:35px;
     text-align:left;
-    font-size: 14px;
+    font-size: 12px;
     color: #2B59C3;
-    padding-left: 20px;
+    /* padding-left: 15px;
+    padding-right: 15px; */
+}
+
+.term-frequency-table thead tr th:first-child {
+    width:70vw;
+    padding-left: 15px;
+}
+
+.term-frequency-table thead tr th:last-child {
+    width:30vw;
+    padding-right: 10px;
+}
+
+.term-frequency-table tbody tr th:first-child {
+    width:70vw;
+    padding-left: 15px;
+}
+
+.term-frequency-table tbody tr th:last-child {
+    width:30vw;
+    padding-right: 10px;
 }
 
 .term-frequency-table tbody tr:nth-of-type(even) th {
@@ -136,7 +156,7 @@
 }
 
 .accordion-table thead tr th {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     text-align:left;
 }
@@ -153,7 +173,7 @@
     text-align: center !important;
 }
 
-.three-col thead tr th:first-child {
+/* .three-col thead tr th:first-child {
     width: 20vw; 
 }
 
@@ -163,7 +183,7 @@
 
 .three-col thead tr th:nth-child(3) {
     width: calc(3 * 20vw); 
-}
+} */
 
 .next-btn {
     grid-column: 4 / 5 ;
@@ -197,34 +217,49 @@
     background-color: #F9F871 !important;
 }
 
-.tab-title {
-margin-bottom: 15px;
-}
-
 .tab-title li {
     list-style-type: none;
     margin-bottom: 10px;
-
     font-weight: 600;
     font-size: 12px;
-    background-color: #F88F70;
     margin-bottom: 5px;
     padding: 10px 20px 10px 20px;
+    border: 1px solid #2B59C3;
     border-radius: 20px;
     display: flex;
     /* flex-direction: column; */
     justify-content: space-between;
 }
 
-.tab-title li a:link {
-    text-decoration: none;;
+.tab-title .bookmark-title:nth-of-type(2) {
+    margin-top: 10px;
+}
+
+.tab-title li:visited {
+    color: #2B59C3;
+}
+
+.tab-title li:hover{
+    color: #FFF;
+    background-color: #2B59C3;
 }
 
 .tab-title li:hover {
     cursor: pointer;
 }
 
+.now {
+    color: #FFF !important;
+    background-color: #2B59C3;
+}
+
 .editing-mark {
     font-size: 600 !important;
-    color: #2B59C3;
+    color: #FFF;
+}
+
+.bookmark-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-left: 10px;
 }

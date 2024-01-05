@@ -16,7 +16,7 @@ $(document).ready(function() {
     $('.tab-inner').hide();
 
     // 初始化第一個 li 為 active
-    $($li.eq(0).addClass('active').find('a').attr('href')).siblings('.tab-inner').hide();
+    $($li.eq(0).addClass('active now').find('a').attr('href')).siblings('.tab-inner').hide();
     $li.filter('.active:first').find('.editing-mark').removeClass('d-none');
 
     // 對於具有 active 屬性的 li，顯示其所有相對應的 tab-inner
@@ -30,7 +30,7 @@ $(document).ready(function() {
     $li.click(function() {
         // 隱藏所有的 tab-inner
         $('.tab-inner').hide();
-        $li.removeClass('active');
+        $li.removeClass('active now');
     
         // 獲取點擊的 li 的 data-targets 屬性值
         var targets = $(this).data('targets').split(', ');
@@ -39,8 +39,8 @@ $(document).ready(function() {
         $(targets.join(', ')).show();
     
         // 切換 active 狀態
-        $(this).addClass('active');
-        $(this).siblings('.active').removeClass('active');
+        $(this).addClass('active now');
+        $(this).siblings('.active').removeClass('active now');
     
         // 顯示當前點擊的 li 中的 editing-mark
         if ($(this).hasClass('active')) {
@@ -58,5 +58,10 @@ $(document).ready(function() {
     // 按鈕事件：上一步
     $('.back-btn').click(function () {
         window.history.back();
+    });
+
+    $('.save-result-btn').click(function () {
+        console.log('yes');
+        $('#download-result').click();
     });
 });
