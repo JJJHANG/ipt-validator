@@ -119,23 +119,23 @@ $(document).ready(function () {
 
         updateFieldsetContent(); // 更新對應的核心欄位內容
 
-        if ($('#custom option:selected').text() !== '') { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
-            var coreFieldsetID = $(this).val();
-            disableDuplicatedCheckbox(coreFieldsetID);
-        }
+        // if ($('#custom option:selected').text() !== '') { // 有選擇自訂模板的情況下，再選擇資料集類型時要檢查欄位是否重複
+        //     var coreFieldsetID = $(this).val();
+        //     disableDuplicatedCheckbox(coreFieldsetID);
+        // }
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         handelSpecificColumn(); // 處理特定欄位的規則
 
-        // 檢查資料集類型和延伸資料集重複的欄位
-        var selectedOptions = $('.fs-option.selected'); 
-        selectedOptions.each(function () {
-            var extensionFieldsetID = $(this).data('value');
-            var target = "#" + extensionFieldsetID + " input[type='checkbox']"
-            $(target).prop('disable', false);
-            updateExtensionFieldsetContent();
-            disableDuplicatedCheckbox(extensionFieldsetID);
-        });
+        // // 檢查資料集類型和延伸資料集重複的欄位
+        // var selectedOptions = $('.fs-option.selected'); 
+        // selectedOptions.each(function () {
+        //     var extensionFieldsetID = $(this).data('value');
+        //     var target = "#" + extensionFieldsetID + " input[type='checkbox']"
+        //     $(target).prop('disable', false);
+        //     updateExtensionFieldsetContent();
+        //     disableDuplicatedCheckbox(extensionFieldsetID);
+        // });
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // console.log(CheckedcheckboxNames);
@@ -148,17 +148,17 @@ $(document).ready(function () {
         handelSpecificColumn(); // 處理特定欄位的規則
         // updateCheckedCheckboxNames();
 
-        // 檢查延伸資料集和其他重複的欄位
-        if ($('#core option:selected').text() !== '' || $('#custom option:selected').text() !== '') {
-            console.log('check duplicates');
-            var selectedOptions = $('.fs-option.selected');
-            selectedOptions.each(function () {
-                var extensionFieldsetID = $(this).data('value');
-                var target = "#" + extensionFieldsetID + " input[type='checkbox']"
-                $(target).prop('disable', false);
-                disableDuplicatedCheckbox(extensionFieldsetID);
-            });
-        }
+        // // 檢查延伸資料集和其他重複的欄位
+        // if ($('#core option:selected').text() !== '' || $('#custom option:selected').text() !== '') {
+        //     console.log('check duplicates');
+        //     var selectedOptions = $('.fs-option.selected');
+        //     selectedOptions.each(function () {
+        //         var extensionFieldsetID = $(this).data('value');
+        //         var target = "#" + extensionFieldsetID + " input[type='checkbox']"
+        //         $(target).prop('disable', false);
+        //         disableDuplicatedCheckbox(extensionFieldsetID);
+        //     });
+        // }
         
         // updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱 
     });
@@ -184,12 +184,12 @@ $(document).ready(function () {
 
         updateFieldsetContent(); // 更新對應的核心欄位內容
 
-        // 檢查自訂模板和延伸資料集重複的欄位
-        var selectedOptions = $('.fs-option.selected');
-        selectedOptions.each(function () {
-            var extensionFieldsetID = $(this).data('value');
-            disableDuplicatedCheckbox(extensionFieldsetID);
-        });
+        // // 檢查自訂模板和延伸資料集重複的欄位
+        // var selectedOptions = $('.fs-option.selected');
+        // selectedOptions.each(function () {
+        //     var extensionFieldsetID = $(this).data('value');
+        //     disableDuplicatedCheckbox(extensionFieldsetID);
+        // });
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // handleCheckboxClick(); // 檢查欄位是否重複勾選
@@ -586,6 +586,12 @@ function updateFieldsetContent() {
                     occurrenceID
                 </label>
             </div>
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <label>
+                    <input type="checkbox" name="taxonID" class="required-col" checked />
+                    taxonID
+                </label>
+            </div>
             <div class="checkbox" data-name="basisOfRecord" data-type="Record-level" data-description="資料紀錄的特定性質、類型，建議使用 Darwin Core 的控制詞彙" data-commonname="紀錄類型" data-example="材料實體 MaterialEntity,<br>保存標本 PreservedSpecimen,<br>化石標本 FossilSpecimen,<br>活體標本 LivingSpecimen,<br>人為觀測 HumanObservation,<br>材料樣本 MaterialSample,<br>機器觀測 MachineObservation,<br>調查活動 Event,<br>名錄/分類群 Taxon,<br>出現紀錄 Occurrence,<br>文獻紀錄 MaterialCitation">
                 <label>
                     <input type="checkbox" name="basisOfRecord" class="required-col" checked/>
@@ -598,24 +604,6 @@ function updateFieldsetContent() {
                     eventDate
                 </label>
             </div>
-            <div class="checkbox" data-name="locality" data-type="Location" data-description="採集或觀測地點的明確描述" data-commonname="地點" data-example="觀音山,<br>Caribbean Sea,<br>Florida">
-                <label>
-                    <input type="checkbox" name="locality" class="required-col" checked />
-                    locality
-                </label>
-            </div>
-            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
-                <label>
-                    <input type="checkbox" name="countryCode" class="required-col" checked />
-                    countryCode
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
-                <label>
-                    <input type="checkbox" name="taxonID" class="required-col" checked />
-                    taxonID
-                </label>
-            </div>
             <div class="checkbox" data-name="scientificName" data-type="Taxon, Occurrence" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名、Name、名字" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
                 <label>
                     <input type="checkbox" name="scientificName" class="required-col" checked />
@@ -626,6 +614,12 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="taxonRank" class="required-col" checked />
                     taxonRank
+                </label>
+            </div>
+            <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
+                <label>
+                    <input type="checkbox" name="countryCode" checked />
+                    countryCode
                 </label>
             </div>
             <div class="checkbox" data-name="decimalLatitude" data-type="Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
@@ -860,6 +854,12 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="identificationRemarks"/>
                     identificationRemarks
+                </label>
+            </div>
+            <div class="checkbox" data-name="locality" data-type="Location" data-description="採集或觀測地點的明確描述" data-commonname="地點" data-example="觀音山,<br>Caribbean Sea,<br>Florida">
+                <label>
+                    <input type="checkbox" name="locality"/>
+                    locality
                 </label>
             </div>
             <div class="checkbox" data-name="continent" data-type="Location" data-description="洲" data-commonname="洲" data-example="非洲 Africa,<br>南極洲 Antarctica,<br>亞洲 Asia,<br>歐洲 Europe,<br>北美洲 North America,<br>大洋洲 Oceania,<br>南美洲 South America">
@@ -1874,13 +1874,13 @@ function updateExtensionFieldsetContent() {
             <legend>延伸資料集欄位：Darwin Core Occurrence</legend>
             <div class="checkbox" data-name="eventID" data-type="Event" data-description="調查活動識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="調查活動ID、編號、採樣事件ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="eventID" class="required-col key-col" checked/>
+                    <input type="checkbox" name="eventID" class="required-col" checked/>
                     eventID
                 </label>
             </div>
             <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號在此資料集中不可有重複。" data-commonname="ID、編號" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
-                    <input type="checkbox" name="occurrenceID" class="required-col key-col" checked/>
+                    <input type="checkbox" name="occurrenceID" class="required-col" checked/>
                     occurrenceID
                 </label>
             </div>
@@ -1908,16 +1908,16 @@ function updateExtensionFieldsetContent() {
                     scientificName
                 </label>
             </div>
-            <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="界" data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
-                <label>
-                    <input type="checkbox" name="kingdom" class="required-col" checked/>
-                    kingdom
-                </label>
-            </div>
             <div class="checkbox" data-name="taxonRank" data-type="Taxon" data-description="與dwc:scientificName欄位搭配，填上該筆紀錄的最低分類位階" data-commonname="分類位階、分類階層" data-example="genus,<br>species,<br>subspecies,<br>family">
                 <label>
                     <input type="checkbox" name="taxonRank" class="required-col" checked/>
                     taxonRank
+                </label>
+            </div>
+            <div class="checkbox" data-name="kingdom" data-type="Taxon" data-description="界" data-commonname="界" data-example="Animalia,<br>Archaea,<br>Bacteria,<br>Chromista,<br>Fungi,<br>Plantae,<br>Protozoa,<br>Viruses">
+                <label>
+                    <input type="checkbox" name="kingdom" checked/>
+                    kingdom
                 </label>
             </div>
             <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
