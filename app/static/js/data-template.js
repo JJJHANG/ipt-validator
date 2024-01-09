@@ -105,6 +105,7 @@ $(document).ready(function () {
         updateDropdown(); // 指定核心以及延伸資料集
         updateFieldsetContent(); // 更新對應的核心欄位內容
         updateExtensionFieldsetContent(); // 更新對應的延伸資料集欄位內容
+        $('#extension').trigger('change');
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // handleCheckboxClick(); // 檢查欄位是否重複勾選
     });
@@ -579,7 +580,7 @@ function updateFieldsetContent() {
                     eventID
                 </label>
             </div>
-            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+            <div class="checkbox" data-name="occurrenceID" data-type="Occurrence" data-description="出現紀錄識別碼" data-commonname="出現紀錄ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
                     <input type="checkbox" name="occurrenceID" class="required-col" checked />
                     occurrenceID
@@ -609,25 +610,7 @@ function updateFieldsetContent() {
                     countryCode
                 </label>
             </div>
-            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
-                <label>
-                    <input type="checkbox" name="samplingProtocol" class="required-col" checked />
-                    samplingProtocol
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位。" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
-                <label>
-                    <input type="checkbox" name="sampleSizeValue" class="required-col" checked />
-                    sampleSizeValue
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
-                <label>
-                    <input type="checkbox" name="sampleSizeUnit" class="required-col" checked />
-                    sampleSizeUnit
-                </label>
-            </div>
-            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+            <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
                 <label>
                     <input type="checkbox" name="taxonID" class="required-col" checked />
                     taxonID
@@ -643,12 +626,6 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="taxonRank" class="required-col" checked />
                     taxonRank
-                </label>
-            </div>
-            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
-                <label>
-                    <input type="checkbox" name="samplingEffort" checked />
-                    samplingEffort
                 </label>
             </div>
             <div class="checkbox" data-name="decimalLatitude" data-type="Location" data-description="十進位緯度" data-commonname="十進位緯度" data-example="-41.0983423">
@@ -687,13 +664,13 @@ function updateFieldsetContent() {
                     individualCount
                 </label>
             </div>
-            <div class="checkbox" data-name="organismQuantity" data-type="Occurrence" data-description="該筆紀錄所包含的生物體的量，若非正整數時可用此欄位記錄。須與dwc: organismQuantityType 搭配使用。" data-commonname="生物體數量" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType),<br>many (organismQuantity) with individuals (organismQuantityType).">
+            <div class="checkbox" data-name="organismQuantity" data-type="Occurrence" data-description="該筆紀錄所包含的生物體的量，若非正整數時可用此欄位記錄。須與dwc: organismQuantityType 搭配使用" data-commonname="生物體數量" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType),<br>many (organismQuantity) with individuals (organismQuantityType).">
                 <label>
                     <input type="checkbox" name="organismQuantity" checked/>
                     organismQuantity
                 </label>
             </div>
-            <div class="checkbox" data-name="organismQuantityType" data-type="Occurrence" data-description="生物體數量的單位，若非正整數時可用此欄位記錄。" data-commonname="生物體數量單位" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType)">
+            <div class="checkbox" data-name="organismQuantityType" data-type="Occurrence" data-description="生物體數量的單位，若非正整數時可用此欄位記錄" data-commonname="生物體數量單位" data-example="27 (organismQuantity) with individuals (organismQuantityType),<br>12.5 (organismQuantity) with % biomass (organismQuantityType),<br>r (organismQuantity) with Braun Blanquet Scale (organismQuantityType)">
                 <label>
                     <input type="checkbox" name="organismQuantityType" checked/>
                     organismQuantityType
@@ -783,6 +760,30 @@ function updateFieldsetContent() {
                     fieldNumber 
                 </label>
             </div>
+            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
+                <label>
+                    <input type="checkbox" name="samplingProtocol"/>
+                    samplingProtocol
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
+                <label>
+                    <input type="checkbox" name="sampleSizeValue"/>
+                    sampleSizeValue
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
+                <label>
+                    <input type="checkbox" name="sampleSizeUnit"/>
+                    sampleSizeUnit
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
+                <label>
+                    <input type="checkbox" name="samplingEffort"/>
+                    samplingEffort
+                </label>
+            </div>
             <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間。建議格式參考 ISO 8601-1:2019" data-commonname="調查時間" data-example="14:07-0600 (2:07 pm UTC+6),<br>08:40Z (8:40 am UTC時區),<br>13:00Z/15:30Z (1:00-3:30 pm UTC時區)">
                 <label>
                     <input type="checkbox" name="eventTime"/>
@@ -831,7 +832,7 @@ function updateFieldsetContent() {
                     eventRemarks 
                 </label>
             </div>
-            <div class="checkbox" data-name="typeStatus" data-type="Identification" data-description="學名標本模式，最好能使用控制詞彙" data-commonname="學名標本模式" data-example="正模標本 HOLOTYPE,<br>副模標本 PARATYPE,<br>複模標本 ISOTYPE,<br>配模標本 ALLOTYPE,<br>總模標本 SYNTYPE,<br>選模標本 LECTOTYPE,<br>副選模標本 PARALECTOTYPE,<br>新模標本 NEOTYPE,<br>模式地標本 TOPOTYPE">
+            <div class="checkbox" data-name="typeStatus" data-type="Identification" data-description="學名標本模式，最好能使用控制詞彙" data-commonname="學名標本模式" data-example="正模標本 Holotype,<br>副模標本 Paratype,<br>複模標本 Isotype,<br>配模標本 Allotype,<br>總模標本 Syntype,<br>選模標本 Lectotype,<br>副選模標本 Paralectotype,<br>新模標本 Neotype,<br>模式地標本 Topotype">
                 <label>
                     <input type="checkbox" name="typeStatus"/>
                     typeStatus 
@@ -855,7 +856,7 @@ function updateFieldsetContent() {
                     identificationVerificationStatus
                 </label>
             </div>
-            <div class="checkbox" data-name="identificationRemarks" data-type="Identification" data-description="" data-commonname="學名鑑定備註" data-example="Distinguished between Anthus correndera and Anthus hellmayri based on the comparative lengths of the uñas">
+            <div class="checkbox" data-name="identificationRemarks" data-type="Identification" data-description="學名鑑定其他補充內容或備註" data-commonname="學名鑑定備註" data-example="Distinguished between Anthus correndera and Anthus hellmayri based on the comparative lengths of the uñas">
                 <label>
                     <input type="checkbox" name="identificationRemarks"/>
                     identificationRemarks
@@ -919,12 +920,6 @@ function updateFieldsetContent() {
                 <label>
                     <input type="checkbox" name="maximumElevationInMeters"/>
                     maximumElevationInMeters 
-                </label>
-            </div>
-            <div class="checkbox" data-name="verbatimElevation" data-type="Location" data-description="" data-commonname="字面上海拔" data-example="100-200 m">
-                <label>
-                    <input type="checkbox" name="verbatimElevation"/>
-                    verbatimElevation 
                 </label>
             </div>
             <div class="checkbox" data-name="minimumDepthInMeters" data-type="Location" data-description="最小深度（公尺）" data-commonname="最小深度（公尺）" data-example="0,<br>100">
@@ -1239,7 +1234,7 @@ function updateFieldsetContent() {
                         samplingProtocol
                     </label>
                 </div>
-                <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位。" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
+                <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
                     <label>
                         <input type="checkbox" name="sampleSizeValue" class="required-col" checked />
                         sampleSizeValue
@@ -1485,7 +1480,7 @@ function updateFieldsetContent() {
                         language
                     </label>
                 </div>
-                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>無授權標示, <br>無法辨識">
+                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>No license無授權標示">
                     <label>
                         <input type="checkbox" name="license"/>
                         license
@@ -1545,7 +1540,7 @@ function updateFieldsetContent() {
         fieldsetContent += `
         <fieldset class="required-fieldset" id="checklist">
             <legend>資料集類型欄位：Chescklist</legend>
-                <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01,<br>6d2dd029-f534-42e6-9805-96db874fdd3a">
+                <div class="checkbox" data-name="taxonID" data-type="Taxon" data-description="分類識別碼，可設定有意義的組合格式，或使用全球唯一辨識碼(GUID)或通用唯一辨識碼(UUID)，序號不可有重複" data-commonname="物種分類ID" data-example="20190523-TP11-01 6d2dd029-f534-42e6-9805-96db874fdd3a">
                     <label>
                         <input type="checkbox" name="taxonID" class="required-col" checked />
                         taxonID
@@ -1575,7 +1570,7 @@ function updateFieldsetContent() {
                         language
                     </label>
                 </div>
-                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>無授權標示, <br>無法辨識">
+                <div class="checkbox" data-name="license" data-type="Record-level" data-description="正式允許對資料進行操作的一份法律授權文件。這裡所用的授權主要為創用CC授權，須使用控制詞彙" data-commonname="授權標示、資料授權" data-example="CC0 1.0, <br>CC BY 4.0 ,<br>CC BY-NC 4.0,<br>No license 無授權標示">
                     <label>
                         <input type="checkbox" name="license" checked/>
                         license
@@ -1907,24 +1902,6 @@ function updateExtensionFieldsetContent() {
                     eventDate
                 </label>
             </div>
-            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
-                <label>
-                    <input type="checkbox" name="samplingProtocol" class="required-col" checked/>
-                    samplingProtocol
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配  dwc:sampleSizeUnit 欄位" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
-                <label>
-                    <input type="checkbox" name="sampleSizeValue" class="required-col" checked/>
-                    sampleSizeValue
-                </label>
-            </div>
-            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
-                <label>
-                    <input type="checkbox" name="sampleSizeUnit" class="required-col" checked/>
-                    sampleSizeUnit
-                </label>
-            </div>
             <div class="checkbox" data-name="scientificName" data-type="Taxon" data-description="完整的學名，包括已知的作者和日期資訊。若是作為鑑定的一部分，應是可確定的最低分類階層的名稱" data-commonname="學名" data-example="Coleoptera (目),<br>Vespertilionidae (科),<br>Manis (屬),<br>Ctenomys sociabilis (屬 + 種小名),<br>Ambystoma tigrinum diaboli (屬 +種小名 + 亞種小名),<br>Roptrocerus typographi (Györfi, 1952) (屬 + 種小名 + 學名命名者),<br>Quercus agrifolia var. oxyadenia (Torr.) J.T.">
                 <label>
                     <input type="checkbox" name="scientificName" class="required-col" checked/>
@@ -1941,12 +1918,6 @@ function updateExtensionFieldsetContent() {
                 <label>
                     <input type="checkbox" name="taxonRank" class="required-col" checked/>
                     taxonRank
-                </label>
-            </div>
-            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
-                <label>
-                    <input type="checkbox" name="samplingEffort" checked/>
-                    samplingEffort
                 </label>
             </div>
             <div class="checkbox" data-name="countryCode" data-type="Location" data-description="國家標準代碼" data-commonname="國家代碼" data-example="TW">
@@ -2013,6 +1984,30 @@ function updateExtensionFieldsetContent() {
                 <label>
                     <input type="checkbox" name="fieldNumber" />
                     fieldNumber
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingProtocol" data-type="Event" data-description="調查方法或流程的名稱、描述，或其參考文獻。同一筆調查活動最好不要包含超過一個調查方法，如果超過則建議分為不同筆的調查活動" data-commonname="調查方法、材料方法、Method、Sampling method" data-example="UV light trap,<br>mist net,<br>bottom trawl,<br>ad hoc observation,<br>https://doi.org/10.1111/j.1466-8238.2009.00467.x,<br>Takats et al. 2001. Guidelines for Nocturnal Owl Monitoring in North America.">
+                <label>
+                    <input type="checkbox" name="samplingProtocol"/>
+                    samplingProtocol
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeValue" data-type="Event" data-description="採樣調查中單次採樣的大小數值(時間間隔、長度、範圍，或體積)。須搭配 dwc:sampleSizeUnit 欄位" data-commonname="採樣大小、採樣量、取樣大小" data-example="5 (sampleSizeValue) with metre (sampleSizeUnit)">
+                <label>
+                    <input type="checkbox" name="sampleSizeValue"/>
+                    sampleSizeValue
+                </label>
+            </div>
+            <div class="checkbox" data-name="sampleSizeUnit" data-type="Event" data-description="採樣大小的量測單位" data-commonname="採樣大小單位、採樣量單位" data-example="minute,<br>day,<br>metre,<br>square metre">
+                <label>
+                    <input type="checkbox" name="sampleSizeUnit"/>
+                    sampleSizeUnit
+                </label>
+            </div>
+            <div class="checkbox" data-name="samplingEffort" data-type="Event" data-description="一次調查的努力量" data-commonname="調查努力量" data-example="40 trap-nights,<br>10 observer-hours,<br>10 km by foot">
+                <label>
+                    <input type="checkbox" name="samplingEffort"/>
+                    samplingEffort
                 </label>
             </div>
             <div class="checkbox" data-name="eventTime" data-type="Event" data-description="該筆資料被記錄的時間。建議格式參考 ISO 8601-1:2019" data-commonname="調查時間" data-example="14:07-0600 (2:07 pm UTC+6),<br>08:40Z (8:40 am UTC時區),<br>13:00Z/15:30Z (1:00-3:30 pm UTC時區)">
