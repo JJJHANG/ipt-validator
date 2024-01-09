@@ -300,7 +300,7 @@ $(document).ready(function () {
             var existingFieldset = $("#customFieldset fieldset");
             if (existingFieldset.length > 0) {
                 var newContent = `
-                    <div class="checkbox" data-description="" data-type=${columnType}>
+                    <div class="checkbox" data-name=${columnName} data-type="自定義 ${columnType}" data-description="使用者自定義欄位" data-commonname="" data-example="">
                         <label>
                             <input type="checkbox" name=${columnName} checked />
                             ${columnName}
@@ -313,7 +313,7 @@ $(document).ready(function () {
                 customfieldsetContent += `
                 <fieldset>
                     <legend>自訂欄位</legend>
-                        <div class="checkbox" data-description="" data-type=${columnType}>
+                        <div class="checkbox" data-name=${columnName} data-type="自定義 ${columnType}" data-description="使用者自定義欄位" data-commonname="" data-example="">
                             <label>
                                 <input type="checkbox" name=${columnName} checked />
                                 ${columnName}
@@ -450,11 +450,16 @@ function updateCheckedCheckboxNames() {
         coreTemplateName = $('#custom option:selected').val();
     }
 
-    CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
-
     var checkedCustomCheckboxNames = $("#customFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含自訂、自訂模板欄位
     }).get();
+
+    if (checkedCustomCheckboxNames.length > 0) {
+        checkedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames);
+    }
+
+    CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
+
 
     var checkedExtensionCheckboxNames = $("#extensionFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含延伸資料集欄位
