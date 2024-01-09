@@ -8,9 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/handsontable/dist/languages/zh-TW.js"></script>
+
+    
+    <link rel="stylesheet" type="text/css" href="../static/package/handsontable.full.min.css">
+    <script src="../static/package/handsontable.full.min.js"></script>
+    <script type="text/javascript" src="../static/package/zh-TW.js"></script>
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
@@ -34,107 +36,21 @@
             </div>
             <div class="box box2">
                 {% block box2 %}{% endblock %}
-                <!-- <div class="template-title">STEP1. 選擇模板</div>
-                <div class="column-title">STEP2. 選擇欄位</div> -->
             </div>
             <div class="box box3">
                 {% block box3 %}{% endblock %}
-                <!-- <div class="upper-container">
-                    <div>
-                        <div>
-                            自訂模板
-                        </div>
-                        <select name="" id="custom">
-                            <option value=""></option>
-                        </select>
-                    </div>
-                    <div>
-                        <div>
-                            主題
-                        </div>
-                        <select id="theme">
-                            <option value=""></option>
-                            <option value="">無</option>
-                            <option value="ecological-survey">生態調查</option>
-                            <option value="parasite">寄生蟲</option>
-                        </select>
-                    </div>
-                    <div>
-                        <div>
-                            資料集類型*
-                        </div>
-                        <select id="core">
-                            <option value=""></option>
-                            <option value="checklist">Checklist 物種名錄</option>
-                            <option value="occurrence">Occurrence 出現紀錄</option>
-                            <option value="samplingevent">Sampling Event 調查活動</option>
-                        </select>
-                    </div>
-                    <div class="extension-container">
-                        <div class="extension">
-                            延伸資料集
-                        </div>
-                        <select id="extension" multiple="multiple">
-                            <option value=""></option>
-                            <option value="darwin-core-occurrence">Darwin Core Occurrence</option>
-                            <option value="simple-multimedia">Simple Multimedia</option>
-                            <option value="extended-measurement-or-facts">Extended Measurement Or Facts</option>
-                            <option value="resource-relationship">Resource Relationship</option>
-                            <option value="dna-derived-data">DNA derived data</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="lower-container">
-                    <div class="custom-column-container">
-                        <form class="custom-column-form">
-                            <label>自訂欄位名稱</label>
-                            <input type="text" class="custom-column-input custom-column">
-                            <label>自訂欄位類型</label>
-                            <select name="" id="custom-column-type" class="custom-column">
-                                <option value=""></option>
-                                <option value="">字串</option>
-                                <option value="">數字</option>
-                                <option value="">布林值</option>
-                            </select>
-                        </form>
-                    </div>
-                </div> -->
             </div>
             <div class="box box4">
                 {% block box4 %}{% endblock %}
-                <!-- <form id="requiredFieldset" method="post" action="/data-template"></form> 
-                <form id="customFieldset"></form>   -->
             </div>
             <div class="box box5">
                 {% block box5 %}{% endblock %}
-                <!-- <div class="description-container">
-                    <div id="description-name"></div>
-                    <div class="description-content">
-                        <div class="description-title">所屬類別</div>
-                        <div id="description-type" class="description"></div>
-                    </div>
-                    <div class="description-content">
-                        <div class="description-title">定義</div>
-                        <div id="description" class="description"></div>
-                    </div>
-                    <div class="description-content">
-                        <div class="description-title">常見對應名稱</div>
-                        <div id="description-commonname" class="description"></div>
-                    </div>
-                    <div class="description-content">
-                        <div class="description-title">範例</div>
-                        <div id="description-example" class="description"></div>
-                    </div>
-                </div> -->
             </div>
             <div class="box box6">
                 {% block box6 %}{% endblock %}
-                <!-- <button class="btn save-template-btn">儲存模板</button>
-                <button class="btn next-btn">下一步</button> -->
             </div>
             <div class="box box7">
                 {% block box7 %}{% endblock %}
-                <!-- <button class="btn column-btn">新增自訂欄位</button> -->
             </div>
         </div>
     </section>

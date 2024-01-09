@@ -297,26 +297,6 @@ $(document).ready(function() {
             };
         });
     }
-    
-    // $('thead .relative').on('mouseenter', async function() {
-    //     var key = $(this).find('span.colHeader').text();
-    //     console.log(key);
-
-    //     try {
-    //         var data = await readFromIndexedDB(key);
-    //         if (data) {
-    //             $('#description-name').html(data.name).show();
-    //             $('#description-type').html(data.type).show();
-    //             $('#description-description').html(data.description).show();
-    //             $('#description-commonname').html(data.commonname).show();
-    //             $('#description-example').html(data.example).show();
-    //         } else {
-    //             $('#description-container').hide();
-    //         }
-    //     } catch (error) {
-    //         console.log('IndexedDB: Error,', error.message);
-    //     }
-    // });
 
     // 滑鼠事件之前隱藏樣式
     $("#description-container").hide();
@@ -329,11 +309,11 @@ $(document).ready(function() {
 
     $(document).on('mouseenter', 'thead .relative', async function() {
         var key = $(this).find('span.colHeader').text();
-        console.log(key);
+        // console.log(key);
 
         try {
             var data = await readFromIndexedDB(key);
-            if (data) {
+            if (data !== 'by JJJ') {
                 $("#description-container").show();
                 if (data.name) {
                     $("#description-name").html(data.name);

@@ -5,6 +5,44 @@ var CheckedcheckboxNames = {};
 var TemplateNames = [];
 
 $(document).ready(function () {
+    // var request = window.indexedDB.open('YourDatabaseName', 1);
+    // var db;
+
+    // request.onupgradeneeded = function(event) {
+    //     db = event.target.result;
+
+
+    //     if (!db.objectStoreNames.contains('YourObjectStoreName')) {
+    //         db.createObjectStore('YourObjectStoreName', { keyPath: 'datasetKey' }); // 假設您的 JSON 數據有一個名為 'id' 的唯一鍵
+    //     }
+    // };
+
+    // request.onsuccess = function(event) {
+    //     db = event.target.result;
+
+    //     fetch('/get-json-data')
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         console.log(data);
+    //         var transaction = db.transaction(['YourObjectStoreName'], 'readwrite');
+    //         var objectStore = transaction.objectStore('YourObjectStoreName');
+
+    //         if (typeof data === 'object' && !Array.isArray(data)) {  
+    //             var transaction = db.transaction(['YourObjectStoreName'], 'readwrite');
+    //             var objectStore = transaction.objectStore('YourObjectStoreName');
+    
+    //             Object.keys(data).forEach(key => {
+    //                 objectStore.add(data[key]);
+    //             });
+    //         } else {
+    //             console.error('Expected an object but received:', data);
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error reading JSON file:', error);
+    //     });
+    // };
+
 
     // IndexedDB instance
     var request = window.indexedDB.open('IndexedDB', 1);
@@ -68,7 +106,7 @@ $(document).ready(function () {
         updateFieldsetContent(); // 更新對應的核心欄位內容
         updateExtensionFieldsetContent(); // 更新對應的延伸資料集欄位內容
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
-        handleCheckboxClick(); // 檢查欄位是否重複勾選
+        // handleCheckboxClick(); // 檢查欄位是否重複勾選
     });
 
     // 下拉選單事件：更新資料集類型的欄位內容
@@ -99,8 +137,7 @@ $(document).ready(function () {
         });
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
-        // handleCheckboxClick(); // 檢查欄位是否重複勾選
-        console.log(CheckedcheckboxNames);
+        // console.log(CheckedcheckboxNames);
     });
 
     // 下拉選單事件：更新延伸資料集的欄位內容
@@ -112,6 +149,7 @@ $(document).ready(function () {
 
         // 檢查延伸資料集和其他重複的欄位
         if ($('#core option:selected').text() !== '' || $('#custom option:selected').text() !== '') {
+            console.log('check duplicates');
             var selectedOptions = $('.fs-option.selected');
             selectedOptions.each(function () {
                 var extensionFieldsetID = $(this).data('value');
@@ -121,8 +159,7 @@ $(document).ready(function () {
             });
         }
         
-        // updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
-        // handleCheckboxClick(); // 檢查 checkbox 是否重複勾選  
+        // updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱 
     });
 
     // 下拉選單事件：更新自訂模板的欄位內容
@@ -223,7 +260,9 @@ $(document).ready(function () {
             getTemplateNames();
             // console.log(TemplateNames);
             // console.log(CheckedcheckboxNames);
-            addToIndexedDB();
+            if ($('#custom option:selected').val() == '') {
+                addToIndexedDB();
+            }
 
             $.ajax({
                 type: 'POST',
@@ -327,6 +366,13 @@ $(document).ready(function () {
     $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
     }) 
+
+    $('#requiredFieldset, #extensionFieldset').on('click', function(event) {
+        // 檢查被點擊的元素是否是一個 checkbox
+        if($(event.target).is('input[type="checkbox"]')) {
+            handleCheckboxClick(event.target);
+        }
+    });
 });
 
 // 功能：處理必選欄位、ID類欄位
@@ -387,6 +433,7 @@ function updateDropdown() {
         $('.fs-label').text('Resource Relationship'); // 指定延伸資料集
         $('.fs-option[data-value="resource-relationship"]').addClass('selected');
     } else {
+        $('#core').val('').prop('disabled', false);
         $('.fs-label').text('');
     }
 }
@@ -414,7 +461,7 @@ function updateCheckedCheckboxNames() {
     }).get();
     $("#extensionFieldset fieldset").each(function() {
         var fieldsetId = $(this).attr('id'); // 假設每個 fieldset 都有一個唯一的 id
-        console.log(fieldsetId);
+        // console.log(fieldsetId);
     
         // 收集該 fieldset 下被勾選的 checkbox 名稱
         var checkedNames = $(this).find(".checkbox input[type='checkbox']:checked").map(function () {
@@ -464,33 +511,32 @@ function getTemplateNames() {
 
 
 // 功能：檢查欄位勾選是否重複
-function handleCheckboxClick() {
-    $(".checkbox input[type='checkbox']").on('click', function() {
+function handleCheckboxClick(checkbox) {
+    // console.log('yes');
+    // console.log(allCheckedCheckboxNames);
 
-        if ($(this).hasClass('key-col')) {
-            return; // ID類欄位需要重複勾選
-        }
-        // 檢查勾選狀態之前的 allCheckedCheckboxNames
-        const wasPreviouslyChecked = allCheckedCheckboxNames.includes($(this).attr('name'));
-        console.log(wasPreviouslyChecked)
-        // 更新 allCheckedCheckboxNames
-        updateCheckedCheckboxNames();
+    if ($(checkbox).hasClass('key-col')) {
+        return; // ID類欄位需要重複勾選
+    }
 
-        // 檢查勾選狀態之後的 allCheckedCheckboxNames
-        const isCurrentlyChecked = allCheckedCheckboxNames.includes($(this).attr('name'));
-        console.log(isCurrentlyChecked)
+    // 檢查勾選狀態之前的 allCheckedCheckboxNames
+    const wasPreviouslyChecked = allCheckedCheckboxNames.includes($(checkbox).attr('name'));
+    // console.log('wasPreviouslyChecked: ', wasPreviouslyChecked)
+    // 更新 allCheckedCheckboxNames
+    updateCheckedCheckboxNames();
 
-        // 如果在前一個檢查時該 checkbox 是勾選的，但在當前檢查時已經不是了，則表示該 checkbox 已經被取消勾選。
-        if (wasPreviouslyChecked && isCurrentlyChecked) {
-            $(this).prop('disabled', true);
-            $(this).prop('checked', false);
-            $('.duplicated-popup').removeClass('d-none');
-            return; // 結束函數，不進行後續的操作
-        }
-        
-        updateCheckedCheckboxNames();
-        // console.log(allCheckedCheckboxNames);
-    });
+    // 檢查勾選狀態之後的 allCheckedCheckboxNames
+    const isCurrentlyChecked = allCheckedCheckboxNames.includes($(checkbox).attr('name'));
+    // console.log('isCurrentlyChecked: ', isCurrentlyChecked)
+
+    // 如果在前一個檢查時該 checkbox 是勾選的，但在當前檢查時已經不是了，則表示該 checkbox 已經被取消勾選。
+    if (wasPreviouslyChecked && isCurrentlyChecked) {
+        $(checkbox).prop('disabled', true);
+        $(checkbox).prop('checked', false);
+        $('.duplicated-popup').removeClass('d-none');
+        return; // 結束函數，不進行後續的操作
+    }
+    // updateCheckedCheckboxNames();
 }
 
 // 功能：檢查欄位是否重複，有重複的話取消選選取並禁用。優先順序實作寫在每個下拉選單變動的地方，自訂模板 > 資料集類型 > 延伸資料集

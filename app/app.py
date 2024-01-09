@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify, send_file
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify, send_file, send_from_directory
 import os
 import pandas as pd
-import numpy as np
 import datetime
 import tempfile
 
@@ -11,6 +10,14 @@ app.config['SECRET_KEY'] = os.urandom(24)
 @app.route('/')
 def homepage():
     return render_template('base.html')
+
+@app.route('/get-json-data', methods=['GET'])
+def get_json_data():
+    try:
+        # 從 static 資料夾中返回 JSON 檔案的內容
+        return send_from_directory('static', 'test.json', as_attachment=False)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/data-template', methods=['GET', 'POST'])
 def data_template():
@@ -618,14 +625,13 @@ def download_result():
 
     table_stats = session.get('table_stats')
 
-    # 初始化一個空的列表來保存每個欄位的資料
     data = []
 
     for main_key, sub_dict in table_stats.items():
     # 遍歷子字典中的鍵值對
         for sub_key, values in sub_dict.items():
             for sub_sub_key, sub_values in values.items():
-                if sub_values.get('valid_percentage') != 100:  # 如果 valid_percentage 不等於 100
+                if sub_values.get('valid_percentage') != 100:  
                     row_data = {
                         'Template': main_key,
                         'Term': sub_sub_key,
@@ -650,4 +656,4 @@ def download_result():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5555)
+    app.run(host='0.0.0.0', port=5555, debug=True)
