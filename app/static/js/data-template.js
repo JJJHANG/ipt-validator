@@ -50,7 +50,7 @@ $(document).ready(function () {
 
     request.onsuccess = function (event) {
         db = request.result;
-        console.log('IndexedDB: up');
+        console.log('IndexedDB: Database up');
     };
 
     request.onupgradeneeded = function(event) {
@@ -271,11 +271,11 @@ $(document).ready(function () {
                 contentType: 'application/json;charset=UTF-8',
                 data: JSON.stringify({ 'checkbox_names': CheckedcheckboxNames, 'template_names': TemplateNames }),
                 success: function(data) {
-                    console.log("Data submitted.");
+                    console.log('System: Data submitted');
                     window.location.href = "/data-edit";
                 },
                 error: function () {
-                    console.error("Failed to submit data.");
+                    console.error('System: Failed to submit data');
                 },
             })
         } else {
@@ -368,12 +368,12 @@ $(document).ready(function () {
         $('.popup-container').addClass('d-none');
     }) 
 
-    $('#requiredFieldset, #extensionFieldset').on('click', function(event) {
-        // 檢查被點擊的元素是否是一個 checkbox
-        if($(event.target).is('input[type="checkbox"]')) {
-            handleCheckboxClick(event.target);
-        }
-    });
+    // $('#requiredFieldset, #extensionFieldset').on('click', function(event) {
+    //     // 檢查被點擊的元素是否是一個 checkbox
+    //     if($(event.target).is('input[type="checkbox"]')) {
+    //         handleCheckboxClick(event.target);
+    //     }
+    // });
 });
 
 // 功能：處理必選欄位、ID類欄位
