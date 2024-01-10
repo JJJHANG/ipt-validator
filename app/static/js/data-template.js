@@ -346,6 +346,7 @@ $(document).ready(function () {
 
         $('.save-popup').addClass('d-none');
         $('#custom').append(newOption);
+        location.reload();
     });
 
     // 彈出視窗事件：刪除自訂模板
