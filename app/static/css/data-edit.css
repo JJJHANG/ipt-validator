@@ -139,6 +139,12 @@ span {
     border-radius: 20px;
 }
 
+.function-btn:hover {
+    background-color: #2B59C3;
+    color: #fff;
+    transition: 0.3s;
+}
+
 .handsontable table thead th{
     font-size:12px;
     font-weight: 600;
@@ -187,8 +193,22 @@ span {
     font-size: 12px;
     /* position: relative; */
     padding-right: 2px;
+    padding-left: 2px;
     display: flex;
     align-items: center;
+    gap: 3px;
+}
+
+.wrapper:hover {
+    background-color: #2B59C3;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.wrapper:hover .function-btn{
+    background-color: #2B59C3;
+    color: #fff;
+    transition: 0.3s;
 }
 
 .insert-row-number {
@@ -206,7 +226,7 @@ span {
 
 .add-row-button { 
     background-color: #EEE8A9;
-    border: 1px solid #EEE8A9;
+    border: none;
     color:#2B59C3;
     font-size: 12px;
     border-radius: 20px;
@@ -214,9 +234,6 @@ span {
     padding: 10px 20px 10px 20px;
 }
 
-.add-row-button:hover {
-    cursor: pointer;
-}
 
 .back-btn {
     background-color: #FFF0E1 !important;
