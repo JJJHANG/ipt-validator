@@ -51,6 +51,10 @@ def convert_csv_to_json():
 
             header = df.columns.tolist()
             data = [header] + df.values.tolist()
+            for single_data in data:
+                for index, single_value in enumerate(single_data):
+                    if single_value == '':
+                        single_data[index] = None
 
             return jsonify(data)
         except Exception as e:

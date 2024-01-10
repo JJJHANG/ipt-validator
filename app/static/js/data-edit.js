@@ -5,6 +5,42 @@ var handsontableInstances = {};
 var selectedColumn = [];
 
 $(document).ready(function() {
+    // IndexedDB instance
+    var request = window.indexedDB.open('IndexedDB', 1);
+    var db;
+
+    request.onsuccess = function (event) {
+        db = request.result;
+        console.log('IndexedDB: Up');
+
+        var transaction = db.transaction(['saved_data'], 'readonly');
+        var objectStore = transaction.objectStore('saved_data');
+        var getAllRequest = objectStore.getAll();
+
+        getAllRequest.onsuccess = function(event) {
+            if (getAllRequest.result && getAllRequest.result.length > 0) {
+                console.log('成功', getAllRequest.result);
+                
+                getAllRequest.result.forEach(function(item) {
+                    console.log(item);
+                    const containerID = 'grid-' + item.template_name
+                    const checkboxNames = item.checkbox_names
+                    const data = [checkboxNames].concat(item.data);
+
+                    $('#' + containerID).html('');
+                    initializeHandsontable(containerID, checkboxNames, data);
+                    console.log('IndexedDB: Render saved_data, ', item.template_name);
+                });
+            } else {
+                console.log('IndexedDB: No saved_data yet')
+            }
+        };
+
+        getAllRequest.onerror = function(event) {
+            console.log('IndexedDB: No saved_data yet')
+        }
+    };
+
     var $li = $('ul.tab-title li');
 
     // 初始化第一個 li 為 active
@@ -185,19 +221,37 @@ $(document).ready(function() {
         }
     });
 
+    function addToIndexedDB(templateName, checkboxNames, data) {
+        var transaction = db.transaction(['saved_data'], 'readwrite');
+        var objectStore = transaction.objectStore('saved_data');
+
+        var request = objectStore.put({
+            template_name: templateName,
+            checkbox_names: checkboxNames,
+            data: data
+        });
+
+        request.onsuccess = function (event) {
+            console.log(`IndexedDB: Save ${templateName} into saved_data`);
+        };
+
+        request.onerror = function (event) {
+            console.log(`IndexedDB: Save ${templateName} failed, ${event.target.error}`);
+        };
+    }
+
     $('.import-button').click(function() {
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
         
         const containerID = 'grid-' + dataName;
         var checkboxNames = checkboxArrays[dataName];
         $('#import-file').click();
-        $('#import-file').off('change').on('change', function()  {
+        $('#import-file').on('change', function()  {
             var inputCSV = $(this)[0];
             if (inputCSV.files.length > 0) {
                 var formData = new FormData();
+                const fileName = inputCSV.files[0]['name'];
                 formData.append('file', inputCSV.files[0]);
     
                 $.ajax({
@@ -207,6 +261,7 @@ $(document).ready(function() {
                     processData: false,
                     data: formData,
                     success: (data) => {
+                        console.log(data);
                         if (JSON.stringify(data[0]) === JSON.stringify(checkboxNames)) {
                             $('#' + containerID).html('');
                             initializeHandsontable(containerID, checkboxNames, data);
@@ -228,26 +283,44 @@ $(document).ready(function() {
         var colHeader = [];
         var colData =[];
 
-        // 獲取表格資料
-        window.getData = function (containerID) {
-            const getData = handsontableInstances[containerID].getData();  
-            const getHeader = handsontableInstances[containerID].getColHeader();  
-            colData.push(getData);
-            colHeader.push(getHeader);
-        };
-
         $('.tab-inner').each(function() {
             var templateName = $(this).attr('id');
             templateNames.push(templateName);
-            console.log(templateNames);
             
-            var containerID = 'grid-' + templateName
-            window.getData(containerID);
+            var containerID = 'grid-' + templateName;
+            
+            // 獲取表格資料
+            var getData = handsontableInstances[containerID].getData();  
+            var getHeader = handsontableInstances[containerID].getColHeader();  
+            colData.push(getData);
+            colHeader.push(getHeader);
+    
+            console.log(templateNames);
+            console.log(colHeader);
+            console.log(colData);
+    
+            addToIndexedDB(templateName, getHeader, getData);
         });
 
-        console.log(colHeader);
-        console.log(colData);
+        // // 獲取表格資料
+        // window.getData = function (containerID) {
+        //     var getData = handsontableInstances[containerID].getData();  
+        //     var getHeader = handsontableInstances[containerID].getColHeader();  
+        //     colData.push(getData);
+        //     colHeader.push(getHeader);
+        // };
 
+        // $('.tab-inner').each(function() {
+        //     var templateName = $(this).attr('id');
+        //     templateNames.push(templateName);
+        //     console.log(templateNames);
+            
+        //     var containerID = 'grid-' + templateName
+        //     window.getData(containerID);
+        //     addToIndexedDB(templateName, getHeader, getData)
+        // });
+
+        // addToIndexedDB(templateName, checkboxNames, data)
         transferDataToBackend(templateNames, colHeader, colData); 
     });
 
@@ -259,15 +332,6 @@ $(document).ready(function() {
     $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
     }) 
-
-    // IndexedDB instance
-    var request = window.indexedDB.open('IndexedDB', 1);
-    var db;
-
-    request.onsuccess = function (event) {
-        db = request.result;
-        console.log('IndexedDB: Up');
-    };
 
     function readFromIndexedDB(key) {
         return new Promise(function(resolve, reject) {
@@ -380,12 +444,12 @@ function transferDataToBackend (templateNames, colHeader, colData) {
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify({ 'table_name': templateNames, 'table_header': colHeader, 'table_data': colData }),
         success: function(data) {
-            console.log("Data submitted.");
-            window.location.href = "/data-validation"; // 轉跳到 data-validation 呈現驗證結果
+            console.log('System: Data submitted');
+            window.location.href = '/data-validation'; // 轉跳到 data-validation 呈現驗證結果
         },
         error: function () {
             $('.unknown-error-popup').removeClass('d-none');
-            console.error("Failed to submit data.");
+            console.error('System: Failed to submit data');
         },
     })
 }

@@ -51,6 +51,11 @@ $(document).ready(function () {
     request.onsuccess = function (event) {
         db = request.result;
         console.log('IndexedDB: Database up');
+
+        var request_clear = db.transaction(['saved_data'], 'readwrite').objectStore('saved_data').clear();
+        request_clear.onsuccess = function(event) {
+            console.log('indexedDB: clear saved_data')
+        }
     };
 
     request.onupgradeneeded = function(event) {
@@ -62,6 +67,11 @@ $(document).ready(function () {
             objectStore.createIndex('description', 'description', { unique: false });
             objectStore.createIndex('commonname', 'commonname', { unique: false });
             objectStore.createIndex('example', 'example', { unique: false });
+        }
+                            
+        if (!db.objectStoreNames.contains('saved_data')) {
+            var objectStore = db.createObjectStore('saved_data', { keyPath: 'template_name' });
+            objectStore.createIndex('data', 'data', { unique: false });
         }
     };
 
