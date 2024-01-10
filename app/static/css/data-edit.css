@@ -181,54 +181,37 @@ span {
     justify-content: space-between;
 }
 
-#insert-row-number {
-    border: none;
-    border-bottom: 1px solid #2B59C3;
-    background-color: #EEE8A9;
-    /* padding-left: 10px; */
-    padding: 5px 15px 5px 15px;
-    font-size: 12px;
-    width: 50px;
-}
-
 .wrapper {
-    position: relative;
-    font-size: 12px;
     background-color: #EEE8A9;
-    border: 1px solid #EEE8A9;
-    padding: 3px 15px 3px 15px;
     border-radius: 20px;
+    font-size: 12px;
+    /* position: relative; */
+    padding-right: 2px;
+    display: flex;
+    align-items: center;
 }
 
 .insert-row-number {
     width: 150px;
-    top: 6%;
-    padding: 3px 6px 3px 6px;
     border: none;
-    border-bottom: 1px solid #2B59C3;
-    background-color: #EEE8A9;
+    border-radius: 20px;
+    padding: 10px 20px 10px 20px;
+    /* position: absolute; */
+    /* right: 5%; */
 }
 
-.insert-row-number:focus {
-    outline: none;
+::placeholder {
+    font-size: 12px;
 }
 
 .add-row-button { 
-    position: absolute;
-    right: 5px;
-    top: 16%;
-    z-index: 999;
     background-color: #EEE8A9;
     border: 1px solid #EEE8A9;
     color:#2B59C3;
     font-size: 12px;
     border-radius: 20px;
     box-sizing: border-box;
-    display: inline-block;
-    line-height: 1.5;
-    margin: 0;
-    outline: none;
-    padding: 3px 10px 3px 10px;
+    padding: 10px 20px 10px 20px;
 }
 
 .add-row-button:hover {

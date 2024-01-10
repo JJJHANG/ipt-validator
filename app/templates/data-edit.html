@@ -121,12 +121,12 @@
             <!-- <p>{{ name }}</p> -->
             <div class="function-container">
                 <button class="function-btn get-data-col-button" id="get-data-col-{{ name }}" data-name="{{ name }}">獲取行資料</button>
-                <div class="wrapper">
-                    <button id="add-row-{{ name }}" class="add-row-button" data-name="{{ name }}">新增列在表格底部</button>
-                    <input type="text" id="insert-row-number-{{ name }}" class="insert-row-number"/>
-                </div>
                 <button class="function-btn import-button" id="import-{{ name }}" data-name="{{ name }}">匯入資料</button>
                 <button class="function-btn export-button" id="export-{{ name }}" data-name="{{ name }}">匯出資料</button>
+                <div class="wrapper">
+                    <button id="add-row-{{ name }}" class="add-row-button" data-name="{{ name }}">新增列在表格底部</button>
+                    <input type="text" id="insert-row-number-{{ name }}" class="insert-row-number" placeholder="填入需新增列數"/>
+                </div>
             </div>
             <div id="row-count-grid-{{ name }}" class="row-count"></div>
             <div id="grid-{{ name }}"></div> 
