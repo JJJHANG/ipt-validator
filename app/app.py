@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import datetime
 import tempfile
+import webbrowser
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -676,4 +677,7 @@ def download_result():
 
 
 if __name__ == '__main__':
+    # The reloader has not yet run - open the browser
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        webbrowser.open_new('http://127.0.0.1:5555/data-template')
     app.run(host='0.0.0.0', port=5555, debug=True)
