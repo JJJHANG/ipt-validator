@@ -38,6 +38,56 @@ $(document).ready(function() {
         }
     };
 
+    // IndexDB function: 讀 col_description 中的內容，滑鼠事件時呈現
+    function readFromIndexedDB(key) {
+        return new Promise(function(resolve, reject) {
+            var transaction = db.transaction(['col_description']);
+            var objectStore = transaction.objectStore('col_description');
+            var request = objectStore.get(key);
+    
+            request.onerror = function(event) {
+                console.log('IndexedDB: Fetch description data failed');
+                reject(new Error('Fetch error'));
+            };
+    
+            request.onsuccess = function(event) {
+                if (request.result) {
+                    var data = {
+                        name: request.result.name,
+                        type: request.result.type,
+                        description: request.result.description,
+                        commonname: request.result.commonname,
+                        example: request.result.example
+                    };
+                    resolve(data);
+                } else {
+                    console.log('indexedDB: No description data');
+                    resolve('by JJJ');
+                }
+            };
+        });
+    }
+
+    // IndexedDB function: 儲存 handsontable 表中的內容到 saved_data
+    function addToIndexedDB(templateName, checkboxNames, data) {
+        var transaction = db.transaction(['saved_data'], 'readwrite');
+        var objectStore = transaction.objectStore('saved_data');
+
+        var request = objectStore.put({
+            template_name: templateName,
+            checkbox_names: checkboxNames,
+            data: data
+        });
+
+        request.onsuccess = function (event) {
+            console.log(`IndexedDB: Save ${templateName} into saved_data`);
+        };
+
+        request.onerror = function (event) {
+            console.log(`IndexedDB: Save ${templateName} failed, ${event.target.error}`);
+        };
+    }
+
     var $li = $('ul.tab-title li');
 
     // 初始化第一個 li 為 active
@@ -218,25 +268,6 @@ $(document).ready(function() {
         }
     });
 
-    function addToIndexedDB(templateName, checkboxNames, data) {
-        var transaction = db.transaction(['saved_data'], 'readwrite');
-        var objectStore = transaction.objectStore('saved_data');
-
-        var request = objectStore.put({
-            template_name: templateName,
-            checkbox_names: checkboxNames,
-            data: data
-        });
-
-        request.onsuccess = function (event) {
-            console.log(`IndexedDB: Save ${templateName} into saved_data`);
-        };
-
-        request.onerror = function (event) {
-            console.log(`IndexedDB: Save ${templateName} failed, ${event.target.error}`);
-        };
-    }
-
     $('.import-button').click(function() {
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
@@ -329,35 +360,6 @@ $(document).ready(function() {
     $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
     }) 
-
-    function readFromIndexedDB(key) {
-        return new Promise(function(resolve, reject) {
-            var transaction = db.transaction(['col_description']);
-            var objectStore = transaction.objectStore('col_description');
-            var request = objectStore.get(key);
-    
-            request.onerror = function(event) {
-                console.log('IndexedDB: Fetch description data failed');
-                reject(new Error('Fetch error'));
-            };
-    
-            request.onsuccess = function(event) {
-                if (request.result) {
-                    var data = {
-                        name: request.result.name,
-                        type: request.result.type,
-                        description: request.result.description,
-                        commonname: request.result.commonname,
-                        example: request.result.example
-                    };
-                    resolve(data);
-                } else {
-                    console.log('indexedDB: No description data');
-                    resolve('by JJJ');
-                }
-            };
-        });
-    }
 
     // 滑鼠事件之前隱藏樣式
     $("#description-container").hide();
