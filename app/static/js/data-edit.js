@@ -1,5 +1,3 @@
-// var checkboxNames = [];
-var extensionCheckboxNames = [];
 var checkboxArrays = {};
 var handsontableInstances = {};
 var selectedColumn = [];
@@ -11,7 +9,7 @@ $(document).ready(function() {
 
     request.onsuccess = function (event) {
         db = request.result;
-        console.log('IndexedDB: Up');
+        console.log('IndexedDB: Database up');
 
         var transaction = db.transaction(['saved_data'], 'readonly');
         var objectStore = transaction.objectStore('saved_data');
@@ -19,17 +17,16 @@ $(document).ready(function() {
 
         getAllRequest.onsuccess = function(event) {
             if (getAllRequest.result && getAllRequest.result.length > 0) {
-                console.log('成功', getAllRequest.result);
-                
+             
                 getAllRequest.result.forEach(function(item) {
-                    console.log(item);
+                    // console.log(item);
                     const containerID = 'grid-' + item.template_name
                     const checkboxNames = item.checkbox_names
                     const data = [checkboxNames].concat(item.data);
 
                     $('#' + containerID).html('');
                     initializeHandsontable(containerID, checkboxNames, data);
-                    console.log('IndexedDB: Render saved_data, ', item.template_name);
+                    console.log('IndexedDB: Render saved_data,', item.template_name);
                 });
             } else {
                 console.log('IndexedDB: No saved_data yet')
@@ -150,8 +147,8 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         const inputID = 'insert-row-number-' + dataName;
         const insertRowNumber = $('#' + inputID).val();
@@ -169,11 +166,11 @@ $(document).ready(function() {
 
         window.getDataCol = function (containerID, selectedColumn) {
             if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
-                console.log(selectedColumn);
+                // console.log(selectedColumn);
                 const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
                 const colName = handsontableInstances[containerID].getColHeader(selectedColumn);
-                console.log(colData);
-                console.log(colName);
+                // console.log(colData);
+                // console.log(colName);
                 updateColContent(colName, colData); 
             } else {
                 $('.duplicated-popup').removeClass('d-none');
@@ -183,12 +180,12 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         const containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
-            console.log(selectedColumn);
+            // console.log(selectedColumn);
             window.getDataCol(containerID, selectedColumn); 
         } else {
             console.error("Handsontable instance for containerID '" + containerID + "' not found.");
@@ -198,8 +195,8 @@ $(document).ready(function() {
     $('.export-button').click(function() {
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         const containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
@@ -261,7 +258,7 @@ $(document).ready(function() {
                     processData: false,
                     data: formData,
                     success: (data) => {
-                        console.log(data);
+                        // console.log(data);
                         if (JSON.stringify(data[0]) === JSON.stringify(checkboxNames)) {
                             $('#' + containerID).html('');
                             initializeHandsontable(containerID, checkboxNames, data);
@@ -295,9 +292,9 @@ $(document).ready(function() {
             colData.push(getData);
             colHeader.push(getHeader);
     
-            console.log(templateNames);
-            console.log(colHeader);
-            console.log(colData);
+            // console.log(templateNames);
+            // console.log(colHeader);
+            // console.log(colData);
     
             addToIndexedDB(templateName, getHeader, getData);
         });
@@ -340,7 +337,7 @@ $(document).ready(function() {
             var request = objectStore.get(key);
     
             request.onerror = function(event) {
-                console.log('IndexedDB: Fetch error');
+                console.log('IndexedDB: Fetch description data failed');
                 reject(new Error('Fetch error'));
             };
     
@@ -355,7 +352,7 @@ $(document).ready(function() {
                     };
                     resolve(data);
                 } else {
-                    console.log('indexedDB: No data');
+                    console.log('indexedDB: No description data');
                     resolve('by JJJ');
                 }
             };
@@ -449,7 +446,7 @@ function transferDataToBackend (templateNames, colHeader, colData) {
         },
         error: function () {
             $('.unknown-error-popup').removeClass('d-none');
-            console.error('System: Failed to submit data');
+            console.error('System: Fail to submit data');
         },
     })
 }
@@ -476,7 +473,7 @@ function updateColContent(colName, colData) {
 
         $('.col-content').html(htmlContent);
     } else {
-        console.log('no data');
+        // console.log('no data');
         $('.col-content').html('No Data');
     }
 };
@@ -768,6 +765,6 @@ function initializeHandsontable(containerID, checkboxNames, data) {
 
     hot.runHooks('afterChange');
     handsontableInstances[containerID] = hot;
-    console.log(handsontableInstances);
+    // console.log(handsontableInstances);
 };
 
