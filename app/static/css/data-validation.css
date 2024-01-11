@@ -59,7 +59,15 @@
 }
 
 .error-message-box:hover {
+    background-color: #2B59C3;
+    color: #fff;
+    transition: 0.3s;
     cursor: pointer;
+}
+
+.error-message-box:hover .invalid_rows {
+    border-left: 1px solid #fff;
+    /* transition: 0.3s; */
 }
 
 .mismatch {

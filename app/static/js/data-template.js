@@ -54,7 +54,7 @@ $(document).ready(function () {
 
         var request_clear = db.transaction(['saved_data'], 'readwrite').objectStore('saved_data').clear();
         request_clear.onsuccess = function(event) {
-            console.log('indexedDB: clear saved_data')
+            console.log('indexedDB: Clear saved_data')
         }
     };
 
@@ -2785,6 +2785,12 @@ function updateExtensionFieldsetContent() {
                     taxonID
                 </label>
             </div>
+            <div class="checkbox" data-name="samp_name" data-type="" data-description="樣本名稱是您為樣本選擇的名稱。它可以有任何格式，但建議您使用簡潔、獨特以及一致性，並盡可能地列出足夠資訊。每個樣本名稱都必須是獨一的" data-commonname="樣本名稱" data-example="ST1,<br>ST2,<br>ST3">
+                <label>
+                    <input type="checkbox" name="samp_name" checked/>
+                    samp_name
+                </label>
+            </div>
             <div class="checkbox" data-name="annealingTemp" data-type="" data-description="PCR引子黏合反應所設定的溫度" data-commonname="PCR引子黏合溫度" data-example="60">
                 <label>
                     <input type="checkbox" name="annealingTemp" checked/>
@@ -2879,12 +2885,6 @@ function updateExtensionFieldsetContent() {
                 <label>
                     <input type="checkbox" name="ampliconSize"/>
                     ampliconSize
-                </label>
-            </div>
-            <div class="checkbox" data-name="samp_name" data-type="" data-description="樣本名稱是您為樣本選擇的名稱。它可以有任何格式，但建議您使用簡潔、獨特以及一致性，並盡可能地列出足夠資訊。每個樣本名稱都必須是獨一的" data-commonname="樣本名稱" data-example="ST1,<br>ST2,<br>ST3">
-                <label>
-                    <input type="checkbox" name="samp_name"/>
-                    samp_name
                 </label>
             </div>
             <div class="checkbox" data-name="env_broad_scale" data-type="" data-description="列出樣本或標本來自哪個主要的環境系統。以粗糙的空間尺度來描述採樣地點的大概環境背景，例如，沙漠還是雨林中？我們建議使用ENVO生物群系類的子類的控制詞彙術語：http://purl.obolibrary.org/obo/ENVO_00000428。 輸入一個術語的格式：termLabel [termID]。輸入多個術語的格式：termLabel [termID]|termLabel [termID]|termLabel [termID]。 例如：對大西洋中部光層水樣本進行標註，考慮使用：oceanic epipelagic zone biome [ENVO:01000033]、對亞馬遜雨林樣本進行標註，考慮使用：tropical moist broadleaf forest biome [ENVO:01000228]。如有需要，請在ENVO跟踪器上提出新的term，會在這裡列出：http://www.obofoundry.org/ontology/envo.html" data-commonname="概略大環境種類" data-example="forest biome [ENVO:01000174]">

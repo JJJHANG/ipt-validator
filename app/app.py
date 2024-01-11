@@ -579,6 +579,22 @@ def process_validation():
                 UNIQUE_ID_COLUMNS = ['eventID', 'occurrenceID', 'taxonID', 'samp_name']
                 unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
                 stats_dict['unique_stats'] = unique_stats
+            elif name in ['darwin-core-occurrence']:
+                UNIQUE_ID_COLUMNS = ['occurrenceID']
+                unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+                stats_dict['unique_stats'] = unique_stats
+            elif name in ['extended-measurement-or-facts']:
+                UNIQUE_ID_COLUMNS = ['measurementID']
+                unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+                stats_dict['unique_stats'] = unique_stats
+            elif name in ['resource-relationship']:
+                UNIQUE_ID_COLUMNS = ['resourceID']
+                unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+                stats_dict['unique_stats'] = unique_stats
+            elif name in ['dna-derived-data']:
+                UNIQUE_ID_COLUMNS = ['samp_name']
+                unique_stats = validate_unique_column(df, header, UNIQUE_ID_COLUMNS)
+                stats_dict['unique_stats'] = unique_stats
             else:
                 UNIQUE_ID_COLUMNS = []
                 stats_dict['unique_stats'] = {}
