@@ -58,6 +58,10 @@ body {
     align-items: center;
 }
 
+.left-container:hover {
+    cursor: pointer;
+}
+
 .right-container {
     display: flex;
     justify-content: flex-start;
@@ -67,6 +71,12 @@ body {
     gap: 5px;
     margin-right: 10px;
 } 
+
+.nav-active{
+    background-color: #EEE8A9;
+    border-radius: 20px;
+    padding: 5px;
+}
 
 .box2 {
     /* background-color: red; */

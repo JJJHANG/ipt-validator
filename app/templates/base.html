@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <script type=text/javascript src="{{ url_for('static', filename='js/base.js') }}"></script>
 
-    
     <link rel="stylesheet" type="text/css" href="../static/package/handsontable.full.min.css">
     <script src="../static/package/handsontable.full.min.js"></script>
     <script type="text/javascript" src="../static/package/zh-TW.js"></script>
@@ -25,13 +25,13 @@
                     <div class="logo-title">資料驗證工具</div>  
                 </div>
                 <div class="right-container">
-                    <div><a href="{{ url_for('data_template') }}">資料模板</a></div>
-                    <div>></div>
-                    <div><a href="{{ url_for('data_edit') }}">編輯資料</a></div>
-                    <div>></div>
-                    <div><a href="{{ url_for('data_validation') }}">資料驗證</a></div>
-                    <div>></div>
-                    <div>資料清理</div>
+                    <div id="data-template" class="nav">資料模板</div>
+                    <div><i>&#x02192</i></div>
+                    <div id="data-edit" class="nav">編輯資料</div>
+                    <div><i>&#x02192</i></div>
+                    <div id="data-validation" class="nav">資料驗證</div>
+                    <!-- <div>></div>
+                    <div>資料清理</div> -->
                 </div>           
             </div>
             <div class="box box2">
