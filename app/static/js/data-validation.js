@@ -64,4 +64,8 @@ $(document).ready(function() {
         console.log('yes');
         $('#download-result').click();
     });
+
+    $('.next-btn').click(function () {
+        window.location.href = 'data-clearance'
+    });
 });

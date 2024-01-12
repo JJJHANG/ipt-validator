@@ -675,9 +675,19 @@ def download_result():
     except FileNotFoundError:
         print('404')
 
+@app.route('/data-clearance', methods=['GET', 'POST'])
+def data_clearance():
+    template_names = session.get('template_names', [])
+    table_stats = session.get('table_stats')
+    table_name = session.get('table_name')
+    checkbox_names = session.get('checkbox_names')
+
+    return render_template('data-clearance.html', template_names=template_names, table_stats=table_stats, table_name=table_name, checkbox_names=checkbox_names)
+
 
 if __name__ == '__main__':
     # The reloader has not yet run - open the browser
-    if not os.environ.get("WERKZEUG_RUN_MAIN"):
-        webbrowser.open_new('http://127.0.0.1:5555/data-template')
+    # if not os.environ.get("WERKZEUG_RUN_MAIN"):
+    #     webbrowser.open_new('http://127.0.0.1:5555/data-template')
+
     app.run(host='0.0.0.0', port=5555, debug=True)

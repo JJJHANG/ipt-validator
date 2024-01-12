@@ -211,3 +211,45 @@ body {
     align-items: center;
     gap: 5px;
 }
+
+.tab-title li {
+    list-style-type: none;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 5px;
+    padding: 10px 20px 10px 20px;
+    border: 1px solid #2B59C3;
+    border-radius: 20px;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-between;
+}
+
+.tab-title .bookmark-title:nth-of-type(2) {
+    margin-top: 10px;
+}
+
+.tab-title li:visited {
+    color: #2B59C3;
+}
+
+.tab-title li:hover{
+    color: #FFF;
+    background-color: #2B59C3;
+}
+
+.tab-title li:hover {
+    cursor: pointer;
+}
+
+.now {
+    color: #FFF !important;
+    background-color: #2B59C3;
+}
+
+.bookmark-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-left: 10px;
+}

@@ -1,0 +1,118 @@
+.box3 {
+    grid-column: 1 / 2 !important;
+    grid-row: 6 / 48 !important;
+    border-right: 1.5px solid #2B59C3;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start !important;
+}
+
+.box4 {
+    grid-column: 2 / 6 !important;
+    grid-row: 6 / 47 !important;
+    border: none !important;
+    border-bottom: 1.5px solid #2B59C3 !important;
+    font-size: 16px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.box5 {
+    display: none !important;
+}
+
+.box6 {
+    grid-column: 3 / 6 !important;
+    grid-row: 47 / 48 !important;
+    border: none !important;
+    /* border-left: 1px solid #2B59C3 !important; */
+    font-size: 12px;
+    display: flex
+}
+
+.box7 {
+    display: none !important;
+}
+
+.handsontable table thead th{
+    font-size:12px;
+    font-weight: 600;
+}
+
+.row-count {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.error-message-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-top: 15px;
+}
+
+.error-message-box {
+    font-weight: 400;
+    font-size: 12px;
+    background-color: #EEE8A9;
+    margin-bottom: 5px;
+    padding: 5px 15px 5px 15px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.error-message-box:hover {
+    cursor: pointer;
+}
+
+.mismatch {
+    /* background-color: #C0A975; */
+    background-color: #FFC05C;
+}
+
+.blank {
+     background-color: #B9CCFF;
+}
+
+.invalid_rows {
+    padding-left: 15px;
+    border-left: 1px solid #2B59C3;
+}
+
+.accordion-menu {
+    padding-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-weight: 300;
+    font-size: 14px;
+}
+
+.save-result-btn {
+    color: #FFF;
+    border-left: 1px solid #2B59C3 !important;
+}
+
+.back-btn {
+    color: #2B59C3;
+    background-color: #FFF0E1 !important;
+    border-left: 1px solid #2B59C3 !important;
+}
+
+.back-btn:hover {
+    background-color: #F9F871 !important;
+}
+
+.accordion-table th, .accordion-table tr {
+    padding-right: 25px;
+}
+
+.handsontable .highlight-cell {
+    background: #F75D6D;
+}
