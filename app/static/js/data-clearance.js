@@ -1,5 +1,8 @@
 var handsontableInstances = {};
-var containerIDArray = [];
+var containerID;
+var colName;
+var rowIndexes;
+var columnIndex;
 
 $(document).ready(function() {
 
@@ -121,6 +124,74 @@ $(document).ready(function() {
             accordionMenu.addClass('d-none');
             $(this).siblings('.error-message-box').find('.accordion-menu').addClass('d-none');
         }
+    });
+
+    // 按鈕事件：新增列在表格底部
+    $('.text-facet-button').click(function() {
+
+        getDataCol = function (containerID, selectedColumn) {
+            if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
+                console.log(selectedColumn);
+                const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
+                colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                console.log(colData);
+                console.log(colName);
+                updateColContent(colName, colData); 
+            } else {
+                $('.duplicated-popup').removeClass('d-none');
+            } 
+            selectedColumn = undefined; // 事件觸發之後重置 index
+        };
+
+        var buttonID = $(this).attr('id');
+        var dataName = $(this).data('name');
+        console.log('點擊的按鈕的ID為:', buttonID);
+        console.log('點擊的按鈕的dataName為:', dataName);
+    
+        containerID = 'grid-' + dataName;
+        if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
+            // console.log(selectedColumn);
+            getDataCol(containerID, selectedColumn); 
+        } else {
+            console.error("Handsontable instance for containerID '" + containerID + "' not found.");
+        }
+    });
+
+    $('.xx-button').on('click', function (event) {
+        $('.popup-container').addClass('d-none');
+    });
+
+    $(document).on('click', '.text-facet-content', function () {
+        // console.log($(this).find('span:first-child').text());
+        $('.text-facet-popup').removeClass('d-none');
+        $('#text-facet-input').val($(this).find('span:first-child').text());
+
+        // Find row index
+        var targetContent = $(this).find('span:first-child').text();
+        var $targetCells = $(`td`).filter(function() {
+            return $(this).text().trim() === targetContent.trim();
+        });
+    
+        if ($targetCells.length > 0) {
+            rowIndexes = $targetCells.map(function() {
+                return $(this).parents('tr').attr('aria-rowindex');
+            }).get();
+        } 
+
+        // Find Column index
+        var targetColumn = $(`#${containerID} span.colHeader:contains(${colName})`);
+        columnIndex = targetColumn.parents('th').attr('aria-colindex')
+    });
+
+    $(document).on('click', '#text-facet-check', function () {
+        // console.log(containerID, columnIndex, rowIndexes);
+        const revisedValue = $('#text-facet-input').val();
+        rowIndexes.forEach(function(rowIndex) {
+            if (handsontableInstances[containerID]) {
+                handsontableInstances[containerID].setDataAtCell(rowIndexes - 2, columnIndex - 2, revisedValue);
+            }
+        });
+        $('.text-facet-popup').addClass('d-none');
     });
 });
 
@@ -401,4 +472,30 @@ function initializeHandsontable(containerID, checkboxNames, data) {
     hot.runHooks('afterChange');
     handsontableInstances[containerID] = hot;
     // console.log(handsontableInstances);
+};
+
+function updateColContent(colName, colData) {
+    if (colData && colData.length > 0) {
+        $('.col-content').removeClass('d-none');
+        var elementCounts = {};
+
+        // 計算每個數值的出現次數
+        colData.forEach(function(value) {
+            elementCounts[value] = (elementCounts[value] || 0) + 1;
+        });
+
+        // 生成 HTML
+        var htmlContent = '<p>Text Facet</p><div class="col-name">' + colName + '</div><ul>';
+        for (var element in elementCounts) {
+            if (elementCounts.hasOwnProperty(element)) {
+                htmlContent += '<li class="text-facet-content"><span>' + element + '</span><span class="text-facet-content-number"> ' + elementCounts[element] + '</span></li>';
+            }
+        }
+        htmlContent += '</ul>';
+
+        $('.col-content').html(htmlContent);
+    } else {
+        // console.log('no data');
+        $('.col-content').html('No Data');
+    }
 };

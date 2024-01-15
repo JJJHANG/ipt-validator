@@ -7,6 +7,27 @@
 {% endblock %}
 {% block title %} 資料清理 {% endblock %}
 
+{% block popup %}
+<!-- Edit Popup -->
+<div class="popup-container text-facet-popup d-none">
+    <!-- <div class="xx">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+                </g>
+            </g>
+        </svg>
+    </div> -->
+    <div class="popup-alert">
+        <input id="text-facet-input">
+        <button id="text-facet-check">確認</button>
+        <button class="xx-button">取消</button>
+    </div>
+</div>
+{% endblock %}
+
 {% block box2 %}
 <div class="template-title">STEP5. 檢視資料</div>
 {% endblock %}
@@ -30,6 +51,8 @@
         {% endfor %}
     {% endfor %}
 </ul>
+
+<div class="col-content d-none"></div>
 
 {% for key, value in table_stats.items() %}
     <div id="{{ key }}-error-message" class="tab-inner error-message-container">

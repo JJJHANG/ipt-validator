@@ -211,7 +211,7 @@ $(document).ready(function() {
         }
     });
 
-    // 按鈕事件：新增列在表格底部
+    // 按鈕事件：
     $('.get-data-col-button').click(function() {
 
         window.getDataCol = function (containerID, selectedColumn) {

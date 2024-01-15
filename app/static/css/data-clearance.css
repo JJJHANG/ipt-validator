@@ -116,3 +116,39 @@
 .handsontable .highlight-cell {
     background: #F75D6D;
 }
+
+.col-content {
+    font-weight: 400;
+    font-size: 12px;
+    background-color: #EEE8A9;
+    margin-bottom: 5px;
+    padding: 10px 20px 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* align-items: center; */
+    margin-top: 10px;
+}
+
+.col-content li {
+    list-style-type: none;
+}
+
+.col-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #2B59C3;
+}
+
+.text-facet-content {
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.text-facet-content:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
