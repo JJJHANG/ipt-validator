@@ -126,7 +126,7 @@ $(document).ready(function() {
         }
     });
 
-    // 按鈕事件：新增列在表格底部
+    // 按鈕事件：內容篩選功能
     $('.text-facet-button').click(function() {
 
         getDataCol = function (containerID, selectedColumn) {
@@ -157,7 +157,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.xx-button').on('click', function (event) {
+    $('.xx').on('click', function (event) {
         $('.popup-container').addClass('d-none');
     });
 
@@ -188,10 +188,11 @@ $(document).ready(function() {
         const revisedValue = $('#text-facet-input').val();
         rowIndexes.forEach(function(rowIndex) {
             if (handsontableInstances[containerID]) {
-                handsontableInstances[containerID].setDataAtCell(rowIndexes - 2, columnIndex - 2, revisedValue);
+                handsontableInstances[containerID].setDataAtCell(rowIndex - 2, columnIndex - 2, revisedValue);
             }
         });
         $('.text-facet-popup').addClass('d-none');
+        $('.col-content').addClass('d-none');
     });
 });
 
@@ -288,7 +289,8 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
-            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            dropdownMenu: true,
+            // dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut'],
             selectionMode: 'multiple',
             language: 'zh-TW',
@@ -406,7 +408,8 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
-            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            dropdownMenu: true,
+            // dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut', '---------'],
             selectionMode: 'multiple',
             language: 'zh-TW',
@@ -485,7 +488,7 @@ function updateColContent(colName, colData) {
         });
 
         // 生成 HTML
-        var htmlContent = '<p>Text Facet</p><div class="col-name">' + colName + '</div><ul>';
+        var htmlContent = '<p>內容篩選</p><div class="col-name">' + colName + '</div><ul>';
         for (var element in elementCounts) {
             if (elementCounts.hasOwnProperty(element)) {
                 htmlContent += '<li class="text-facet-content"><span>' + element + '</span><span class="text-facet-content-number"> ' + elementCounts[element] + '</span></li>';

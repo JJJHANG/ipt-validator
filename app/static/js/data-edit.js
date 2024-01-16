@@ -573,7 +573,8 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
-            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            dropdownMenu: true,
+            // dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut'],
             selectionMode: 'multiple',
             language: 'zh-TW',
@@ -691,7 +692,8 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
-            dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
+            dropdownMenu: true,
+            // dropdownMenu: ['clear_column', 'make_read_only', '---------', 'filter_by_condition', 'filter_by_value', 'filter_action_bar'],
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut', '---------'],
             selectionMode: 'multiple',
             language: 'zh-TW',
