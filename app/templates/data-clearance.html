@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/data-clearance.css') }}">
 <script src="../static/package/jquery-3.6.4.min.js"></script>
 <script type=text/javascript src="{{ url_for('static', filename='js/data-clearance.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/data-clearance.css') }}">
 {% endblock %}
 {% block title %} 資料清理 {% endblock %}
 
@@ -33,6 +33,10 @@
 {% endblock %}
 
 {% block box3 %}
+
+<form action="/export-as-zip" method="POST">
+    <input type="submit" id="download-result" class="d-none">
+</form>
 
 <!-- {% for template_name, col_names in checkbox_names.items()%}
     <div class="template-name">{{ template_name }}</div>
@@ -447,7 +451,9 @@
         <div id="{{ name }}" class="tab-inner">
             <div class="function-container">
                 <button class="function-btn text-facet-button" id="text-facet-{{ name }}" data-name="{{ name }}">內容篩選</button>
-                <button class="function-btn duplicate-facet-button" id="duplicate-facet-{{ name }}" data-name="{{ name }}">重複值篩選</button>
+                <!-- <button class="function-btn duplicate-facet-button" id="duplicate-facet-{{ name }}" data-name="{{ name }}">重複值篩選</button> -->
+
+                <button class="function-btn text-filter-button" id="text-filter-{{ name }}" data-name="{{ name }}">文字篩選</button>
                 <!-- <button class="function-btn import-button" id="import-{{ name }}" data-name="{{ name }}">匯入資料</button>
                 <button class="function-btn export-button" id="export-{{ name }}" data-name="{{ name }}">匯出資料</button>
                 <div class="wrapper">
@@ -467,6 +473,7 @@
 
 
 {% block box6 %}
+<form id="download"></form>
 <button class="btn back-btn">上一步</button>
 <button class="btn save-result-btn">下載清理結果</button>
 {% endblock %}

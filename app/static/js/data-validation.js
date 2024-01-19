@@ -61,7 +61,7 @@ $(document).ready(function() {
     });
 
     $('.save-result-btn').click(function () {
-        console.log('yes');
+        // console.log('yes');
         $('#download-result').click();
     });
 

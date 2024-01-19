@@ -4,6 +4,7 @@ import pandas as pd
 import datetime
 import tempfile
 import webbrowser
+import zipfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -643,10 +644,10 @@ def data_validation():
 
 @app.route('/download-result', methods=['POST'])
 def download_result():
-
     table_stats = session.get('table_stats')
 
     data = []
+    print(table_stats)
 
     for main_key, sub_dict in table_stats.items():
     # 遍歷子字典中的鍵值對
@@ -658,7 +659,8 @@ def download_result():
                         'Term': sub_sub_key,
                         **sub_values  # 使用 ** 來展開子字典中的所有鍵值對
                     }
-                data.append(row_data)
+                    
+                    data.append(row_data)
 
     # 將列表轉換為 DataFrame
     df = pd.DataFrame(data)
@@ -683,6 +685,41 @@ def data_clearance():
     checkbox_names = session.get('checkbox_names')
 
     return render_template('data-clearance.html', template_names=template_names, table_stats=table_stats, table_name=table_name, checkbox_names=checkbox_names)
+
+@app.route('/transfer-data', methods=['POST'])
+def tansfer_data():
+    if request.method == 'POST':
+        data = request.get_json()
+        table_name = data['table_name']
+        table_header = data['table_header']
+        table_data = data['table_data']
+
+        session['table_name'] = table_name
+        session['table_header'] = table_header
+        session['table_data'] = table_data
+
+    return data
+
+@app.route('/export-as-zip', methods=['POST'])
+def export_as_zip():
+        table_name = session.get('table_name')
+        table_header = session.get('table_header')
+        table_data = session.get('table_data')
+
+        with zipfile.ZipFile('Rasengan.zip', 'w') as zf:
+            for name, header, rows in zip(table_name, table_header, table_data):
+                df = pd.DataFrame(rows, columns=header)
+                df.to_csv(f'{name}.csv')
+                zf.write(f'{name}.csv')
+                os.remove(f'{name}.csv')
+
+        try:
+            return send_file('Rasengan.zip',
+                            as_attachment=True,
+                            download_name=None)
+
+        except FileNotFoundError:
+            print('404')
 
 
 if __name__ == '__main__':

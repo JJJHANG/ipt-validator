@@ -8,9 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <script type=text/javascript src="{{ url_for('static', filename='js/base.js') }}"></script>
-
     <link rel="stylesheet" type="text/css" href="../static/package/handsontable.full.min.css">
+    <script type=text/javascript src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script src="../static/package/handsontable.full.min.js"></script>
     <script type="text/javascript" src="../static/package/zh-TW.js"></script>
     <title>{% block title %}{% endblock %}</title>
@@ -31,7 +30,7 @@
                     <div><i>&#x02192</i></div>
                     <div id="data-validation" class="nav"><img alt="frog" src="static/image/mascot-fish.png" class="nav-img"/>資料驗證</div>
                     <div><i>&#x02192</i></div>
-                    <div id="data-clearance" class="nav"><a href=" {{ url_for('data_clearance') }}">資料清理(宇宙連結)</a></div>
+                    <div id="data-clearance" class="nav"><img alt="frog" src="static/image/mascot-butterfly.png" class="nav-img"/>資料清理</div>
                 </div>           
             </div>
             <div class="box box2">

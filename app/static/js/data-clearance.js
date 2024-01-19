@@ -193,6 +193,134 @@ $(document).ready(function() {
         });
         $('.text-facet-popup').addClass('d-none');
         $('.col-content').addClass('d-none');
+    });$('.text-facet-button').click(function() {
+
+        getDataCol = function (containerID, selectedColumn) {
+            if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
+                console.log(selectedColumn);
+                const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
+                colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                console.log(colData);
+                console.log(colName);
+                updateColContent(colName, colData); 
+            } else {
+                $('.duplicated-popup').removeClass('d-none');
+            } 
+            selectedColumn = undefined; // 事件觸發之後重置 index
+        };
+
+        var buttonID = $(this).attr('id');
+        var dataName = $(this).data('name');
+        console.log('點擊的按鈕的ID為:', buttonID);
+        console.log('點擊的按鈕的dataName為:', dataName);
+    
+        containerID = 'grid-' + dataName;
+        if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
+            // console.log(selectedColumn);
+            getDataCol(containerID, selectedColumn); 
+        } else {
+            console.error("Handsontable instance for containerID '" + containerID + "' not found.");
+        }
+    });
+
+    $('.duplicate-facet-button').click(function() {
+
+        getDataCol = function (containerID, selectedColumn) {
+            if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
+                console.log(selectedColumn);
+                const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
+                colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                console.log(colData);
+                console.log(colName);
+                duplicateFacetContent(colName, colData); 
+            } else {
+                $('.duplicated-popup').removeClass('d-none');
+            } 
+            selectedColumn = undefined; // 事件觸發之後重置 index
+        };
+
+        var buttonID = $(this).attr('id');
+        var dataName = $(this).data('name');
+        console.log('點擊的按鈕的ID為:', buttonID);
+        console.log('點擊的按鈕的dataName為:', dataName);
+    
+        containerID = 'grid-' + dataName;
+        if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
+            // console.log(selectedColumn);
+            getDataCol(containerID, selectedColumn); 
+        } else {
+            console.error("Handsontable instance for containerID '" + containerID + "' not found.");
+        }
+    });
+
+    $('.text-filter-button').click(function() {
+        getDataCol = function (containerID, selectedColumn) {
+            if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
+                console.log(selectedColumn);
+                colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                console.log(colName);
+                textFilterContent(colName); 
+            } else {
+                $('.duplicated-popup').removeClass('d-none');
+            } 
+            selectedColumn = undefined; // 事件觸發之後重置 index
+        };
+
+        var buttonID = $(this).attr('id');
+        var dataName = $(this).data('name');
+        console.log('點擊的按鈕的ID為:', buttonID);
+        console.log('點擊的按鈕的dataName為:', dataName);
+    
+        containerID = 'grid-' + dataName;
+        if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
+            // console.log(selectedColumn);
+            getDataCol(containerID, selectedColumn); 
+        } else {
+            console.error("Handsontable instance for containerID '" + containerID + "' not found.");
+        }
+    });
+
+    $(document).on('keyup', '#text-filter-input', function (event) {
+        const filters = handsontableInstances[containerID].getPlugin('filters');
+        
+        var targetColumn = $(`#${containerID} span.colHeader:contains(${colName})`);
+        columnIndex = targetColumn.parents('th').attr('aria-colindex')
+
+        filters.removeConditions(columnIndex - 2);
+        filters.addCondition(columnIndex - 2, 'contains', [event.target.value]);
+        filters.filter();
+
+        handsontableInstances[containerID].render();
+    });
+
+    $('.save-result-btn').click(function () {
+        var templateNames = [];
+        var colHeader = [];
+        var colData =[];
+
+        $('.box4 .tab-inner').each(function() {
+            var templateName = $(this).attr('id');
+            templateNames.push(templateName);
+            
+            var containerID = 'grid-' + templateName;
+            
+            // 獲取表格資料
+            var getData = handsontableInstances[containerID].getData();  
+            var getHeader = handsontableInstances[containerID].getColHeader();  
+            colData.push(getData);
+            colHeader.push(getHeader);
+    
+            // console.log('templateNames: ', templateNames);
+            // console.log('colHeader: ', colHeader);
+            // console.log('colData: ', colData);
+        });
+
+        // $('#download').submit()
+        transferDataToBackend(templateNames, colHeader, colData);
+    });
+
+    $('.back-btn').click(function () {
+        window.history.back();
     });
 });
 
@@ -294,6 +422,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut'],
             selectionMode: 'multiple',
             language: 'zh-TW',
+            manualColumnMove: true, 
             licenseKey: 'non-commercial-and-evaluation'
         });
         hot.loadData(data.slice(1));
@@ -413,6 +542,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut', '---------'],
             selectionMode: 'multiple',
             language: 'zh-TW',
+            manualColumnMove: true,
             licenseKey: 'non-commercial-and-evaluation'
         });
     }
@@ -491,7 +621,7 @@ function updateColContent(colName, colData) {
         var htmlContent = '<p>內容篩選</p><div class="col-name">' + colName + '</div><ul>';
         for (var element in elementCounts) {
             if (elementCounts.hasOwnProperty(element)) {
-                htmlContent += '<li class="text-facet-content"><span>' + element + '</span><span class="text-facet-content-number"> ' + elementCounts[element] + '</span></li>';
+                htmlContent += '<li class="facet-content text-facet-content"><span>' + element + '</span><span class="text-facet-content-number"> ' + elementCounts[element] + '</span></li>';
             }
         }
         htmlContent += '</ul>';
@@ -502,3 +632,71 @@ function updateColContent(colName, colData) {
         $('.col-content').html('No Data');
     }
 };
+
+function duplicateFacetContent(colName, colData) {
+    if (colData && colData.length > 0) {
+        $('.col-content').removeClass('d-none');
+        var elementCounts = {};
+
+        colData.forEach(function(value) {
+            elementCounts[value] = (elementCounts[value] || 0) + 1;
+        });
+
+        var htmlContent = '<p>重複值篩選</p><div class="col-name">' + colName + '</div><ul>';
+        
+        var trueCount = 0;
+        var falseCount = 0;
+
+        for (var element in elementCounts) {
+            if (elementCounts.hasOwnProperty(element)) {
+                var count = elementCounts[element];
+
+                if (count === 1) {
+                    trueCount += count;
+                } else {
+                    falseCount += count;
+                }
+            }
+        }
+
+        htmlContent += '<li class="facet-content text-facet-content"><span>true</span><span class="text-facet-content-number"> ' + trueCount + '</span></li>';
+        htmlContent += '<li class="facet-content text-facet-content"><span>false</span><span class="text-facet-content-number"> ' + falseCount + '</span></li>';
+
+        htmlContent += '</ul>';
+
+        $('.col-content').html(htmlContent);
+    } else {
+        // console.log('no data');
+        $('.col-content').html('No Data');
+    }
+};
+
+function textFilterContent(colName) {
+    $('.col-content').removeClass('d-none');
+
+    var htmlContent = '<p>文字篩選</p><div class="col-name">' + colName + '</div>';
+    
+    htmlContent += '<div class="controlsQuickFilter"><input id="text-filter-input" type="text" placeholder="輸入欲篩選內容" /></div>'
+
+    $('.col-content').html(htmlContent);
+    
+};
+
+// 功能：把編輯表格的資料傳遞到後端
+function transferDataToBackend (templateNames, colHeader, colData) {
+    $.ajax({
+        type: "POST",
+        url: "/transfer-data", 
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({ 'table_name': templateNames, 'table_header': colHeader, 'table_data': colData }),
+        success: function(data) {
+            console.log('System: Data submitted');
+            $('#download-result').click();
+        },
+        error: function () {
+            // $('.unknown-error-popup').removeClass('d-none');
+            console.error('System: Fail to submit data');
+        },
+    })
+}
+

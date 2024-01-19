@@ -244,3 +244,8 @@
     color: #fff;
     transition: 0.3s;
 }
+
+#text-filter-input {
+    width: 100%;
+    padding: 10px 20px 10px 20px;
+}
