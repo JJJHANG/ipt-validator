@@ -3,6 +3,7 @@ var containerID;
 var colName;
 var rowIndexes;
 var columnIndex;
+var highlightedColumn = ['taxonID', 'occurrenceID', 'eventID', 'measurementID', 'resourceID', 'samp_name'];
 
 $(document).ready(function() {
 
@@ -134,8 +135,8 @@ $(document).ready(function() {
                 console.log(selectedColumn);
                 const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
                 colName = handsontableInstances[containerID].getColHeader(selectedColumn);
-                console.log(colData);
-                console.log(colName);
+                // console.log(colData);
+                // console.log(colName);
                 updateColContent(colName, colData); 
             } else {
                 $('.duplicated-popup').removeClass('d-none');
@@ -145,8 +146,8 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
@@ -166,21 +167,25 @@ $(document).ready(function() {
         $('.text-facet-popup').removeClass('d-none');
         $('#text-facet-input').val($(this).find('span:first-child').text());
 
+        // Find Column index
+        var targetColumn = $(`#${containerID} span.colHeader:contains(${colName})`);
+        columnIndex = targetColumn.parents('th').attr('aria-colindex')
+
         // Find row index
         var targetContent = $(this).find('span:first-child').text();
-        var $targetCells = $(`td`).filter(function() {
+        if (targetContent === 'null') { // 把 null 替換回空字串
+            targetContent = '';
+        };
+        var $targetCells = $(`.ht_master td:nth-child(${columnIndex})`).filter(function() {
             return $(this).text().trim() === targetContent.trim();
         });
+        
     
         if ($targetCells.length > 0) {
             rowIndexes = $targetCells.map(function() {
                 return $(this).parents('tr').attr('aria-rowindex');
             }).get();
         } 
-
-        // Find Column index
-        var targetColumn = $(`#${containerID} span.colHeader:contains(${colName})`);
-        columnIndex = targetColumn.parents('th').attr('aria-colindex')
     });
 
     $(document).on('click', '#text-facet-check', function () {
@@ -197,11 +202,12 @@ $(document).ready(function() {
 
         getDataCol = function (containerID, selectedColumn) {
             if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
-                console.log(selectedColumn);
+                // console.log(selectedColumn);
                 const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
                 colName = handsontableInstances[containerID].getColHeader(selectedColumn);
-                console.log(colData);
-                console.log(colName);
+                colName = colName.replace(/<div.*?>|<\/div>/g, '');
+                // console.log(colData);
+                // console.log(colName);
                 updateColContent(colName, colData); 
             } else {
                 $('.duplicated-popup').removeClass('d-none');
@@ -211,8 +217,8 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
@@ -223,15 +229,20 @@ $(document).ready(function() {
         }
     });
 
+    $(document).on('click', '.xx-text-facet', function (event) {
+        $('.col-content').html('');
+        $('.col-content').addClass('d-none');
+    });
+
     $('.duplicate-facet-button').click(function() {
 
         getDataCol = function (containerID, selectedColumn) {
             if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
-                console.log(selectedColumn);
+                // console.log(selectedColumn);
                 const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
                 colName = handsontableInstances[containerID].getColHeader(selectedColumn);
-                console.log(colData);
-                console.log(colName);
+                // console.log(colData);
+                // console.log(colName);
                 duplicateFacetContent(colName, colData); 
             } else {
                 $('.duplicated-popup').removeClass('d-none');
@@ -241,8 +252,8 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
@@ -256,9 +267,10 @@ $(document).ready(function() {
     $('.text-filter-button').click(function() {
         getDataCol = function (containerID, selectedColumn) {
             if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
-                console.log(selectedColumn);
+                // console.log(selectedColumn);
                 colName = handsontableInstances[containerID].getColHeader(selectedColumn);
-                console.log(colName);
+                colName = colName.replace(/<div.*?>|<\/div>/g, '');
+                // console.log(colName);
                 textFilterContent(colName); 
             } else {
                 $('.duplicated-popup').removeClass('d-none');
@@ -268,8 +280,8 @@ $(document).ready(function() {
 
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        console.log('點擊的按鈕的ID為:', buttonID);
-        console.log('點擊的按鈕的dataName為:', dataName);
+        // console.log('點擊的按鈕的ID為:', buttonID);
+        // console.log('點擊的按鈕的dataName為:', dataName);
     
         containerID = 'grid-' + dataName;
         if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
@@ -293,6 +305,13 @@ $(document).ready(function() {
         handsontableInstances[containerID].render();
     });
 
+    $(document).on('click', '.xx-text-filter', function (event) {
+        const filters = handsontableInstances[containerID].getPlugin('filters');
+        filters.removeConditions(columnIndex - 2)
+        filters.filter();
+        $('.col-content').addClass('d-none');
+    });
+
     $('.save-result-btn').click(function () {
         var templateNames = [];
         var colHeader = [];
@@ -307,6 +326,11 @@ $(document).ready(function() {
             // 獲取表格資料
             var getData = handsontableInstances[containerID].getData();  
             var getHeader = handsontableInstances[containerID].getColHeader();  
+
+            getHeader = getHeader.map(function (header) {
+                return header.replace(/<div.*?>|<\/div>/g, '');
+            });
+            
             colData.push(getData);
             colHeader.push(getHeader);
     
@@ -329,7 +353,13 @@ function initializeHandsontable(containerID, checkboxNames, data) {
     var container = document.getElementById(containerID);
     if (data) {
         var hot = new Handsontable(container, {
-            colHeaders: data[0],
+            colHeaders: data[0].map(function (name) {
+                if (highlightedColumn.includes(name)) {
+                    return `<div class="red">${name}</div>`
+                } else {
+                    return `<div>${name}</div>`
+                }
+            }),
             columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
                 if (name === 'basisOfRecord') {
                     return {
@@ -428,7 +458,13 @@ function initializeHandsontable(containerID, checkboxNames, data) {
         hot.loadData(data.slice(1));
     } else {
         var hot = new Handsontable(container, {
-            colHeaders: checkboxNames,
+            colHeaders: checkboxNames.map(function (name) {
+                if (highlightedColumn.includes(name)) {
+                    return `<div class="red">${name}</div>`
+                } else {
+                    return `<div>${name}</div>`
+                }
+            }),
             columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
                 if (name === 'basisOfRecord') {
                     return {
@@ -617,8 +653,16 @@ function updateColContent(colName, colData) {
             elementCounts[value] = (elementCounts[value] || 0) + 1;
         });
 
-        // 生成 HTML
-        var htmlContent = '<p>內容篩選</p><div class="col-name">' + colName + '</div><ul>';
+        var htmlContent = '<div class="xx-text-facet">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">' +
+        '<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">' +
+        '<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">' +
+        '<line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" ' +
+        'fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>' +
+        '<line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" ' +
+        'fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>' +
+        '</g></g></svg></div><p>內容篩選</p><div class="col-name">' + colName + '</div>';
+
         for (var element in elementCounts) {
             if (elementCounts.hasOwnProperty(element)) {
                 htmlContent += '<li class="facet-content text-facet-content"><span>' + element + '</span><span class="text-facet-content-number"> ' + elementCounts[element] + '</span></li>';
@@ -674,7 +718,15 @@ function duplicateFacetContent(colName, colData) {
 function textFilterContent(colName) {
     $('.col-content').removeClass('d-none');
 
-    var htmlContent = '<p>文字篩選</p><div class="col-name">' + colName + '</div>';
+    var htmlContent = '<div class="xx-text-filter">' +
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">' +
+    '<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">' +
+    '<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">' +
+    '<line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" ' +
+    'fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>' +
+    '<line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" ' +
+    'fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>' +
+    '</g></g></svg></div><p>文字篩選</p><div class="col-name">' + colName + '</div>';
     
     htmlContent += '<div class="controlsQuickFilter"><input id="text-filter-input" type="text" placeholder="輸入欲篩選內容" /></div>'
 

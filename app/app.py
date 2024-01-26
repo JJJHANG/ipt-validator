@@ -68,6 +68,7 @@ def data_edit():
     # extension_checkbox_names = session.get('extension_checkbox_names', [])
     template_names = session.get('template_names', [])
     app.logger.info(f'checkbox_names in data_edit: {checkbox_names}')
+    app.logger.info(f'template_names in data_edit: {template_names}')
     return render_template('data-edit.html', checkbox_names=checkbox_names, template_names=template_names)
 
 
@@ -672,7 +673,7 @@ def download_result():
         return send_file(temp_file.name,
                         mimetype='"text/csv"',
                         as_attachment=True,
-                        download_name='test.csv')
+                        download_name=f'error-{datetime.date.today()}.csv')
 
     except FileNotFoundError:
         print('404')
@@ -721,10 +722,33 @@ def export_as_zip():
         except FileNotFoundError:
             print('404')
 
+@app.route('/export-as-csv', methods=['POST'])
+def export_as_csv():
+        table_name = session.get('table_name')
+        table_header = session.get('table_header')
+        table_data = session.get('table_data')
+
+        for data in table_data:
+            df = pd.DataFrame(data, columns=table_header)
+            df.to_csv(f'{table_name}-{datetime.date.today()}.csv')
+        print(df)
+        
+        try:
+            return send_file(f'{table_name}-{datetime.date.today()}.csv',
+                            as_attachment=True,
+                            download_name=f'{table_name}-{datetime.date.today()}.csv')
+
+        except FileNotFoundError:
+            print('404')
+
+        finally:
+            if os.path.exists(f'{table_name}-{datetime.date.today()}.csv'):
+                os.remove(f'{table_name}-{datetime.date.today()}.csv')
+
 
 if __name__ == '__main__':
     # The reloader has not yet run - open the browser
-    # if not os.environ.get("WERKZEUG_RUN_MAIN"):
-    #     webbrowser.open_new('http://127.0.0.1:5555/data-template')
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        webbrowser.open_new('http://127.0.0.1:5555/data-template')
 
     app.run(host='0.0.0.0', port=5555, debug=True)

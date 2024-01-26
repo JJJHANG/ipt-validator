@@ -1,6 +1,7 @@
 var checkboxArrays = {};
 var handsontableInstances = {};
 var selectedColumn = [];
+var highlightedColumn = ['taxonID', 'occurrenceID', 'eventID', 'measurementID', 'resourceID', 'samp_name'];
 
 $(document).ready(function() {
     // IndexedDB instance
@@ -17,7 +18,6 @@ $(document).ready(function() {
 
         getAllRequest.onsuccess = function(event) {
             if (getAllRequest.result && getAllRequest.result.length > 0) {
-             
                 getAllRequest.result.forEach(function(item) {
                     // console.log(item);
                     const containerID = 'grid-' + item.template_name
@@ -218,7 +218,8 @@ $(document).ready(function() {
             if (typeof selectedColumn !== 'undefined' && selectedColumn.length !== 0) {
                 // console.log(selectedColumn);
                 const colData = handsontableInstances[containerID].getDataAtCol(selectedColumn);
-                const colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                var colName = handsontableInstances[containerID].getColHeader(selectedColumn);
+                colName = colName.replace(/<div.*?>|<\/div>/g, '');
                 // console.log(colData);
                 // console.log(colName);
                 updateColContent(colName, colData); 
@@ -245,27 +246,48 @@ $(document).ready(function() {
     $('.export-button').click(function() {
         var buttonID = $(this).attr('id');
         var dataName = $(this).data('name');
-        // console.log('點擊的按鈕的ID為:', buttonID);
-        // console.log('點擊的按鈕的dataName為:', dataName);
+        console.log('點擊的按鈕的ID為:', buttonID);
+        console.log('點擊的按鈕的dataName為:', dataName);
     
         const containerID = 'grid-' + dataName;
-        if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
-            const exportPlugin = handsontableInstances[containerID].getPlugin('exportFile');
-            exportPlugin.downloadFile('csv', {
-                bom: false,
-                columnDelimiter: ',',
-                columnHeaders: true,
-                exportHiddenColumns: true,
-                exportHiddenRows: true,
-                fileExtension: 'csv',
-                filename: dataName + '_[YYYY]-[MM]-[DD]',
-                mimeType: 'text/csv',
-                rowDelimiter: '\r\n',
-                rowHeaders: true
-            });
-        } else {
-            console.error("Handsontable instance for containerID '" + containerID + "' not found.");
-        }
+        var colHeader = [];
+        var colData =[];
+
+        
+        // 獲取表格資料
+        var getData = handsontableInstances[containerID].getData();  
+        var getHeader = handsontableInstances[containerID].getColHeader();  
+
+        getHeader = getHeader.map(function (header) {
+            return header.replace(/<div.*?>|<\/div>/g, '');
+        });
+        
+        colData.push(getData);
+        colHeader.push(getHeader);
+
+        console.log('templateName: ', dataName);
+        console.log('colHeader: ', colHeader);
+        console.log('colData: ', colData);
+
+        transferExportDataToBackend(dataName, colHeader, colData);
+
+        // if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
+        //     const exportPlugin = handsontableInstances[containerID].getPlugin('exportFile');
+        //     exportPlugin.downloadFile('csv', {
+        //         bom: false,
+        //         columnDelimiter: ',',
+        //         columnHeaders: true,
+        //         exportHiddenColumns: true,
+        //         exportHiddenRows: true,
+        //         fileExtension: 'csv',
+        //         filename: dataName + '_[YYYY]-[MM]-[DD]',
+        //         mimeType: 'text/csv',
+        //         rowDelimiter: '\r\n',
+        //         rowHeaders: true
+        //     });
+        // } else {
+        //     console.error("Handsontable instance for containerID '" + containerID + "' not found.");
+        // }
     });
 
     $('.import-button').click(function() {
@@ -320,6 +342,11 @@ $(document).ready(function() {
             // 獲取表格資料
             var getData = handsontableInstances[containerID].getData();  
             var getHeader = handsontableInstances[containerID].getColHeader();  
+
+            getHeader = getHeader.map(function (header) {
+                return header.replace(/<div.*?>|<\/div>/g, '');
+            });
+
             colData.push(getData);
             colHeader.push(getHeader);
     
@@ -329,6 +356,8 @@ $(document).ready(function() {
     
             addToIndexedDB(templateName, getHeader, getData);
         });
+
+        transferDataToBackend(templateNames, colHeader, colData); 
 
         // // 獲取表格資料
         // window.getData = function (containerID) {
@@ -349,12 +378,12 @@ $(document).ready(function() {
         // });
 
         // addToIndexedDB(templateName, checkboxNames, data)
-        transferDataToBackend(templateNames, colHeader, colData); 
     });
 
     // 按鈕事件：上一步
     $('.back-btn').click(function () {
-        window.history.back();
+        // window.history.back();
+        window.location.replace(document.referrer);
     });
 
     $('.xx').on('click', function (event) {
@@ -411,7 +440,7 @@ $(document).ready(function() {
         }
     });
 
-    $(document).on('mouseleave', 'thead .relative', async function() {
+    $(document).on('mouseleave', 'thead .relative', function() {
         $("#description-container").hide();
         $("#description-name").hide();
         $("#description-type").hide();
@@ -421,6 +450,18 @@ $(document).ready(function() {
         $(".description-title").hide();
     });
 });
+
+// function highlightHeader () {
+//     var targetTexts = ['taxonID', 'occurrenceID', 'eventID', 'measurementID', 'resourceID', 'samp_name'];
+//     var targetSpans = $('span.colHeader');
+
+//     var filteredSpans = targetSpans.filter(function() {
+//         return targetTexts.includes($(this).text());
+//     });
+
+//     console.log(filteredSpans);
+//     filteredSpans.addClass('red');
+// }
 
 // 功能：測試匯入資料
 // function updateHandsontable(data) {
@@ -438,13 +479,30 @@ $(document).ready(function() {
 // 功能：把編輯表格的資料傳遞到後端
 function transferDataToBackend (templateNames, colHeader, colData) {
     $.ajax({
-        type: "POST",
-        url: "/process-validation", // 給 process-validation 處理驗證過程
+        type: 'POST',
+        url: '/process-validation', // 給 process-validation 處理驗證過程
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify({ 'table_name': templateNames, 'table_header': colHeader, 'table_data': colData }),
         success: function(data) {
             console.log('System: Data submitted');
             window.location.href = '/data-validation'; // 轉跳到 data-validation 呈現驗證結果
+        },
+        error: function () {
+            $('.unknown-error-popup').removeClass('d-none');
+            console.error('System: Fail to submit data');
+        },
+    })
+}
+
+function transferExportDataToBackend (templateNames, colHeader, colData) {
+    $.ajax({
+        type: 'POST',
+        url: '/transfer-data', 
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({ 'table_name': templateNames, 'table_header': colHeader, 'table_data': colData }),
+        success: function(data) {
+            console.log('System: Data submitted');
+            $('#export-result').click();
         },
         error: function () {
             $('.unknown-error-popup').removeClass('d-none');
@@ -485,7 +543,13 @@ function initializeHandsontable(containerID, checkboxNames, data) {
     var container = document.getElementById(containerID);
     if (data) {
         var hot = new Handsontable(container, {
-            colHeaders: data[0],
+            colHeaders: data[0].map(function (name) {
+                if (highlightedColumn.includes(name)) {
+                    return `<div class="red">${name}</div>`
+                } else {
+                    return `<div>${name}</div>`
+                }
+            }),
             columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
                 if (name === 'basisOfRecord') {
                     return {
@@ -583,7 +647,13 @@ function initializeHandsontable(containerID, checkboxNames, data) {
         hot.loadData(data.slice(1));
     } else {
         var hot = new Handsontable(container, {
-            colHeaders: checkboxNames,
+            colHeaders: checkboxNames.map(function (name) {
+                if (highlightedColumn.includes(name)) {
+                    return `<div class="red">${name}</div>`
+                } else {
+                    return `<div>${name}</div>`
+                }
+            }),
             columns: checkboxNames.map(function (name) { // 設定前驗證檢查的格式
                 if (name === 'basisOfRecord') {
                     return {
@@ -697,7 +767,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             contextMenu: ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo', '---------', 'make_read_only', '---------', 'copy', 'cut', '---------'],
             selectionMode: 'multiple',
             language: 'zh-TW',
-            licenseKey: 'non-commercial-and-evaluation'
+            licenseKey: 'non-commercial-and-evaluation',
         });
     }
 

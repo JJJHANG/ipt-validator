@@ -129,6 +129,7 @@
     justify-content: flex-start;
     /* align-items: center; */
     margin-top: 10px;
+    position: relative;
 }
 
 .col-content li {
@@ -248,4 +249,13 @@
 #text-filter-input {
     width: 100%;
     padding: 10px 20px 10px 20px;
+}
+
+.xx-text-filter, .xx-text-facet{
+    position: absolute;
+    right: 5px;
+}
+
+.xx-text-filter:hover, .xx-text-facet:hover{
+    cursor: pointer;
 }

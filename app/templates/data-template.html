@@ -7,7 +7,6 @@
 <script type=text/javascript src="{{ url_for('static', filename='js/data-template.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/data-template.css') }}">
 {% endblock %}
-{% block title %} 資料模板 {% endblock %}
 
 
 {% block popup %}
@@ -187,6 +186,9 @@
 {% endblock %}
 
 {% block box4 %}
+<div class="loader-wrapper d-none">
+    <span id="loader" class="loader"></span>
+</div>
 <form id="customFieldset"></form>  
 <form id="requiredFieldset" method="post" action="/data-template"></form> 
 <form id="extensionFieldset"></form>  

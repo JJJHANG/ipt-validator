@@ -12,7 +12,7 @@
     <script type=text/javascript src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script src="../static/package/handsontable.full.min.js"></script>
     <script type="text/javascript" src="../static/package/zh-TW.js"></script>
-    <title>{% block title %}{% endblock %}</title>
+    <title>TaiBIF 開放資料模板與驗證工具</title>
 </head>
 <body>
     <section>
@@ -20,8 +20,8 @@
         <div class="grid-system">
             <div class="box box1">
                 <div class="left-container">
-                    <img src="static/image/taibif-logo.png" alt="Logo" class="logo-img">
-                    <div class="logo-title">資料驗證工具</div>  
+                    <img src="static/image/taibif-logo-rbg.png" alt="Logo" class="logo-img">
+                    <div class="logo-title">開放資料模板與驗證工具</div>  
                 </div>
                 <div class="right-container">
                     <div id="data-template" class="nav"><img alt="frog" src="static/image/mascot-frog.png" class="nav-img"/><p>資料模板</p></div>
@@ -41,7 +41,6 @@
             </div>
             <div class="box box4">
                 {% block box4 %}{% endblock %}
-                <div id="exampleShowFilterItemsOnly"></div>
             </div>
             <div class="box box5">
                 {% block box5 %}{% endblock %}

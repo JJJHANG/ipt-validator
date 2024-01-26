@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/data-edit.css') }}">
 <script type=text/javascript src="{{ url_for('static', filename='js/data-edit.js') }}"></script>
 {% endblock %}
-{% block title %} 資料驗證 {% endblock %}
+
 
 {% block popup %}
 <!-- Warning Popup -->
@@ -38,7 +38,7 @@
     </div>
     <div class="popup-alert">
         <p>提醒：未知錯誤，請檢查表格是否填寫完整 ( ͡• ͜ʖ ͡• )</p>
-        <p id="alert-small">* 請確保 ID 類欄位填寫完整，<br>如：eventID, occurrenceID, taxonID, samp_name</p>
+        <p id="alert-small">* 請確保 ID 類欄位填寫完整<br></p>
     </div>
 </div>
 
@@ -62,6 +62,9 @@
 {% block box2 %}
 <div class="sheet-title">STEP3. 切換頁籤</div>
 <div class="edit-title">STEP4. 編輯資料</div>
+<form action="/export-as-csv" method="POST" class="d-none">
+    <input type="submit" id="export-result">
+</form>
 {% endblock %}
 
 {% block box3 %}
@@ -132,7 +135,7 @@
             <div id="grid-{{ name }}"></div> 
             <div id="pages-grid-{{ name }}"></div> 
         </div>
-        <div id="example1"></div>
+        <!-- <div id="example1"></div> -->
     {% endfor %}
 {% endfor %}
 

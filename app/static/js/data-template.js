@@ -112,16 +112,21 @@ $(document).ready(function () {
 
     // 下拉選單事件：主題下拉選單連動其他選單
     $('#theme').on('change', function() {
+        $('.loader-wrapper').removeClass('d-none');
         updateDropdown(); // 指定核心以及延伸資料集
         updateFieldsetContent(); // 更新對應的核心欄位內容
         updateExtensionFieldsetContent(); // 更新對應的延伸資料集欄位內容
         $('#extension').trigger('change');
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // handleCheckboxClick(); // 檢查欄位是否重複勾選
+        setTimeout(function () {
+            $('.loader-wrapper').addClass('d-none');
+        }, 500);
     });
 
     // 下拉選單事件：更新資料集類型的欄位內容
     $('#core').on('change', function() {
+        $('.loader-wrapper').removeClass('d-none');
         $('.fs-label').text('');
         $('.fs-option').removeClass('selected');
         $('#extensionFieldset').html('');
@@ -149,13 +154,29 @@ $(document).ready(function () {
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // console.log(CheckedcheckboxNames);
+        $('#core option:selected').each(function () {
+            if ($(this).val() === 'occurrence') {
+                $('.fs-option[data-value="darwin-core-occurrence"]').prop('disabled', true);
+                $('.fs-option[data-value="darwin-core-occurrence"]').addClass('disabled-color');
+            } else {
+                $('.fs-option[data-value="darwin-core-occurrence"]').prop('disabled', false);
+                $('.fs-option[data-value="darwin-core-occurrence"]').removeClass('disabled-color');
+            }
+        });
+        setTimeout(function () {
+            $('.loader-wrapper').addClass('d-none');
+        }, 500);
     });
 
     // 下拉選單事件：更新延伸資料集的欄位內容
     $('#extension').on('change', function() {
+        $('.loader-wrapper').removeClass('d-none');
         checkedExtensionCheckboxNames = [];
         updateExtensionFieldsetContent();
         handelSpecificColumn(); // 處理特定欄位的規則
+        setTimeout(function () {
+            $('.loader-wrapper').addClass('d-none');
+        }, 500);
         // updateCheckedCheckboxNames();
 
         // // 檢查延伸資料集和其他重複的欄位
@@ -175,9 +196,10 @@ $(document).ready(function () {
 
     // 下拉選單事件：更新自訂模板的欄位內容
     $('#custom').on('change', function() {
+        $('.loader-wrapper').removeClass('d-none');
         if ($('#custom option:selected').text() !== '') {
             $('#custom-template-container span:nth-child(2)').removeClass('d-none');
-            console.log($('#custom option:selected').text());
+            // console.log($('#custom option:selected').text());
         } else {
             $('#custom-template-container span:nth-child(2)').addClass('d-none');
         }
@@ -203,6 +225,9 @@ $(document).ready(function () {
 
         updateCheckedCheckboxNames(); // 更新被勾選的欄位名稱
         // handleCheckboxClick(); // 檢查欄位是否重複勾選
+        setTimeout(function () {
+            $('.loader-wrapper').addClass('d-none');
+        }, 500);
     });
 
     // 滑鼠事件之前隱藏樣式
@@ -346,7 +371,7 @@ $(document).ready(function () {
 
     $('#save-btn').on('click', function (event) {
         updateCheckedCheckboxNames();
-        console.log(CheckedcheckboxNames);
+        // console.log(CheckedcheckboxNames);
         const templateName = $('#template-name').val();
         const newOption = $("<option>")
         // .attr('value', CheckedcheckboxNames.join(','))
@@ -461,16 +486,17 @@ function updateCheckedCheckboxNames() {
         // 如果coreTemplateName是None或為空，則設定它為custom option的值
         coreTemplateName = $('#custom option:selected').val();
     }
+    CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
 
     var checkedCustomCheckboxNames = $("#customFieldset .checkbox input[type='checkbox']:checked").map(function () {
         return $(this).attr("name"); // 包含自訂、自訂模板欄位
     }).get();
-
+    
     if (checkedCustomCheckboxNames.length > 0) {
-        checkedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames);
+        CheckedcheckboxNames['custom'] = checkedCustomCheckboxNames;
+        // checkedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames);
     }
 
-    CheckedcheckboxNames[coreTemplateName] = checkedCheckboxNames;
 
 
     var checkedExtensionCheckboxNames = $("#extensionFieldset .checkbox input[type='checkbox']:checked").map(function () {
@@ -520,9 +546,16 @@ function getTemplateNames() {
         }).get()
     };
 
+    if (CheckedcheckboxNames['custom'] !== undefined) {
+        var customTemplateName = {
+            '自訂欄位': ['custom']
+        }
+    };
+
     TemplateNames = {
         '資料集類型': coreTemplateName['資料集類型'],
-        '延伸資料集': extensionTemplateName['延伸資料集']
+        '延伸資料集': extensionTemplateName['延伸資料集'],
+        '自訂欄位': customTemplateName ? customTemplateName['自訂欄位'] : undefined
     };
 }
 
@@ -1820,13 +1853,14 @@ function updateFieldsetContent() {
         
         var customTemplateName = $("#custom option:selected").text();
         var fieldsetContent = `<fieldset id="custom-core" class="required-fieldset"><legend>${customTemplateName}：資料集類型欄位</legend>`;
+        var customfieldsetContent = '';
         var customExtensionFieldsetContent = '';
 
         const storedData = JSON.parse(localStorage.getItem(customTemplateName));
 
         for (const key in storedData) {
             if (Array.isArray(storedData[key])) {
-                console.log(`${key}:`, storedData[key]);
+                // console.log(`${key}:`, storedData[key]);
                 if (['checklist', 'samplingevent', 'occurrence'].includes(key)) {
                     for (let i = 0; i < storedData[key].length; i++) {
                         fieldsetContent += `
@@ -1838,6 +1872,7 @@ function updateFieldsetContent() {
                             </div>
                         `;
                     }
+                    fieldsetContent += '</fieldset>';
                 } else if (['darwin-core-occurrence', 'simple-multimedia', 'extended-measurement-or-facts', 'resource-relationship', 'dna-derived-data'].includes(key)) {
                     customExtensionFieldsetContent += `<fieldset id="${key}"><legend>${customTemplateName} ${key}：延伸資料集欄位</legend>`;
                     for (let i = 0; i < storedData[key].length; i++) {
@@ -1851,18 +1886,31 @@ function updateFieldsetContent() {
                         `;
                     }
                     customExtensionFieldsetContent += '</fieldset>';
+                } else if (['custom'].includes(key)) {
+                    customfieldsetContent = `<fieldset id="custom-custom"><legend>${customTemplateName}：自訂欄位</legend>`;
+                    for (let i = 0; i < storedData[key].length; i++) {
+                        customfieldsetContent += `
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="${storedData[key][i]}" checked />
+                                    ${storedData[key][i]}
+                                </label>
+                            </div>
+                        `;
+                    }
+                    customfieldsetContent += '</fieldset>';
                 }
             }
         }
-        customExtensionFieldsetContent += '</fieldset>';
+        $("#requiredFieldset").html(fieldsetContent);
         $("#extensionFieldset").html(customExtensionFieldsetContent);
-        fieldsetContent += '</fieldset>';
+        $("#customFieldset").html(customfieldsetContent);
+        
     } else {
         $("#customFieldset").html('');
     }
 
     $("#requiredFieldset").html(fieldsetContent);
-
     // 鎖定必填欄位的選項
     // $('.required-fieldset input[type="checkbox"]').prop('disabled', true);
 
