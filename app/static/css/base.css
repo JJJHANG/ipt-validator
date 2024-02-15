@@ -19,9 +19,9 @@
 }
 
 body {
-    background-color: #FFF0E1;
-    color: #2B59C3;
-    font-family: 'Noto Sans TC', sans-serif;
+    background-color: #fff0e1;
+    color: #2b59c3;
+    font-family: "Noto Sans TC", sans-serif;
 }
 
 .logo-img {
@@ -46,7 +46,7 @@ body {
     /* background-color: blue; */
     grid-column: 1 / 5;
     grid-row: 1 / 5;
-    border-bottom: 1.5px solid #2B59C3;
+    border-bottom: 1.5px solid #2b59c3;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -70,10 +70,10 @@ body {
     font-weight: 600;
     gap: 5px;
     margin-right: 10px;
-} 
+}
 
-.nav-active{
-    background-color: #EEE8A9;
+.nav-active {
+    background-color: #eee8a9;
     border-radius: 20px;
     padding: 5px;
 }
@@ -82,14 +82,14 @@ body {
     /* background-color: red; */
     grid-column: 1 / 5;
     grid-row: 5 / 6;
-    border-bottom: 1.5px solid #2B59C3;
+    border-bottom: 1.5px solid #2b59c3;
     display: grid;
     grid-template-columns: 1fr 2fr 2fr;
     align-items: center;
     font-size: 12px;
     font-weight: 600;
-    background-color: #2B59C3;
-    color: #FFF;
+    background-color: #2b59c3;
+    color: #fff;
     /* padding-left: 5px; */
     padding-top: 5px;
     padding-bottom: 5px;
@@ -99,7 +99,7 @@ body {
     /* background-color: green; */
     grid-column: 1 / 2;
     grid-row: 6 / 47;
-    border-right: 1.5px solid #2B59C3;
+    border-right: 1.5px solid #2b59c3;
     display: flex;
     flex-direction: column;
     font-size: 16px;
@@ -116,7 +116,7 @@ body {
     /* background-color: green; */
     grid-column: 2 / 3;
     grid-row: 6 / 48;
-    border-right: 1.5px solid #2B59C3;
+    border-right: 1.5px solid #2b59c3;
     font-size: 16px;
     padding: 10px;
     overflow-y: auto;
@@ -127,13 +127,12 @@ body {
     grid-column: 3 / 5;
     grid-row: 6 / 47;
     display: grid;
-    
 }
 
 .box6 {
     grid-column: 3 / 5;
     grid-row: 47 / 48;
-    border-top: 1px solid #2B59C3;
+    border-top: 1px solid #2b59c3;
     font-size: 12px;
     display: flex;
 }
@@ -141,13 +140,13 @@ body {
 .box7 {
     grid-column: 1 / 2;
     grid-row: 47 / 48;
-    border-top: 1px solid #2B59C3;
-    border-right: 1px solid #2B59C3;
+    border-top: 1px solid #2b59c3;
+    border-right: 1px solid #2b59c3;
     font-size: 12px;
 }
 
 .btn {
-    background-color: #2B59C3; 
+    background-color: #2b59c3;
     border: none;
     padding: 15px 32px;
     text-align: center;
@@ -161,20 +160,22 @@ body {
 
 .btn:hover {
     cursor: pointer;
-    background-color: #F9F871;
-    color: #2B59C3;
+    background-color: #f9f871;
+    color: #2b59c3;
     transition: 0.3s;
     /* color:#2B59C3 */
 }
 
-.template-title, .sheet-title {
-    border-right: 1.5px solid #FFF;
+.template-title,
+.sheet-title {
+    border-right: 1.5px solid #fff;
     padding-left: 5px;
     display: flex;
     align-items: center;
 }
 
-.column-title, .edit-title{
+.column-title,
+.edit-title {
     padding-left: 5px;
     /* border-right: 1.5px solid #FFF; */
     display: flex;
@@ -191,14 +192,14 @@ body {
     border: 1px solid #ccc;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    background-color: #FFF0E1;
+    background-color: #fff0e1;
 }
 
 .popup-alert {
     margin-top: 30px;
     padding: 6px 22px 6px 22px;
     font-size: 16px;
-    color: #B91F3E;
+    color: #b91f3e;
 }
 
 .nav-img {
@@ -219,7 +220,7 @@ body {
     font-size: 12px;
     margin-bottom: 5px;
     padding: 10px 20px 10px 20px;
-    border: 1px solid #2B59C3;
+    border: 1px solid #2b59c3;
     border-radius: 20px;
     display: flex;
     /* flex-direction: column; */
@@ -231,12 +232,12 @@ body {
 }
 
 .tab-title li:visited {
-    color: #2B59C3;
+    color: #2b59c3;
 }
 
-.tab-title li:hover{
-    color: #FFF;
-    background-color: #2B59C3;
+.tab-title li:hover {
+    color: #fff;
+    background-color: #2b59c3;
 }
 
 .tab-title li:hover {
@@ -244,8 +245,8 @@ body {
 }
 
 .now {
-    color: #FFF !important;
-    background-color: #2B59C3;
+    color: #fff !important;
+    background-color: #2b59c3;
 }
 
 .bookmark-title {
@@ -255,10 +256,14 @@ body {
 }
 
 .disabled-color {
-    color:lightgray;
+    color: lightgray;
     cursor: default;
 }
 
 .red {
-    color: #F75D6D;
+    color: #f75d6d;
+}
+
+.custom {
+    color: #2b59c3;
 }
