@@ -1,0 +1,52 @@
+.tab-title li {
+    list-style-type: none;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 5px;
+    padding: 10px 20px 10px 20px;
+    border: 1px solid #2b59c3;
+    border-radius: 20px;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-between;
+}
+
+.tab-title li a:link {
+    color: #2b59c3;
+    text-decoration: none;
+}
+
+.tab-title li a:visited {
+    color: #2b59c3;
+    text-decoration: none;
+}
+
+.tab-title li:hover {
+    background-color: #2b59c3;
+    text-decoration: none;
+}
+
+.tab-title li:hover a {
+    color: #fff;
+    background-color: #2b59c3;
+}
+
+.tab-title li a:active {
+    color: #2b59c3;
+    text-decoration: none;
+}
+
+.tab-title li:hover {
+    cursor: pointer;
+}
+
+.now {
+    color: #fff !important;
+    background-color: #2b59c3;
+}
+
+.editing-mark {
+    font-size: 600 !important;
+    color: #fff;
+}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %} 
+{% block head %} 
+<script src="../static/package/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/project.css') }}">
+<script type=text/javascript src="{{ url_for('static', filename='js/project.js') }}"></script>
+{% endblock %} {% block box2 %}
+<div class="template-title">STEP0. 選擇專案</div>
+{% endblock %} {% block box3 %}
+<ul class="tab-title">
+    <!-- <div class="bookmark-title"></div> -->
+    <li>
+        <a href="#create_project">建立專案</a>
+        <p class="editing-mark d-none">●</p>
+    </li>
+    <!-- <div class="bookmark-title"></div> -->
+    <li>
+        <a href="#open_project">開啟專案</a>
+        <p class="editing-mark d-none">●</p>
+    </li>
+</ul>
+
+{% endblock %}
+
+{% block box4 %}
+
+        <div id="create_project" class="tab-inner">
+            <div>create project</div>
+        </div>
+
+
+{% endblock %}

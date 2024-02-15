@@ -13,6 +13,10 @@ app.config['SECRET_KEY'] = os.urandom(24)
 def homepage():
     return render_template('base.html')
 
+@app.route('/project')
+def create_project():
+    return render_template('project.html')
+
 @app.route('/get-json-data', methods=['GET'])
 def get_json_data():
     try:
@@ -707,20 +711,23 @@ def export_as_zip():
         table_header = session.get('table_header')
         table_data = session.get('table_data')
 
-        with zipfile.ZipFile('Rasengan.zip', 'w') as zf:
-            for name, header, rows in zip(table_name, table_header, table_data):
-                df = pd.DataFrame(rows, columns=header)
-                df.to_csv(f'{name}.csv')
-                zf.write(f'{name}.csv')
-                os.remove(f'{name}.csv')
+        with tempfile.TemporaryDirectory() as temp_dir:
+            zip_filename = os.path.join(temp_dir, 'Rasengan.zip')
 
-        try:
-            return send_file('Rasengan.zip',
-                            as_attachment=True,
-                            download_name=None)
+            with zipfile.ZipFile(zip_filename, 'w') as zf:
+                for name, header, rows in zip(table_name, table_header, table_data):
+                    csv_filename = os.path.join(temp_dir, f'{name}.csv')
 
-        except FileNotFoundError:
-            print('404')
+                    df = pd.DataFrame(rows, columns=header)
+                    df.to_csv(csv_filename)
+
+                    zf.write(csv_filename, arcname=f'{name}.csv')
+
+            try:
+                return send_file(zip_filename, as_attachment=True, download_name='Rasengan.zip')
+
+            except FileNotFoundError:
+                print('404')
 
 @app.route('/export-as-csv', methods=['POST'])
 def export_as_csv():
@@ -728,22 +735,15 @@ def export_as_csv():
         table_header = session.get('table_header')
         table_data = session.get('table_data')
 
-        for data in table_data:
-            df = pd.DataFrame(data, columns=table_header)
-            df.to_csv(f'{table_name}-{datetime.date.today()}.csv')
-        print(df)
-        
-        try:
-            return send_file(f'{table_name}-{datetime.date.today()}.csv',
-                            as_attachment=True,
-                            download_name=f'{table_name}-{datetime.date.today()}.csv')
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_csv:
+            for data in table_data:
+                df = pd.DataFrame(data, columns=table_header)
+                df.to_csv(temp_csv.name)
 
-        except FileNotFoundError:
-            print('404')
-
-        finally:
-            if os.path.exists(f'{table_name}-{datetime.date.today()}.csv'):
-                os.remove(f'{table_name}-{datetime.date.today()}.csv')
+            try:
+                return send_file(temp_csv.name, as_attachment=True, download_name=f'{table_name}-{datetime.date.today()}.csv')
+            except FileNotFoundError:
+                print('404')
 
 
 if __name__ == '__main__':
