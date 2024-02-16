@@ -3,6 +3,7 @@ var coreCheckedCheckboxNames = [];
 // var extensionCheckedcheckboxNames = [];
 var CheckedcheckboxNames = {};
 var TemplateNames = [];
+var customColumns = [];
 
 $(document).ready(function () {
     // var request = window.indexedDB.open('YourDatabaseName', 1);
@@ -333,6 +334,7 @@ $(document).ready(function () {
         }
 
         console.log(CheckedcheckboxNames);
+        console.log(customColumns);
 
         if ($("#core").val() == "" && $("#custom").val() == "") {
             $(".required-popup").removeClass("d-none");
@@ -354,6 +356,7 @@ $(document).ready(function () {
                 data: JSON.stringify({
                     checkbox_names: CheckedcheckboxNames,
                     template_names: TemplateNames,
+                    custom_columns: customColumns,
                 }),
                 success: function (data) {
                     console.log("System: Data submitted");
@@ -558,8 +561,17 @@ function updateCheckedCheckboxNames() {
         .get();
 
     if (checkedCustomCheckboxNames.length > 0) {
-        CheckedcheckboxNames["custom"] = checkedCustomCheckboxNames;
-        // checkedCheckboxNames = checkedCheckboxNames.concat(checkedCustomCheckboxNames);
+        CheckedcheckboxNames[coreTemplateName] = CheckedcheckboxNames[
+            coreTemplateName
+        ].concat(checkedCustomCheckboxNames);
+
+        // 更新全域變數
+        customColumns = checkedCustomCheckboxNames; // 用在標記自訂欄位
+
+        // CheckedcheckboxNames["custom"] = checkedCustomCheckboxNames;
+        // checkedCheckboxNames = checkedCheckboxNames.concat(
+        //     checkedCustomCheckboxNames
+        // );
     }
 
     var checkedExtensionCheckboxNames = $(

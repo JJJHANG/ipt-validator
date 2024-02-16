@@ -35,13 +35,9 @@
 {% endblock %}
 
 {% block box3 %}
-
-<!-- {% for template_name, col_names in checkbox_names.items()%}
-    <div class="template-name">{{ template_name }}</div>
-        {% for col_name in col_names %}
-            <div class="checkbox-name checkbox-name-{{ template_name }}" data-checkbox-name="{{ col_name }}">{{ col_name }}</div>
-        {% endfor %}
-{% endfor %} -->
+{% for col_name in custom_columns %}
+    <div class="custom-col d-none" data-custom-column="{{ col_name }}">{{ col_name }}</div>
+{% endfor %}
 
 <ul class="tab-title">
     {% for type, names in template_names.items()|reverse  %}
@@ -459,7 +455,10 @@
                     <input type="text" id="insert-row-number-{{ name }}" class="insert-row-number" placeholder="填入需新增列數"/>
                 </div> -->
             </div>
-            <div id="row-count-grid-{{ name }}" class="row-count"></div>
+            <div class="alert-text">
+                <div><strong class="red">紅字</strong>為ID類必填欄位；<strong class="custom">藍字</strong>為自訂欄位</div>
+                <div id="row-count-grid-{{ name }}" class="row-count"></div>
+            </div>
             <div id="grid-{{ name }}"></div> 
             <div id="pages-grid-{{ name }}"></div> 
         </div>
@@ -472,6 +471,8 @@
 
 {% block box6 %}
 <form id="download"></form>
+<button class="btn fake-btn"></button>
 <button class="btn back-btn">上一步</button>
+<button class="btn validate-btn">再次驗證</button>
 <button class="btn save-result-btn">下載清理結果</button>
 {% endblock %}

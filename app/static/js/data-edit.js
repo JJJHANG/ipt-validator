@@ -9,6 +9,7 @@ var highlightedColumn = [
     "resourceID",
     "samp_name",
 ];
+var customColumn = [];
 
 $(document).ready(function () {
     // IndexedDB instance
@@ -183,6 +184,12 @@ $(document).ready(function () {
             }
             checkboxArrays[templateName].push(name); // 將名稱添加到相應的陣列中
             // console.log(checkboxArrays);
+        });
+
+        $(".custom-col").each(function () {
+            var name = $(this).data("custom-column");
+            customColumn.push(name);
+            // console.log(customColumn);
         });
 
         initializeHandsontable(containerID, checkboxArrays[templateName]);
@@ -602,7 +609,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             colHeaders: data[0].map(function (name) {
                 if (highlightedColumn.includes(name)) {
                     return `<div class="red">${name}</div>`;
-                } else if (checkboxArrays["custom"].includes(name)) {
+                } else if (customColumn.includes(name)) {
                     return `<div class="custom">${name}</div>`;
                 } else {
                     return `<div>${name}</div>`;
@@ -795,7 +802,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             colHeaders: checkboxNames.map(function (name) {
                 if (highlightedColumn.includes(name)) {
                     return `<div class="red">${name}</div>`;
-                } else if (checkboxArrays["custom"].includes(name)) {
+                } else if (customColumn.includes(name)) {
                     return `<div class="custom">${name}</div>`;
                 } else {
                     return `<div>${name}</div>`;
