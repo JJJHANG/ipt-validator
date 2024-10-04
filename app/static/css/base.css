@@ -160,8 +160,9 @@ body {
 
 .btn:hover {
     cursor: pointer;
-    background-color: #f9f871;
-    color: #2b59c3;
+    background-color: #002d8c;
+    /* color: #2b59c3; */
+    color: #fff;
     transition: 0.3s;
     /* color:#2B59C3 */
 }
@@ -266,4 +267,19 @@ body {
 
 .custom {
     color: #2b59c3;
+}
+
+.project-title {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 0.5rem;
+}
+
+.intro-content {
+    padding: 10px 20px;
+}
+
+.intro {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }

@@ -242,7 +242,9 @@ span {
 }
 
 .back-btn:hover {
-    background-color: #f9f871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
+    transition: 0.3s;
 }
 
 .upload {
@@ -341,7 +343,7 @@ span {
 }
 
 .description {
-    font-weight: 100;
+    font-weight: 300;
     font-size: 14px;
 }
 
@@ -352,4 +354,8 @@ span {
     /* font-weight: 600; */
     font-size: 14px;
     margin-bottom: 5px;
+}
+
+#autosave-status {
+    display: inline;
 }

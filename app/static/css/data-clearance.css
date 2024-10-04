@@ -1,3 +1,7 @@
+.border-none {
+    border-right: none !important;
+}
+
 .box3 {
     grid-column: 1 / 2 !important;
     grid-row: 6 / 48 !important;
@@ -106,7 +110,9 @@
 }
 
 .back-btn:hover {
-    background-color: #f9f871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
+    transition: 0.3s;
 }
 
 .accordion-table th,
@@ -277,5 +283,7 @@
 }
 
 .validate-btn:hover {
-    background-color: #f9f871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
+    transition: 0.3s;
 }

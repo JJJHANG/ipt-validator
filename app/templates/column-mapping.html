@@ -1,0 +1,98 @@
+{% extends 'base.html' %} {% block head %}
+<script src="../static/package/jquery-3.6.4.min.js"></script>
+<!-- <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/project.css') }}"
+/> -->
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/column-mapping.css') }}"
+/>
+<script src="{{ url_for('static', filename='js/column-mapping.js') }}"></script>
+{% endblock %} {% block box2 %}
+<div class="sheet-title">STEP4-1. 檢視欄位</div>
+<div class="edit-title">
+    STEP4-2. 對應欄位<span id="autosave-status"></span>
+</div>
+{% endblock %} {% block box3 %}
+<ul class="mapping-list">
+    <li>
+        <div class="mapping-list-title">匯入檔案</div>
+        <div class="mapping-list-content">{{ import_filename }}</div>
+    </li>
+    <li>
+        <div class="mapping-list-title">模板名稱</div>
+        <div class="mapping-list-content">{{ template_name }}</div>
+    </li>
+    <li>
+        <div>
+            <div class="mapping-list-title info-icon-container">所有匯入欄位
+                <svg class=""
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-info-circle"
+                    viewBox="0 0 16 16"
+                >
+                    <path
+                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                    />
+                    <path
+                        d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"
+                    />
+                </svg>
+                <div class="info-tooltip">
+                    <div>
+                        <strong class="red"
+                            >紅字欄位 → 未對應到模板</strong
+                        >
+                    </div>
+                    <div>
+                        <strong class="custom"
+                            >藍字欄位 → 已對應到模板</strong
+                        >
+                    </div>
+                </div>
+            </div>
+                
+            <div class="mapping-col-container">
+                {% for header in import_data_header %} {% if header in unmapped_columns_list %}
+                <div class="mapping-col unmapped-col">{{ header }}</div>
+                {% else %}
+                <div class="mapping-col">{{ header }}</div>
+                {% endif %} {% endfor %}
+            </div>
+        </div>
+    </li>
+</ul>
+{% endblock %} {% block box4 %}
+<table class="mapping-table">
+    <thead>
+        <tr>
+            <th>資料模板欄位</th>
+            <th>匯入檔案欄位</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for checkbox in checkbox_names_list %}
+        <tr>
+            <td>
+                <div>{{ checkbox }}</div>
+            </td>
+            <td>
+                <select>
+                    <option value=""></option>
+                    {% for header in import_data_header %}
+                    <option value="{{ header }}" {% if header == checkbox %}selected{% endif %}>{{ header }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} {% block box5 %}{% endblock %} {% block box6 %}
+<button class="btn back-btn">返回</button>
+<button class="btn next-btn">確認匯入</button>
+{% endblock %}

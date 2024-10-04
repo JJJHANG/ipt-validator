@@ -1,30 +1,65 @@
-{% extends 'base.html' %}
-
-{% block head %}
+{% extends 'base.html' %} {% block head %}
 <script src="../static/package/jquery-3.6.4.min.js"></script>
-<script src="../static/fSelect/fSelect.js"></script>
-<link rel="stylesheet" href="../static/fSelect/fSelect.css">
-<script type=text/javascript src="{{ url_for('static', filename='js/data-template.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/data-template.css') }}">
-{% endblock %}
-
-
-{% block popup %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/data-template.css') }}"
+/>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='package/select2.min.css') }}"
+    rel="stylesheet"
+/>
+<script src="{{ url_for('static', filename='js/data-template.js') }}"></script>
+<script src="{{ url_for('static', filename='package/select2.min.js') }}"></script>
+{% endblock %} {% block popup %}
 <!-- Save Template Popup -->
 <div class="popup-container save-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2B59C3"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2B59C3"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
     </div>
     <div class="popup-input">
         <label>模板名稱</label>
-        <input type="text" id="template-name">
+        <input type="text" id="template-name" />
     </div>
     <div class="popup-btn">
         <button id="save-btn">儲存</button>
@@ -34,11 +69,44 @@
 <!-- Warning Popup -->
 <div class="popup-container duplicated-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -50,11 +118,44 @@
 
 <div class="popup-container no-column-name-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -66,11 +167,44 @@
 
 <div class="popup-container no-column-type-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -82,18 +216,49 @@
 
 <div class="popup-container delete-template-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#2B59C3" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2B59C3"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2B59C3"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
     </div>
-    <div class="" id="custom-template-name">
-        刪除自訂模板：
-    </div>
+    <div class="" id="custom-template-name">刪除自訂模板：</div>
     <div class="popup-btn">
         <button id="delete-btn">確定刪除</button>
     </div>
@@ -101,11 +266,44 @@
 
 <div class="popup-container required-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -117,11 +315,44 @@
 
 <div class="popup-container columns-empty-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -130,61 +361,196 @@
         <p>提醒：請選擇資料集類型欄位 (✧≖‿ゝ≖)</p>
     </div>
 </div>
-{% endblock %}
 
-{% block box2 %}
+<div class="popup-container custom-columns-popup d-none">
+    <div class="popup-header">新增/修改自訂欄位</div>
+    <div class="xx">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                </g>
+            </g>
+        </svg>
+    </div>
+
+    <div class="custom-columns-function-container">
+        <div
+            class="custom-columns-btn active-function"
+            id="add-column-content-btn"
+        >
+            新增自訂欄位
+        </div>
+        <div class="custom-columns-btn" id="edit-column-content-btn">
+            修改自訂欄位
+        </div>
+    </div>
+
+    <div class="popup-content-container">
+        <div id="add-column-content-container">
+            <form
+                id="add-column-content"
+                method="post"
+                action="/data-template/custom_terms"
+            >
+                <div>
+                    <span>欄位名稱</span>
+                    <span class="title-tag">必填</span>
+                </div>
+                <input name="column_name" type="text" />
+                <div>
+                    <span>欄位類型</span>
+                    <span class="title-tag">必填</span>
+                </div>
+                <select name="column_type">
+                    <option value=""></option>
+                    <option value="string">字串</option>
+                    <option value="number">數字</option>
+                    <option value="date">日期</option>
+                    <option value="boolean">布林值</option></select
+                ><br />
+                <div>欄位備註</div>
+                <textarea name="column_comment" type="text"></textarea>
+            </form>
+        </div>
+        <div id="edit-column-content-container" class="d-none">
+            <div id="edit-column-content">
+                <div id="edit-column-content-left"></div>
+                <!-- 點擊 edit-column-content-btn 時 fetch api 後填入 -->
+                <div id="edit-column-content-right">
+                    <div class="right-content-container">
+                        <div class="right-content-subtitle">欄位名稱</div>
+                        <div
+                            id="column-name"
+                            class="right-content-detail"
+                        ></div>
+                    </div>
+                    <div class="right-content-container">
+                        <div class="right-content-subtitle">欄位類型</div>
+                        <div
+                            id="column-type"
+                            class="right-content-detail"
+                        ></div>
+                    </div>
+                    <div class="right-content-container">
+                        <div class="right-content-subtitle">欄位備註</div>
+                        <div
+                            id="column-comment"
+                            class="right-content-detail"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-columns-btn-container">
+        <button id="confirm-add-edit-column" class="btn">儲存編輯</button>
+        <button id="confirm-add-column" class="btn d-none">加入模板</button>
+    </div>
+</div>
+{% endblock %} {% block box2 %}
 <div class="template-title">STEP1. 選擇模板</div>
 <div class="column-title">STEP2. 選擇欄位</div>
-{% endblock %}
-                
-
-{% block box3 %}
+{% endblock %} {% block box3 %}
 <div class="upper-container">
     <div>
         <div id="custom-template-container">
-            <span>自訂模板</span><span class="d-none"><button id="delete-template-btn">刪除模板</button></span>
+            <span class="select-title">自訂模板</span
+            ><span class="d-none"
+                ><button id="delete-template-btn">刪除模板</button></span
+            >
         </div>
         <select name="" id="custom">
             <option value=""></option>
+            {% for id, title in template_list %}
+            <option value="{{ id }}">{{ title }}</option>
+            {% endfor %}
         </select>
     </div>
     <div>
-        <div>
-            主題
+        <div class="select-title title-with-tag">
+            <span>主題</span>
+            <span class="title-tag lock-tag d-none">已鎖定</span>
         </div>
         <select id="theme">
             <option value=""></option>
-            <option value="">無</option>
+            <option value="none">無</option>
             <option value="ecological-survey">生態調查</option>
             <option value="parasite">寄生蟲調查</option>
+            <option value="metabarcoding">eDNA/Metabarcoding</option>
+            <option value="ltser">長期生態站</option>
         </select>
     </div>
     <div>
-        <div>
-            資料集類型*
+        <div class="select-title title-with-tag">
+            <span>資料集類型</span>
+            <span class="title-tag">必填</span>
+            <span class="title-tag lock-tag lock-tag-core d-none">已鎖定</span>
         </div>
         <select id="core">
             <option value=""></option>
-            <option value="checklist">Checklist 物種名錄</option>
-            <option value="occurrence">Occurrence 出現紀錄</option>
-            <option value="samplingevent">Sampling Event 調查活動</option>
+            <optgroup label="DwC 核心資料表">
+                <option value="checklist">Checklist 物種名錄</option>
+                <option value="occurrence">Occurrence 出現紀錄</option>
+                <option value="samplingevent">Sampling Event 調查活動</option>
+            </optgroup>
+            <optgroup label="其他">
+                <option value="others">其他</option>
+            </optgroup>
         </select>
     </div>
-    <div class="extension-container">
-        <div class="extension">
-            延伸資料集
+    <div>
+        <div class="select-title title-with-tag">
+            <span>延伸資料集</span>
+            <span class="title-tag">可複選</span>
         </div>
         <select id="extension" multiple="multiple">
-            <option value=""></option>
             <option value="darwin-core-occurrence">Darwin Core Occurrence</option>
             <option value="simple-multimedia">Simple Multimedia</option>
-            <option value="extended-measurement-or-facts">Extended Measurement Or Facts</option>
+            <option value="extended-measurement-or-facts">
+                Extended Measurement Or Facts
+            </option>
             <option value="resource-relationship">Resource Relationship</option>
             <option value="dna-derived-data">DNA derived data</option>
         </select>
     </div>
 </div>
-<div class="lower-container">
+<!-- <div class="lower-container">
     <div class="custom-column-container">
         <form class="custom-column-form">
             <label>自訂欄位名稱</label>
@@ -198,19 +564,16 @@
             </select>
         </form>
     </div>
-</div>
-{% endblock %}
-
-{% block box4 %}
+</div> -->
+{% endblock %} {% block box4 %}
 <div class="loader-wrapper d-none">
     <span id="loader" class="loader"></span>
 </div>
-<form id="customFieldset"></form>  
-<form id="requiredFieldset" method="post" action="/data-template"></form> 
-<form id="extensionFieldset"></form>  
-{% endblock %}
-
-{% block box5 %}
+<form id="customFieldset"></form>
+<form id="requiredFieldset" method="post" action="/data-template"></form>
+<form id="themeFieldset"></form>
+<form id="extensionFieldset"></form>
+{% endblock %} {% block box5 %}
 <div class="description-container">
     <div id="description-name"></div>
     <div class="description-content">
@@ -230,13 +593,9 @@
         <div id="description-example" class="description"></div>
     </div>
 </div>
-{% endblock %}
-
-{% block box6 %}
+{% endblock %} {% block box6 %}
 <button class="btn save-template-btn">儲存模板</button>
 <button class="btn next-btn">下一步</button>
-{% endblock %}
-
-{% block box7 %}
-<button class="btn column-btn">新增自訂欄位</button>
+{% endblock %} {% block box7 %}
+<button class="btn column-btn">新增/修改自訂欄位</button>
 {% endblock %}

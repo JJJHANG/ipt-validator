@@ -10,8 +10,13 @@ var highlightedColumn = [
     "measurementID",
     "resourceID",
     "samp_name",
+    "dataID",
 ];
 var customColumn = [];
+var customTermsData = null;
+
+const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+getCustomTermsDict();
 
 $(document).ready(function () {
     $(".custom-col").each(function () {
@@ -30,85 +35,121 @@ $(document).ready(function () {
         hotInstance.render();
     }
 
-    // IndexedDB instance
-    var request = window.indexedDB.open("IndexedDB", 1);
-    var db;
+    $(".tab-title li").each(function () {
+        const templateName = $(this).data("name");
+        const containerID = "grid-" + templateName;
+        const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+        console.log(templateName);
 
-    request.onsuccess = function (event) {
-        db = request.result;
-        console.log("IndexedDB: Database up");
-
-        var transaction = db.transaction(["saved_data"], "readonly");
-        var objectStore = transaction.objectStore("saved_data");
-        var getAllRequest = objectStore.getAll();
-
-        getAllRequest.onsuccess = function (event) {
-            if (getAllRequest.result && getAllRequest.result.length > 0) {
-                getAllRequest.result.forEach(function (item) {
-                    // console.log(item);
-                    const containerID = "grid-" + item.template_name;
-                    const checkboxNames = item.checkbox_names;
-                    const data = [checkboxNames].concat(item.data);
-
-                    $("#" + containerID).html("");
-                    initializeHandsontable(containerID, checkboxNames, data);
-
-                    const errorrMessageID =
-                        item.template_name + "-error-message";
-                    $(`#${errorrMessageID} .accordion-table`).each(function () {
-                        const $table = $(this);
-
-                        $table.find("tbody tr").each(function () {
-                            const $row = $(this);
-                            const rowIndex = $row.find("td:first-child").text();
-
-                            highlightRow(containerID, rowIndex - 1);
-                        });
-
-                        // const columnNames = $table.find('thead th:last').map(function (index) {
-                        //     const columnName = $(this).text();
-                        //     console.log(columnName);
-                        //     const elementscolumnName = $(`#${containerID} span.colHeader:contains(${columnName})`);
-                        //     const columnIndex = elementscolumnName.parents('th').attr('aria-colindex')
-                        // }).get();
-                    });
-
-                    console.log(
-                        "IndexedDB: Render saved_data,",
-                        item.template_name
-                    );
-                });
-            } else {
-                console.log("IndexedDB: No saved_data yet");
-            }
-        };
-
-        getAllRequest.onerror = function (event) {
-            console.log("IndexedDB: No saved_data yet");
-        };
-    };
-
-    // IndexedDB function: 儲存 handsontable 表中的內容到 saved_data
-    function addToIndexedDB(templateName, checkboxNames, data) {
-        var transaction = db.transaction(["saved_data"], "readwrite");
-        var objectStore = transaction.objectStore("saved_data");
-
-        var request = objectStore.put({
-            template_name: templateName,
-            checkbox_names: checkboxNames,
-            data: data,
+        $.ajax({
+            type: "GET",
+            url: "/data-clearance/project_data",
+            data: {
+                project_id: projectID,
+                project_name: projectName,
+                template_name: templateName,
+            },
+            success: (data) => {
+                checkbox_name_list = data.checkbox_name_list;
+                table_data_list = data.table_data_list;
+                initializeHandsontable(
+                    containerID,
+                    checkbox_name_list,
+                    table_data_list,
+                    customTermsData
+                );
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("獲取資料失敗");
+                console.log("Error:", textStatus, errorThrown);
+            },
         });
+    });
+    // IndexedDB instance
+    // var request = window.indexedDB.open("IndexedDB", 1);
+    // var db;
 
-        request.onsuccess = function (event) {
-            console.log(`IndexedDB: Save ${templateName} into saved_data`);
-        };
+    // request.onsuccess = function (event) {
+    //     db = request.result;
+    //     console.log("IndexedDB: Database up");
 
-        request.onerror = function (event) {
-            console.log(
-                `IndexedDB: Save ${templateName} failed, ${event.target.error}`
-            );
-        };
-    }
+    //     var transaction = db.transaction(["saved_data"], "readonly");
+    //     var objectStore = transaction.objectStore("saved_data");
+    //     var getAllRequest = objectStore.getAll();
+
+    //     getAllRequest.onsuccess = function (event) {
+    //         print("success");
+    //         if (getAllRequest.result && getAllRequest.result.length > 0) {
+    //             getAllRequest.result.forEach(function (item) {
+    //                 // console.log(item);
+    //                 const containerID = "grid-" + item.template_name;
+    //                 const checkboxNames = item.checkbox_names;
+    //                 const data = [checkboxNames].concat(item.data);
+
+    //                 $("#" + containerID).html("");
+    //                 initializeHandsontable(
+    //                     containerID,
+    //                     checkboxNames,
+    //                     data,
+    //                     customTermsData
+    //                 );
+
+    //                 const errorrMessageID =
+    //                     item.template_name + "-error-message";
+    //                 $(`#${errorrMessageID} .accordion-table`).each(function () {
+    //                     const $table = $(this);
+
+    //                     $table.find("tbody tr").each(function () {
+    //                         const $row = $(this);
+    //                         const rowIndex = $row.find("td:first-child").text();
+
+    //                         highlightRow(containerID, rowIndex - 1);
+    //                     });
+
+    //                     // const columnNames = $table.find('thead th:last').map(function (index) {
+    //                     //     const columnName = $(this).text();
+    //                     //     console.log(columnName);
+    //                     //     const elementscolumnName = $(`#${containerID} span.colHeader:contains(${columnName})`);
+    //                     //     const columnIndex = elementscolumnName.parents('th').attr('aria-colindex')
+    //                     // }).get();
+    //                 });
+
+    //                 console.log(
+    //                     "IndexedDB: Render saved_data,",
+    //                     item.template_name
+    //                 );
+    //             });
+    //         } else {
+    //             console.log("IndexedDB: No saved_data yet");
+    //         }
+    //     };
+
+    //     getAllRequest.onerror = function (event) {
+    //         console.log("IndexedDB: No saved_data yet");
+    //     };
+    // };
+
+    // // IndexedDB function: 儲存 handsontable 表中的內容到 saved_data
+    // function addToIndexedDB(templateName, checkboxNames, data) {
+    //     var transaction = db.transaction(["saved_data"], "readwrite");
+    //     var objectStore = transaction.objectStore("saved_data");
+
+    //     var request = objectStore.put({
+    //         template_name: templateName,
+    //         checkbox_names: checkboxNames,
+    //         data: data,
+    //     });
+
+    //     request.onsuccess = function (event) {
+    //         console.log(`IndexedDB: Save ${templateName} into saved_data`);
+    //     };
+
+    //     request.onerror = function (event) {
+    //         console.log(
+    //             `IndexedDB: Save ${templateName} failed, ${event.target.error}`
+    //         );
+    //     };
+    // }
 
     var $li = $("ul.tab-title li");
 
@@ -491,8 +532,27 @@ $(document).ready(function () {
     });
 });
 
+function getCustomTermsDict() {
+    $.ajax({
+        type: "GET",
+        url: "/data-edit/custom_terms",
+        contentType: "application/json;charset=UTF-8",
+        success: function (data) {
+            customTermsData = data;
+        },
+        error: function () {
+            console.error("System: Fail to fetch cutsom terms");
+        },
+    });
+}
+
 // 功能：初始化編輯表格
-function initializeHandsontable(containerID, checkboxNames, data) {
+function initializeHandsontable(
+    containerID,
+    checkboxNames,
+    data,
+    customTermsData
+) {
     var container = document.getElementById(containerID);
     if (data) {
         var hot = new Handsontable(container, {
@@ -654,6 +714,10 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                     return {
                         type: "numeric",
                     };
+                } else if (customTermsData["date"].includes(name)) {
+                    return {
+                        validator: "custom-date-validator",
+                    };
                 } else {
                     return {};
                 }
@@ -663,6 +727,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             rowHeaders: true,
             width: "100%",
             height: "auto",
+            renderAllRows: false,
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
@@ -868,6 +933,10 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                     return {
                         validator: "custom-int-validator",
                     };
+                } else if (customTermsData["date"].includes(name)) {
+                    return {
+                        validator: "custom-date-validator",
+                    };
                 } else {
                     return {};
                 }
@@ -878,6 +947,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             rowHeaders: true,
             width: "100%",
             height: "auto",
+            renderAllRows: false,
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
@@ -950,6 +1020,78 @@ function initializeHandsontable(containerID, checkboxNames, data) {
         );
     })(Handsontable);
 
+    function getAllGridIDs() {
+        const containers = document.querySelectorAll(".grid-container");
+        const gridID = [];
+
+        containers.forEach((container) => {
+            const id = container.id;
+            gridID.push(id);
+        });
+
+        return gridID;
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function saveTableContent() {
+        const allGridIDs = getAllGridIDs();
+        // console.log(allGridIDs)
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectID = urlParams.get("project_id");
+        // console.log(projectID);
+
+        const jsonData = {};
+
+        allGridIDs.forEach((containerID) => {
+            // const containerID = container.id;
+            const tableName = containerID.replace("grid-", "");
+            // const hotInstance = Handsontable.getInstance(container);
+            const tableData = handsontableInstances[containerID].getData();
+            const tableHeader =
+                handsontableInstances[containerID].getColHeader();
+            const cleanTableHeader = tableHeader.map((header) =>
+                header.replace(/<div.*?>|<\/div>/g, "")
+            );
+
+            jsonData[tableName] = {
+                checkbox_names: cleanTableHeader,
+                data: tableData,
+            };
+        });
+
+        // console.log(projectID);
+        // console.log(jsonData);
+
+        $.ajax({
+            type: "PATCH",
+            url: "/data-edit/autosave",
+            data: JSON.stringify({
+                project_id: projectID,
+                table_content: jsonData,
+            }),
+            contentType: "application/json;charset=UTF-8",
+            success: function () {
+                $("#autosave-status").text("（已存檔）");
+            },
+            error: function (response) {
+                console.error(response.responseJSON.error);
+            },
+        });
+    }
+
+    const debouncedSaveTableContent = debounce(saveTableContent, 1000);
+
     // 取得被選取的行、列的 index
     hot.updateSettings({
         afterSelectionEnd: function (r, c, r2, c2) {
@@ -959,17 +1101,19 @@ function initializeHandsontable(containerID, checkboxNames, data) {
         afterChange: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數：" + rowCount);
+            $("#autosave-status").text("（儲存中．．．）");
+            debouncedSaveTableContent();
         },
         afterCreateRow: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數" + rowCount);
         },
         afterRemoveRow: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數" + rowCount);
         },
     });
 
@@ -1091,7 +1235,7 @@ function textFilterContent(colName) {
 function transferDataToBackend(templateNames, colHeader, colData) {
     $.ajax({
         type: "POST",
-        url: "/transfer-data",
+        url: "/data-edit/transfer",
         contentType: "application/json;charset=UTF-8",
         data: JSON.stringify({
             table_name: templateNames,
@@ -1112,20 +1256,30 @@ function transferDataToBackend(templateNames, colHeader, colData) {
 function transferValidateDataToBackend(templateNames, colHeader, colData) {
     $.ajax({
         type: "POST",
-        url: "/process-validation", // 給 process-validation 處理驗證過程
+        url: "/data-edit/validate", // 給 process-validation 處理驗證過程
         contentType: "application/json;charset=UTF-8",
         data: JSON.stringify({
             table_name: templateNames,
             table_header: colHeader,
             table_data: colData,
+            custom_terms: customTermsData,
         }),
         success: function (data) {
             console.log("System: Data submitted");
-            window.location.href = "/data-validation"; // 轉跳到 data-validation 呈現驗證結果
+            window.location.href = `/data-validation?project_name=${projectName}&project_id=${projectID}&edit=${isEdit}`; // 轉跳到 data-validation 呈現驗證結果
         },
         error: function () {
             $(".unknown-error-popup").removeClass("d-none");
             console.error("System: Fail to submit data");
         },
     });
+}
+
+function getProjectParamsFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        projectID: urlParams.get("project_id"),
+        projectName: urlParams.get("project_name"),
+        isEdit: urlParams.get("edit"),
+    };
 }

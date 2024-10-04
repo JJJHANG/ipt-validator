@@ -1,3 +1,24 @@
+.box5 {
+    overflow: auto;
+}
+
+.box7 {
+    border-top: none !important;
+    border-right: 1.5px solid #2b59c3 !important;
+}
+
+input[name="project_name"] {
+    width: 100%;
+    padding: 0.275rem 0.55rem;
+    border: none;
+    border-bottom: 1px solid #2b59c3;
+    background-color: transparent !important;
+    color: #2b59c3;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    font-size: 14px !important;
+}
+
 .tab-title li {
     list-style-type: none;
     margin-bottom: 10px;
@@ -49,4 +70,82 @@
 .editing-mark {
     font-size: 600 !important;
     color: #fff;
+}
+
+.info-icon-container {
+    position: relative;
+    display: inline-block;
+}
+
+.info-tooltip {
+    /* font-size: 16px; */
+    visibility: hidden;
+    width: 500px;
+    text-align: center;
+    padding: 15px 30px;
+    position: absolute;
+    z-index: 999;
+    bottom: 10%; /* Position above the icon */
+    left: 110%;
+    background: #f0f0f0;
+    border-radius: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.info-icon-container:hover .info-tooltip {
+    visibility: visible;
+    /* opacity: 1; */
+}
+
+.create-project-btn {
+    color: #fff !important;
+}
+
+.start-project-btn {
+    color: #fff !important;
+}
+
+/* .project-title {
+    display: none !important;
+} */
+
+.tab-inner-project {
+    margin-bottom: 10px;
+    margin-left: 10px;
+}
+
+.sub-title {
+    font-weight: 600;
+}
+
+.project-container {
+    /* background-color: #FFDFC3; */
+    border: 1px solid #2b59c3;
+    padding: 0.8rem 1.6rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 40px;
+}
+
+.current-project {
+    background-color: #2b59c3 !important;
+    color: #fff;
+}
+
+.del-project-btn {
+    background-color: transparent !important;
+    color: #2b59c3;
+}
+
+.del-project-btn:hover {
+    background-color: #002d8c !important;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.project-last-updated {
+    font-size: 12px !important;
 }

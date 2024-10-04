@@ -1,57 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    {% block head %}{% endblock %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" type="text/css" href="../static/package/handsontable.full.min.css">
-    <script type=text/javascript src="{{ url_for('static', filename='js/base.js') }}"></script>
-    <script src="../static/package/handsontable.full.min.js"></script>
-    <script type="text/javascript" src="../static/package/zh-TW.js"></script>
-    <title>TaiBIF 開放資料整合工具 (Open Data Toolkit, ODT)</title>
-</head>
-<body>
-    <section>
-        {% block popup %}{% endblock %}
-        <div class="grid-system">
-            <div class="box box1">
-                <div class="left-container">
-                    <img src="static/image/taibif-logo-rbg.png" alt="Logo" class="logo-img">
-                    <div class="logo-title">開放資料整合工具 (Open Data Toolkit, ODT)</div>  
+    <head>
+        {% block head %}{% endblock %}
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/base.css') }}"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../static/package/handsontable.full.min.css"
+        />
+        <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+
+        <script src="../static/package/handsontable.full.min.js"></script>
+        <script
+            type="text/javascript"
+            src="../static/package/zh-TW.js"
+        ></script>
+        <script
+            type="text/javascript"
+            src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+        ></script>
+        <script type="text/javascript">
+            function googleTranslateElementInit() {
+                new google.translate.TranslateElement(
+                    { pageLanguage: "zh-TW" },
+                    "google_translate_element"
+                );
+            }
+        </script>
+        <title>TaiBIF 開放資料整合工具 (Open Data Toolkit, ODT)</title>
+    </head>
+    <body>
+        <section>
+            {% block popup %}{% endblock %}
+            <div class="grid-system">
+                <div class="box box1">
+                    <div class="left-container">
+                        <img
+                            src="{{ url_for('static', filename='image/taibif-logo-rbg.png') }}"
+                            alt="Logo"
+                            class="logo-img"
+                        />
+                        <div class="logo-title">
+                            開放資料整合工具 (Open Data Toolkit, ODT)
+                        </div>
+                        <div id="google_translate_element"></div>
+                    </div>
+                    <div class="right-container">
+                        <div id="data-project" class="nav">
+                            <img
+                                alt="frog"
+                                src="{{ url_for('static', filename='image/mascot-flower.png') }}"
+                                class="nav-img"
+                            />
+                            <p>專案管理</p>
+                        </div>
+                        <div><i>&#x02192;</i></div>
+                        <div id="data-template" class="nav">
+                            <img
+                                alt="frog"
+                                src="{{ url_for('static', filename='image/mascot-frog.png') }}"
+                                class="nav-img"
+                            />
+                            <p>資料模板</p>
+                        </div>
+                        <div><i>&#x02192;</i></div>
+                        <div id="data-edit" class="nav">
+                            <img
+                                alt="frog"
+                                src="{{ url_for('static', filename='image/mascot-Mreevesi.png') }}"
+                                class="nav-img"
+                            />編輯資料
+                        </div>
+                        <div><i>&#x02192;</i></div>
+                        <div id="data-validation" class="nav">
+                            <img
+                                alt="frog"
+                                src="{{ url_for('static', filename='image/mascot-fish.png') }}"
+                                class="nav-img"
+                            />資料驗證
+                        </div>
+                        <div><i>&#x02192;</i></div>
+                        <div id="data-clearance" class="nav">
+                            <img
+                                alt="frog"
+                                src="{{ url_for('static', filename='image/mascot-butterfly.png') }}"
+                                class="nav-img"
+                            />資料清理
+                        </div>
+                    </div>
                 </div>
-                <div class="right-container">
-                    <div id="data-template" class="nav"><img alt="frog" src="static/image/mascot-frog.png" class="nav-img"/><p>資料模板</p></div>
-                    <div><i>&#x02192</i></div>
-                    <div id="data-edit" class="nav"><img alt="frog" src="static/image/mascot-Mreevesi.png" class="nav-img"/>編輯資料</div>
-                    <div><i>&#x02192</i></div>
-                    <div id="data-validation" class="nav"><img alt="frog" src="static/image/mascot-fish.png" class="nav-img"/>資料驗證</div>
-                    <div><i>&#x02192</i></div>
-                    <div id="data-clearance" class="nav"><img alt="frog" src="static/image/mascot-butterfly.png" class="nav-img"/>資料清理</div>
-                </div>           
+                <div class="box box2">
+                    {% block box2 %}{% endblock %}
+                    <div class="project-title">
+                        <div>當前專案：<span id="current-project"></span></div>
+                    </div>
+                </div>
+                <div class="box box3">{% block box3 %}{% endblock %}</div>
+                <div class="box box4">{% block box4 %}{% endblock %}</div>
+                <div class="box box5">{% block box5 %}{% endblock %}</div>
+                <div class="box box6">{% block box6 %}{% endblock %}</div>
+                <div class="box box7">{% block box7 %}{% endblock %}</div>
             </div>
-            <div class="box box2">
-                {% block box2 %}{% endblock %}
-            </div>
-            <div class="box box3">
-                {% block box3 %}{% endblock %}
-            </div>
-            <div class="box box4">
-                {% block box4 %}{% endblock %}
-            </div>
-            <div class="box box5">
-                {% block box5 %}{% endblock %}
-            </div>
-            <div class="box box6">
-                {% block box6 %}{% endblock %}
-            </div>
-            <div class="box box7">
-                {% block box7 %}{% endblock %}
-            </div>
-        </div>
-    </section>
-</body>
+        </section>
+    </body>
 </html>

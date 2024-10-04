@@ -1,0 +1,92 @@
+{% extends 'base.html' %} 
+{% block head %} 
+<script src="../static/package/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/project.css') }}">
+<script type=text/javascript src="{{ url_for('static', filename='js/data-project.js') }}"></script>
+{% endblock %} {% block box2 %}
+<div class="template-title">STEP0. 選擇專案</div>
+{% endblock %} {% block box3 %}
+<ul class="tab-title">
+    <!-- <div class="bookmark-title"></div> -->
+    <li>
+        <a href="#create_project">建立專案</a>
+        <p class="editing-mark d-none">●</p>
+    </li>
+    <!-- <div class="bookmark-title"></div> -->
+    <li>
+        <a href="#open_project">開啟專案</a>
+        <p class="editing-mark d-none">●</p>
+    </li>
+</ul>
+
+{% endblock %}
+
+{% block box4 %}
+    <div id="create_project" class="tab-inner tab-inner-project">
+        <form id="crete-project" method="post" action="">
+            <div>專案名稱</div>
+            <input name="project_name" type="text">
+        </form>
+    </div>
+    <div id="open_project" class="tab-inner tab-inner-project">
+        <div class="sub-title">專案列表</div>
+        {% for project in projects %}
+            <div class="project-container" data-project-id="{{ project.id }}">
+                <div class="project-name">{{ project.project_name }}</div>
+                <div class="project-last-updated">最後更新時間：{{ project.last_updated }}</div>
+                <!-- <div class="del-project" >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#B91F3E" class="bi bi-trash-fill" viewBox="0 0 20 20">
+                        <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                    </svg>
+                </div> -->
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block box5 %}
+<div class="intro-content">
+    <p id="intro-all" class="intro">
+        TaiBIF Open Data Toolkit 是一個專門針對生物多樣性資料整合的強大工具，採用了國際生物多樣性領域常用的 <a href="https://dwc.tdwg.org/terms/" target="_blank">Darwin Core</a> 資料標準，
+        旨在幫助使用者建立並有效管理、編輯、驗證和清理生物多樣性資料集。若想要建立資料模板、資料編輯管理和發布，此工具將能引導您進入理想的資料管理流程，並協助管控資料品質。
+    </p>
+    <p id="intro-project" class="intro">
+        <strong><img alt="frog" src="{{ url_for('static', filename='image/mascot-flower.png') }}" class="nav-img"/>資料專案管理</strong>
+        <div>
+            提供新資料集專案建立和過往資料集匯入的功能，可輕鬆建立、開啟所擁有的資料集，並追蹤最新的資料集版本。從專案的建立到完成，您都能掌握每一步的進度和細節。
+        </div>
+    </p>
+    <p id="intro-template" class="intro">
+        <strong><img alt="frog" src="{{ url_for('static', filename='image/mascot-frog.png') }}" class="nav-img"/>資料模板</strong>
+        <div>
+            建立並選擇依據 Darwin Core 標準定義的欄位模板，確保資料格式和結構的一致性，再透過建議的必填、選填欄位提高資料集的完整性。
+            不僅提高了資料處理的效率，大大節省探索 Darwin Core 資料欄位的時間成本，還能減少因欄位格式導致的錯誤。
+        </div>
+    </p>
+    <p id="intro-edit" class="intro">
+        <strong><img alt="frog" src="{{ url_for('static', filename='image/mascot-Mreevesi.png') }}" class="nav-img"/>資料編輯</strong>
+        <div>
+            提供類似 Excel 的編輯功能，讓您能夠直接在介面上進行資料編輯、修改和新增。自動儲存功能將保護您的資料變更不會因電腦問題或工具關閉而丟失。
+        </div>
+    </p>
+    <p id="intro-validation" class="intro">
+        <strong><img alt="frog" src="{{ url_for('static', filename='image/mascot-fish.png') }}" class="nav-img"/>資料驗證</strong>
+        <div>
+            協助檢查資料的準確性和完整性。通過自動化驗證工具，您可快速發現並修正資料中的常見錯誤，確保資料的高品質。
+        </div>
+    </p>
+    <p id="intro-clearance" class="intro">
+        <strong><img alt="frog" src="{{ url_for('static', filename='image/mascot-butterfly.png') }}" class="nav-img"/>資料清理</strong>
+        <div>
+            提供便利的資料清理功能，協助清除或修正重複、錯誤、不完整的資料，使資料更加精確可靠。清理完成後可匯出壓縮檔，
+            可直接將整個檔案上傳到 TaiBIF 資料發布工具 (IPT)，不僅加速資料發布的流程，亦為後續的分析應用打下堅實的基礎。
+        </div>
+    </p>
+</div>
+{% endblock %}
+
+{% block box6 %}
+<button class="btn create-project-btn">確定建立</button>
+<button class="btn del-project-btn d-none">刪除專案</button>
+<button class="btn start-project-btn d-none">編輯專案</button>
+{% endblock %}

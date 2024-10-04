@@ -1,4 +1,4 @@
-.template-title {
+.border-none {
     border-right: none !important;
 }
 
@@ -205,7 +205,9 @@
 }
 
 .save-result-btn:hover {
-    background-color: #F9F871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
+    transition: .3s;
 }
 
 .fake-btn {
@@ -222,7 +224,9 @@
 }
 
 .back-btn:hover {
-    background-color: #F9F871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
+    transition: .3s;
 }
 
 .editing-mark {

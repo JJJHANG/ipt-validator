@@ -1,21 +1,60 @@
-{% extends 'base.html' %}
-
-{% block head %}
+{% extends 'base.html' %} {% block head %}
 <script src="../static/package/jquery-3.6.4.min.js"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/data-edit.css') }}">
-<script type=text/javascript src="{{ url_for('static', filename='js/data-edit.js') }}"></script>
-{% endblock %}
-
-
-{% block popup %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/data-edit.css') }}"
+/>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/project.css') }}"
+/>
+<script src="{{ url_for('static', filename='js/data-edit.js') }}"></script>
+<script>
+    var parsedImportDataFromBackend = {{ parsed_import_data|tojson|safe }};
+    var parsedTemplateName = {{ template_name|tojson|safe }};
+</script>
+{% endblock %} {% block popup %}
 <!-- Warning Popup -->
 <div class="popup-container duplicated-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -27,28 +66,94 @@
 
 <div class="popup-container unknown-error-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
     </div>
     <div class="popup-alert">
         <p>提醒：未知錯誤，請檢查表格是否填寫完整 ( ͡• ͜ʖ ͡• )</p>
-        <p id="alert-small">* 請確保 ID 類欄位填寫完整<br></p>
+        <p id="alert-small">* 請確保 ID 類欄位填寫完整<br /></p>
     </div>
 </div>
 
 <div class="popup-container columns-issue-popup d-none">
     <div class="xx">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-                    <line id="Line_1" data-name="Line 1" x1="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
-                    <line id="Line_2" data-name="Line 2" x2="12" y2="12" transform="translate(1824.5 446.5)" fill="none" stroke="#B91F3E" stroke-linecap="round" stroke-width="2"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#B91F3E"
+                        stroke-linecap="round"
+                        stroke-width="2"
+                    />
                 </g>
             </g>
         </svg>
@@ -57,100 +162,147 @@
         <p>提醒：發生錯誤，匯入欄位不一致</p>
     </div>
 </div>
-{% endblock %}
-
-{% block box2 %}
-<div class="sheet-title">STEP3. 切換頁籤</div>
-<div class="edit-title">STEP4. 編輯資料</div>
-<form action="/export-as-csv" method="POST" class="d-none">
-    <input type="submit" id="export-result">
+{% endblock %} {% block box2 %}
+<div class="sheet-title">STEP3. 切換表格</div>
+<div class="edit-title">STEP4. 編輯資料<span id="autosave-status"></span></div>
+<form action="/data-edit/export" method="POST" class="d-none">
+    <input type="submit" id="export-result" />
 </form>
-{% endblock %}
+{% endblock %} {% block box3 %} {% for col_name in custom_columns %}
+<div class="custom-col d-none" data-custom-column="{{ col_name }}">
+    {{ col_name }}
+</div>
+{% endfor %} {% for template_name, col_names in checkbox_names.items()%}
+<div class="template-name">{{ template_name }}</div>
+{% for col_name in col_names %}
+<div
+    class="checkbox-name checkbox-name-{{ template_name }}"
+    data-checkbox-name="{{ col_name }}"
+>
+    {{ col_name }}
+</div>
+{% endfor %} {% endfor %}
 
-{% block box3 %}
-    {% for col_name in custom_columns %}
-        <div class="custom-col d-none" data-custom-column="{{ col_name }}">{{ col_name }}</div>
-    {% endfor %}
-    {% for template_name, col_names in checkbox_names.items()%}
-        <div class="template-name">{{ template_name }}</div>
-            {% for col_name in col_names %}
-                <div class="checkbox-name checkbox-name-{{ template_name }}" data-checkbox-name="{{ col_name }}">{{ col_name }}</div>
-            {% endfor %}
-    {% endfor %}
+<ul class="tab-title">
+    {% for type, names in template_names.items()|reverse %} {% if names %}
+    <div class="bookmark-title">{{ type }}</div>
+    {% endif %} {% for name in names %}
+    <li>
+        <a href="#{{ name }}">{{ name }}</a>
+        <p class="editing-mark d-none">●</p>
+    </li>
+    {% endfor %} {% endfor %}
+</ul>
 
-    <ul class="tab-title">
-        {% for type, names in template_names.items()|reverse  %}
-            {% if names %}
-            <div class="bookmark-title">{{ type }}</div> 
-            {% endif %}
-            {% for name in names %}
-                <li><a href="#{{ name }}" >{{ name }}</a><p class="editing-mark d-none">●</p></li>
-            {% endfor %}
-        {% endfor %}
-    </ul>
-    
-    <div>
-        <div id="description-container">
-            <div id="description-name"></div>
-            <div class="description-content">
-                <div class="description-title">所屬類別</div>
-                <div id="description-type" class="description"></div>
-            </div>
-            <div class="description-content">
-                <div class="description-title">定義</div>
-                <div id="description-description" class="description"></div>
-            </div>
-            <div class="description-content">
-                <div class="description-title">常見對應名稱</div>
-                <div id="description-commonname" class="description"></div>
-            </div>
-            <div class="description-content">
-                <div class="description-title">範例</div>
-                <div id="description-example" class="description"></div>
-            </div>
+<div>
+    <div id="description-container">
+        <div id="description-name"></div>
+        <div class="description-content">
+            <div class="description-title">所屬類別</div>
+            <div id="description-type" class="description"></div>
         </div>
-        <div class="col-content d-none" ></div>
+        <div class="description-content">
+            <div class="description-title">定義</div>
+            <div id="description-description" class="description"></div>
+        </div>
+        <div class="description-content">
+            <div class="description-title">常見對應名稱</div>
+            <div id="description-commonname" class="description"></div>
+        </div>
+        <div class="description-content">
+            <div class="description-title">範例</div>
+            <div id="description-example" class="description"></div>
+        </div>
     </div>
-    
-    <form class="upload">
-        <input type="file" name="uploadFile" accept=".csv" id="import-file"/>
-        <br/><br/>
-        <input type="submit" />
-    </form>
-{% endblock %}
+    <div class="col-content d-none"></div>
+</div>
 
-{% block box4 %}
-
-{% for type, names in template_names.items() %}
-    {% for name in names %}
-        <div id="{{ name }}" class="tab-inner">
-            <!-- <p>{{ name }}</p> -->
-            <div class="function-container">
-                <button class="function-btn get-data-col-button" id="get-data-col-{{ name }}" data-name="{{ name }}">獲取行資料</button>
-                <button class="function-btn import-button" id="import-{{ name }}" data-name="{{ name }}">匯入資料</button>
-                <button class="function-btn export-button" id="export-{{ name }}" data-name="{{ name }}">匯出資料</button>
-                <div class="wrapper">
-                    <button id="add-row-{{ name }}" class="function-btn add-row-button" data-name="{{ name }}">新增列在表格底部</button>
-                    <input type="text" id="insert-row-number-{{ name }}" class="insert-row-number" placeholder="填入需新增列數"/>
+<form class="upload">
+    <input type="file" name="uploadFile" accept=".csv" id="import-file" />
+    <br /><br />
+    <input type="submit" />
+</form>
+{% endblock %} {% block box4 %} {% for type, names in template_names.items() %}
+{% for name in names %}
+<div id="{{ name }}" class="tab-inner">
+    <!-- <p>{{ name }}</p> -->
+    <div class="function-container">
+        <button
+            class="function-btn get-data-col-button"
+            id="get-data-col-{{ name }}"
+            data-name="{{ name }}"
+        >
+            獲取行資料
+        </button>
+        <button
+            class="function-btn import-button"
+            id="import-{{ name }}"
+            data-name="{{ name }}"
+        >
+            匯入資料至當前資料表
+        </button>
+        <button
+            class="function-btn export-button"
+            id="export-{{ name }}"
+            data-name="{{ name }}"
+        >
+            匯出當前資料表
+        </button>
+        <div class="wrapper">
+            <button
+                id="add-row-{{ name }}"
+                class="function-btn add-row-button"
+                data-name="{{ name }}"
+            >
+                新增列在表格底部
+            </button>
+            <input
+                type="text"
+                id="insert-row-number-{{ name }}"
+                class="insert-row-number"
+                placeholder="填入需新增列數"
+            />
+        </div>
+    </div>
+    <div class="alert-text">
+        <div class="info-icon-container">
+            欄位顏色說明
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-info-circle"
+                viewBox="0 0 16 16"
+            >
+                <path
+                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                />
+                <path
+                    d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"
+                />
+            </svg>
+            <div class="info-tooltip">
+                <div>
+                    <strong class="red"
+                        >紅字欄位 → ID 類必填欄位（通常位於表最左側）</strong
+                    >
+                </div>
+                <div>
+                    <strong class="custom"
+                        >藍字欄位 → 自訂欄位（通常位於表最右側）</strong
+                    >
                 </div>
             </div>
-            <div class="alert-text">
-                <div><strong class="red">紅字</strong>為ID類必填欄位；<strong class="custom">藍字</strong>為自訂欄位</div>
-                <div id="row-count-grid-{{ name }}" class="row-count"></div>
-            </div>
-            <div id="grid-{{ name }}"></div> 
-            <div id="pages-grid-{{ name }}"></div> 
         </div>
-        <!-- <div id="example1"></div> -->
-    {% endfor %}
-{% endfor %}
-
-
-{% endblock %}
-
-{% block box5 %}{% endblock %}
-
-{% block box6 %}
+        <div id="row-count-grid-{{ name }}" class="row-count"></div>
+    </div>
+    <div id="grid-{{ name }}" class="grid-container"></div>
+    <div id="pages-grid-{{ name }}"></div>
+</div>
+<!-- <div id="example1"></div> -->
+{% endfor %} {% endfor %} {% endblock %} {% block box5 %}{% endblock %} {% block
+box6 %}
 <button class="btn back-btn">上一步</button>
 <button class="btn next-btn">下一步</button>
 {% endblock %}

@@ -8,8 +8,33 @@ var highlightedColumn = [
     "measurementID",
     "resourceID",
     "samp_name",
+    "dataID",
 ];
 var customColumn = [];
+var customTermsData = null;
+var tableContentFromDB;
+var dataContentFromDB = [];
+
+getCustomTermsDict();
+const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+if (projectID && projectName) {
+    // get data from project and initialize hansontable instances
+    $.ajax({
+        type: "GET",
+        url: `/data-project/projects/${projectID}`,
+        contentType: "application/json;charset=UTF-8",
+        success: function (response) {
+            // console.log(data.project_name)
+            // console.log(data.table_content)
+            tableContentFromDB = response.table_content;
+            // console.log(tableContentFromDB);
+            console.log(isEdit);
+        },
+        error: function (response) {
+            console.error(response);
+        },
+    });
+}
 
 $(document).ready(function () {
     // IndexedDB instance
@@ -25,23 +50,24 @@ $(document).ready(function () {
         var getAllRequest = objectStore.getAll();
 
         getAllRequest.onsuccess = function (event) {
-            if (getAllRequest.result && getAllRequest.result.length > 0) {
-                getAllRequest.result.forEach(function (item) {
-                    // console.log(item);
-                    const containerID = "grid-" + item.template_name;
-                    const checkboxNames = item.checkbox_names;
-                    const data = [checkboxNames].concat(item.data);
+            // if (getAllRequest.result && getAllRequest.result.length > 0) {
+            //     getAllRequest.result.forEach(function (item) {
+            //         // console.log(item);
+            //         const containerID = "grid-" + item.template_name;
+            //         const checkboxNames = item.checkbox_names;
+            //         const data = [checkboxNames].concat(item.data);
 
-                    $("#" + containerID).html("");
-                    initializeHandsontable(containerID, checkboxNames, data);
-                    console.log(
-                        "IndexedDB: Render saved_data,",
-                        item.template_name
-                    );
-                });
-            } else {
-                console.log("IndexedDB: No saved_data yet");
-            }
+            //         $("#" + containerID).html("");
+            //         initializeHandsontable(containerID, checkboxNames, data, customTermsData);
+            //         console.log(
+            //             "IndexedDB: Render saved_data,",
+            //             item.template_name
+            //         );
+            //     });
+            // } else {
+            //     console.log("IndexedDB: No saved_data yet");
+            // }
+            console.log("IndexedDB: Render saved_data");
         };
 
         getAllRequest.onerror = function (event) {
@@ -139,35 +165,6 @@ $(document).ready(function () {
         });
     });
 
-    // var example = document.getElementById('example1');
-    // var hot1 = new Handsontable(example, {
-    //     data: Handsontable.helper.createSpreadsheetData(100000, 20), //row, columns
-    //     colWidths: 100,
-    //     width: '100%',
-    //     dropdownMenu: true,
-    //     filters: true,
-    //     height: 320,
-    //     rowHeights: 23,
-    //     rowHeaders: true,
-    //     colHeaders: true
-    // });
-
-    // *deprecated* 按鈕事件：新增十列
-    // $('#add-ten-rows').click(function () {
-    //     window.addTenRow();
-    // });
-
-    // *deprecated* 按鈕事件：刪除指定列
-    // $('#delete-row').click(function () {
-    //     window.deleteRow();
-    // });
-
-    // *deprecated* 收集從後端傳來的欄位名稱
-    // $('.checkbox-name-core').each(function() {
-    //     var name = $(this).data('checkbox-name');
-    //     checkboxNames.push(name);
-    // });
-
     // 收集完之後初始化編輯表格
     $(".template-name").each(function () {
         var templateName = $(this).text();
@@ -192,8 +189,50 @@ $(document).ready(function () {
             // console.log(customColumn);
         });
 
-        initializeHandsontable(containerID, checkboxArrays[templateName]);
+        if (isEdit === "1") {
+            // console.log('containerID:' + containerID)
+            // console.log('checkbox_names:' + checkboxArrays[templateName])
+            // console.log('data:' + tableContentFromDB[templateName].data)
+            dataContentFromDB = [
+                tableContentFromDB[templateName].checkbox_names,
+                ...tableContentFromDB[templateName].data,
+            ];
+            initializeHandsontable(
+                containerID,
+                tableContentFromDB[templateName].checkbox_names,
+                dataContentFromDB,
+                customTermsData
+            );
+        } else {
+            initializeHandsontable(
+                containerID,
+                checkboxArrays[templateName],
+                null,
+                customTermsData
+            );
+        }
     });
+
+    if (parsedImportDataFromBackend && parsedTemplateName) {
+        var dataName = parsedTemplateName;
+        const containerID = "grid-" + dataName;
+        var checkboxNames = checkboxArrays[dataName];
+        // console.log(checkboxNames);
+        if (
+            JSON.stringify(parsedImportDataFromBackend[0]) ===
+            JSON.stringify(checkboxNames)
+        ) {
+            $("#" + containerID).html("");
+            initializeHandsontable(
+                containerID,
+                checkboxNames,
+                parsedImportDataFromBackend,
+                customTermsData
+            );
+        } else {
+            $(".columns-issue-popup").removeClass("d-none");
+        }
+    }
 
     // 按鈕事件：新增列在表格底部
     $(".add-row-button").click(function () {
@@ -289,9 +328,9 @@ $(document).ready(function () {
 
     $(".export-button").click(function () {
         var buttonID = $(this).attr("id");
-        var dataName = $(this).data("name");
-        console.log("點擊的按鈕的ID為:", buttonID);
-        console.log("點擊的按鈕的dataName為:", dataName);
+        var dataName = [$(this).data("name")];
+        // console.log("點擊的按鈕的ID為:", buttonID);
+        // console.log("點擊的按鈕的dataName為:", dataName);
 
         const containerID = "grid-" + dataName;
         var colHeader = [];
@@ -308,33 +347,14 @@ $(document).ready(function () {
         colData.push(getData);
         colHeader.push(getHeader);
 
-        console.log("templateName: ", dataName);
-        console.log("colHeader: ", colHeader);
-        console.log("colData: ", colData);
+        // console.log("templateName: ", dataName);
+        // console.log("colHeader: ", colHeader);
+        // console.log("colData: ", colData);
 
-        transferExportDataToBackend(dataName, colHeader, colData);
-
-        // if (handsontableInstances[containerID]) { // 確保 containerID 的 Handsontable 實例存在
-        //     const exportPlugin = handsontableInstances[containerID].getPlugin('exportFile');
-        //     exportPlugin.downloadFile('csv', {
-        //         bom: false,
-        //         columnDelimiter: ',',
-        //         columnHeaders: true,
-        //         exportHiddenColumns: true,
-        //         exportHiddenRows: true,
-        //         fileExtension: 'csv',
-        //         filename: dataName + '_[YYYY]-[MM]-[DD]',
-        //         mimeType: 'text/csv',
-        //         rowDelimiter: '\r\n',
-        //         rowHeaders: true
-        //     });
-        // } else {
-        //     console.error("Handsontable instance for containerID '" + containerID + "' not found.");
-        // }
+        transferExportDataToBackend(dataName);
     });
 
     $(".import-button").click(function () {
-        var buttonID = $(this).attr("id");
         var dataName = $(this).data("name");
 
         const containerID = "grid-" + dataName;
@@ -343,33 +363,41 @@ $(document).ready(function () {
         $("#import-file").on("change", function () {
             var inputCSV = $(this)[0];
             if (inputCSV.files.length > 0) {
+                // 檢查是否選擇文件
                 var formData = new FormData();
-                const fileName = inputCSV.files[0]["name"];
-                formData.append("file", inputCSV.files[0]);
+                formData.append("file", inputCSV.files[0]); // 將選擇的文件以 file 這個名稱傳遞給後端
+                formData.append("template_name", dataName);
+                formData.append("checkbox_names", checkboxNames);
 
                 $.ajax({
                     type: "POST",
-                    url: "/convert-csv-to-json",
+                    url: "/data-edit/import",
                     contentType: false,
                     processData: false,
                     data: formData,
                     success: (data) => {
-                        // console.log(data);
-                        if (
-                            JSON.stringify(data[0]) ===
-                            JSON.stringify(checkboxNames)
-                        ) {
-                            $("#" + containerID).html("");
-                            initializeHandsontable(
-                                containerID,
-                                checkboxNames,
-                                data
-                            );
-                        } else {
-                            $(".columns-issue-popup").removeClass("d-none");
-                        }
+                        // 嘗試轉跳到另一個頁面處理
+                        window.location.href = `/data-edit/column_mapping?project_name=${encodeURIComponent(
+                            projectName
+                        )}&project_id=${encodeURIComponent(projectID)}`;
+
+                        // if (
+                        //     JSON.stringify(data[0]) ===
+                        //     JSON.stringify(checkboxNames)
+                        // ) {
+                        //     $("#" + containerID).html("");
+                        //     initializeHandsontable(
+                        //         containerID,
+                        //         checkboxNames,
+                        //         data,
+                        //         customTermsData
+                        //     );
+                        // } else {
+                        //     $(".columns-issue-popup").removeClass("d-none");
+                        // }
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
+                        alert("匯入資料表發生錯誤");
                         console.log("Error:", textStatus, errorThrown);
                     },
                 });
@@ -407,7 +435,7 @@ $(document).ready(function () {
             addToIndexedDB(templateName, getHeader, getData);
         });
 
-        transferDataToBackend(templateNames, colHeader, colData);
+        transferDataToBackend(templateNames);
 
         // // 獲取表格資料
         // window.getData = function (containerID) {
@@ -501,45 +529,37 @@ $(document).ready(function () {
     });
 });
 
-// function highlightHeader () {
-//     var targetTexts = ['taxonID', 'occurrenceID', 'eventID', 'measurementID', 'resourceID', 'samp_name'];
-//     var targetSpans = $('span.colHeader');
-
-//     var filteredSpans = targetSpans.filter(function() {
-//         return targetTexts.includes($(this).text());
-//     });
-
-//     console.log(filteredSpans);
-//     filteredSpans.addClass('red');
-// }
-
-// 功能：測試匯入資料
-// function updateHandsontable(data) {
-//     var container = document.getElementById('grid');
-//     var hot2 = new Handsontable(container, {
-//         colHeaders: data[0],
-//         rowHeaders: true,
-//         width: '100%',
-//         height: '100%',
-//         licenseKey: 'non-commercial-and-evaluation'
-//     });
-//     hot2.loadData(data.slice(1));
-// }
+function getCustomTermsDict() {
+    $.ajax({
+        type: "GET",
+        url: "/data-edit/custom_terms",
+        contentType: "application/json;charset=UTF-8",
+        success: function (data) {
+            customTermsData = data;
+        },
+        error: function () {
+            console.error("System: Fail to fetch cutsom terms");
+        },
+    });
+}
 
 // 功能：把編輯表格的資料傳遞到後端
-function transferDataToBackend(templateNames, colHeader, colData) {
+function transferDataToBackend(templateNames) {
+    const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+
     $.ajax({
         type: "POST",
-        url: "/process-validation", // 給 process-validation 處理驗證過程
+        url: "/data-edit/validate", // 給 process-validation 處理驗證過程
         contentType: "application/json;charset=UTF-8",
         data: JSON.stringify({
             table_name: templateNames,
-            table_header: colHeader,
-            table_data: colData,
+            // table_header: colHeader,
+            project_id: projectID,
+            custom_terms: customTermsData,
         }),
-        success: function (data) {
+        success: function () {
             console.log("System: Data submitted");
-            window.location.href = "/data-validation"; // 轉跳到 data-validation 呈現驗證結果
+            window.location.href = `/data-validation/?project_name=${projectName}&project_id=${projectID}&edit=${isEdit}`; // 轉跳到 data-validation 呈現驗證結果
         },
         error: function () {
             $(".unknown-error-popup").removeClass("d-none");
@@ -548,15 +568,16 @@ function transferDataToBackend(templateNames, colHeader, colData) {
     });
 }
 
-function transferExportDataToBackend(templateNames, colHeader, colData) {
+function transferExportDataToBackend(templateNames) {
+    const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+
     $.ajax({
         type: "POST",
-        url: "/transfer-data",
+        url: "/data-edit/transfer",
         contentType: "application/json;charset=UTF-8",
         data: JSON.stringify({
             table_name: templateNames,
-            table_header: colHeader,
-            table_data: colData,
+            project_id: projectID,
         }),
         success: function (data) {
             console.log("System: Data submitted");
@@ -602,7 +623,32 @@ function updateColContent(colName, colData) {
 }
 
 // 功能：初始化編輯表格
-function initializeHandsontable(containerID, checkboxNames, data) {
+function initializeHandsontable(
+    containerID,
+    checkboxNames,
+    data,
+    customTermsData
+) {
+    /*** 
+    參數說明：
+
+    containerID： 渲染 handsontable 的起始點，格式為字串，內容如 grid-checklist, gird-darwin-core-occurrence
+    checkboxNames： 資料表的 header 名稱，格式為列表
+    data： 資料表的全部內容，包含 header 與每列的內容，格式為雙層列表，結構如下：
+    data = [
+        [], // header 
+        [], // 第一列內容
+        [], // 第二列內容
+        ...
+    ]
+    customTermsData： 自訂欄位的名稱，格式為字典，結構如下：
+    customTermsData = {
+        key1: [], # key 代表自訂欄位的種類，value 為列表，代表該種類下的自訂欄位名稱
+        key2: [],
+        ...
+    }
+    ***/
+
     var container = document.getElementById(containerID);
     if (data) {
         var hot = new Handsontable(container, {
@@ -764,6 +810,33 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                     return {
                         type: "numeric",
                     };
+                } else if (name === "eventDate") {
+                    return {
+                        validator: "custom-date-validator",
+                    };
+                } else if (name === "individualCount") {
+                    return {
+                        validator: "custom-int-validator",
+                    };
+                } else if (name === "year") {
+                    return {
+                        validator: "custom-int-validator",
+                    };
+                } else if (name === "month") {
+                    return {
+                        validator: "custom-int-validator",
+                    };
+                } else if (name === "day") {
+                    return {
+                        validator: "custom-int-validator",
+                    };
+                } else if (
+                    customTermsData["date"] &&
+                    customTermsData["date"].includes(name)
+                ) {
+                    return {
+                        validator: "custom-date-validator",
+                    };
                 } else {
                     return {};
                 }
@@ -773,6 +846,7 @@ function initializeHandsontable(containerID, checkboxNames, data) {
             rowHeaders: true,
             width: "100%",
             height: "auto",
+            renderAllRows: false, // 設定此值為 false 確保虛擬渲染只渲染可見範圍
             // Header 開啟過濾功能
             filters: true,
             // Header 開啟 menu
@@ -977,6 +1051,13 @@ function initializeHandsontable(containerID, checkboxNames, data) {
                     return {
                         validator: "custom-int-validator",
                     };
+                } else if (
+                    customTermsData["date"] &&
+                    customTermsData["date"].includes(name)
+                ) {
+                    return {
+                        validator: "custom-date-validator",
+                    };
                 } else {
                     return {};
                 }
@@ -1069,6 +1150,77 @@ function initializeHandsontable(containerID, checkboxNames, data) {
     //     hot.alter('remove_row', selectedRow);
     // };
 
+    function getAllGridIDs() {
+        const containers = document.querySelectorAll(".grid-container");
+        const gridID = [];
+
+        containers.forEach((container) => {
+            const id = container.id;
+            gridID.push(id);
+        });
+
+        return gridID;
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function saveTableContent() {
+        const allGridIDs = getAllGridIDs();
+        // console.log(allGridIDs)
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectID = urlParams.get("project_id");
+        // console.log(projectID);
+
+        const jsonData = {};
+
+        allGridIDs.forEach((containerID) => {
+            // const containerID = container.id;
+            const tableName = containerID.replace("grid-", "");
+            // const hotInstance = Handsontable.getInstance(container);
+            const tableData = handsontableInstances[containerID].getData();
+            const tableHeader =
+                handsontableInstances[containerID].getColHeader();
+            const cleanTableHeader = tableHeader.map((header) =>
+                header.replace(/<div.*?>|<\/div>/g, "")
+            );
+
+            jsonData[tableName] = {
+                checkbox_names: cleanTableHeader,
+                data: tableData,
+            };
+        });
+
+        // console.log(jsonData);
+
+        $.ajax({
+            type: "PATCH",
+            url: "/data-edit/autosave",
+            data: JSON.stringify({
+                project_id: projectID,
+                table_content: jsonData,
+            }),
+            contentType: "application/json;charset=UTF-8",
+            success: function () {
+                $("#autosave-status").text("（已存檔）");
+            },
+            error: function (response) {
+                console.error(response.responseJSON.error);
+            },
+        });
+    }
+
+    const debouncedSaveTableContent = debounce(saveTableContent, 1000);
+
     // 取得被選取的行、列的 index
     hot.updateSettings({
         afterSelectionEnd: function (r, c, r2, c2) {
@@ -1078,21 +1230,34 @@ function initializeHandsontable(containerID, checkboxNames, data) {
         afterChange: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數：" + rowCount);
+            // console.log('CHANGED!')
+            // saveTableContent(containerID);
+            $("#autosave-status").text("（儲存中．．．）");
+            debouncedSaveTableContent();
         },
         afterCreateRow: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數：" + rowCount);
         },
         afterRemoveRow: function () {
             // 更新列數
             var rowCount = hot.countRows();
-            $("#row-count-" + containerID).text("列數：" + rowCount);
+            $("#row-count-" + containerID).text("當前表格列數：" + rowCount);
         },
     });
 
     hot.runHooks("afterChange");
     handsontableInstances[containerID] = hot;
     // console.log(handsontableInstances);
+}
+
+function getProjectParamsFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        projectID: urlParams.get("project_id"),
+        projectName: urlParams.get("project_name"),
+        isEdit: urlParams.get("edit"),
+    };
 }

@@ -8,6 +8,62 @@ select {
     font-size: 14px;
 }
 
+.select2-container--default .select2-selection--single {
+    border: none !important;
+    border-bottom: 1px solid #2B59C3 !important;
+    border-radius: 0px !important;
+    background-color: #fff0e1 !important;
+}
+
+.select2-container--default .select2-selection--multiple {
+    border: none !important;
+    border-bottom: 1px solid #2B59C3 !important;
+    border-radius: 0px !important;
+    background-color: #fff0e1 !important;
+}
+
+.select2-dropdown {
+    background-color: #fff0e1 !important;
+    /* box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px !important; */
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px !important;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: #2B59C3 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #2B59C3 transparent transparent transparent!important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #2B59C3 !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border: none !important;
+    background-color: #2B59C3 !important;
+    color: #fff !important;
+    padding: 8px !important;
+    padding-left: 20px !important;
+    border-radius: 20px !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    padding: 8px 4px !important;
+    border-right: none !important;
+    color: #fff !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover, .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:focus {
+    background-color: #2B59C3 !important;
+}
+
+.select-title {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
 .custom-column-title {
     padding-left: 5px;
     display: flex;
@@ -21,7 +77,8 @@ select {
 }
 
 .save-template-btn:hover {
-    background-color: #F9F871 !important;
+    background-color: #002D8C !important;
+    color: #fff !important;
 }
 
 #save-btn {
@@ -46,6 +103,11 @@ select {
     vertical-align: baseline;
     white-space: nowrap;
     width: 100%;
+}
+
+#save-btn:hover {
+    background-color: #002D8C !important;
+    color: #fff !important;
 }
 
 .popup-input {
@@ -143,9 +205,9 @@ fieldset input{
     font-size: 14px;
 }
 
-.extension {
+/* .extension {
     margin-bottom: 15px;
-}
+} */
 
 .description-container {
     margin: 20px 30px;
@@ -171,7 +233,7 @@ fieldset input{
 }
 
 .description {
-    font-weight: 100;
+    font-weight: 300;
     font-size: 14px;
 }
 
@@ -236,6 +298,11 @@ fieldset input{
     width: 100%;
 }
 
+#delete-btn:hover {
+    background-color: #002D8C !important;
+    color: #fff !important;
+}
+
 .loader {
     width: 48px;
     height: 48px;
@@ -273,5 +340,169 @@ fieldset input{
     opacity: 30%;
 }
 
+.title-tag {
+    font-size: 12px;
+    font-weight: 600;
+    background-color: #B91F3E;
+    padding: 5px 10px;
+    color: #fff;
+    border-radius: 6px;
+}
 
-  
+.lock-tag {
+    background-color: #AAAABC;
+}
+
+.title-with-tag {
+    display: flex;
+    align-items: center;
+    gap:5px;
+}
+
+.select2-selection[aria-disabled="true"] .select2-selection__rendered {
+    color: #AAAABC !important; 
+}
+
+#edit-column-content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+#edit-column-content-left {
+    flex: 0 0 45%;
+    height: 250px; 
+    overflow: auto; 
+}
+
+#edit-column-content-right {
+    height: 250px; 
+    overflow: auto; 
+    /* border-left: 1px solid #2B59C3;
+    padding-left: .5rem; */
+}
+
+.right-content-subtitle {
+    font-weight: 600;
+}
+
+.right-content-detail {
+    margin-top: .5rem;
+    margin-bottom: 1.5rem;
+}
+
+.content-detail {
+    display: flex;
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: .25rem;
+}
+
+.column-name {
+    flex-grow: 1; 
+}
+
+.column-name input {
+    margin-right: 5px;
+    margin-top: 2px;
+    accent-color: #2B59C3;
+}
+
+.custom-columns-popup {
+    width: 40%;
+}
+
+.popup-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+}
+
+#add-column-content-container {
+    padding-left: .75rem;
+    padding-right: .75rem;
+}
+
+#add-column-content div {
+    font-weight: 600;
+    margin-top: 1.25rem;
+}
+
+#add-column-content input {
+    width: 100%;
+    padding: .275rem .55rem;
+    border: none;
+    border-bottom: 1px solid #2B59C3;
+    background-color: transparent !important;
+    color: #2B59C3;
+    margin-top: .25rem;
+    margin-bottom: .5rem;
+    font-size: 14px !important;
+}
+
+#add-column-content select {
+    padding: .275rem .55rem;
+    margin-top: .25rem;
+    margin-bottom: .5rem;
+}
+
+#add-column-content textarea {
+    height: 3rem;
+    width: 100%;
+    padding: .275rem .55rem;
+    border: none;
+    border-bottom: 1px solid #2B59C3;
+    background-color: transparent !important;
+    color: #2B59C3;
+    margin-top: .25rem;
+    margin-bottom: .5rem;
+    font-size: 14px !important;
+    font-family: "Noto Sans TC", sans-serif !important;
+}
+
+#custom-columns-btn-container {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: .5rem;
+    padding-left: .75rem;
+    padding-right: .75rem;
+}
+
+#custom-columns-btn-container button{
+    color: #fff;
+}
+
+.custom-columns-function-container {
+    padding-left: .75rem;
+    padding-right: .75rem;
+    margin-top: .85rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+.custom-columns-btn {
+    padding: .65rem .9rem;
+    font-size: .85rem;
+}
+
+.custom-columns-btn:hover {
+    cursor: pointer;
+    color: #002D8C;
+}
+
+.active-function {
+    border-bottom: 1.5px solid #B91F3E;
+}
+
+#edit-column-content-container {
+    padding-left: .75rem;
+    padding-right: .75rem;
+}
+
+.del-custom-column {
+    margin-top: 5px;
+}

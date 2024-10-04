@@ -1,3 +1,5 @@
+const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
+
 $(document).ready(function() {
     $('.error-message-box').click(function() {
         var accordionMenu = $(this).next('.accordion-menu');
@@ -61,11 +63,19 @@ $(document).ready(function() {
     });
 
     $('.save-result-btn').click(function () {
-        // console.log('yes');
         $('#download-result').click();
     });
 
     $('.next-btn').click(function () {
-        window.location.href = 'data-clearance'
+        window.location.href = `/data-clearance?project_name=${projectName}&project_id=${projectID}&edit=${isEdit}`
     });
 });
+
+function getProjectParamsFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        projectID: urlParams.get('project_id'),
+        projectName: urlParams.get('project_name'),
+        isEdit: urlParams.get('edit')
+    };
+}
