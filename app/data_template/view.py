@@ -168,3 +168,105 @@ def delete_custom_templates(id):
     db.session.delete(template)
     db.session.commit()
     return jsonify(template.as_dict())
+
+@data_template_bp.route('/table_header', methods=['POST'])
+def save_table_header():
+    data = request.get_json()
+    project_id = data.get('project_id')
+    table_name = data.get('table_name')
+    new_table_header = data.get('table_header')
+    table_header = TableHeader.query.filter_by(project_id=project_id, table_name=table_name).first()
+    
+    if table_header:
+        try:
+            old_table_header = table_header.table_header
+
+            if old_table_header != new_table_header:
+                # 更新現有的 table_header
+                table_header.table_header = new_table_header
+                db.session.commit()
+
+                # 如果有變更，則更新 TableData 中的 data 欄位
+                update_table_data(project_id, table_name, old_table_header, new_table_header)
+            else:
+                return jsonify({"message": "No changes detected in the table header"}), 200
+        except Exception as e:
+            db.session.rollback() 
+            return jsonify({
+                "message": "Failed to update the existing table header",
+                "error": str(e)
+            }), 500
+    else:
+        try:
+            # 如果沒有找到對應的資料，則新增一筆
+            new_table_header = TableHeader(
+                project_id=project_id,
+                table_name=table_name,
+                table_header=new_table_header
+            )
+            db.session.add(new_table_header)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                "message": "Failed to save new table header",
+                "error": str(e)
+            }), 500
+    return jsonify({"message": "Table header saved successfully"}), 201
+
+@data_template_bp.route('/table_header', methods=['GET'])
+def get_table_header():
+    project_id = request.args.get('project_id')
+
+    if not project_id:
+        return jsonify({"error": "Project ID is required"}), 400
+    
+    try:
+        table_header_entry = TableHeader.query.filter_by(project_id=project_id).all()
+        
+        if not table_header_entry:
+            return jsonify({"error": "Table header not found"}), 404
+        
+        data = [
+            {
+                "table_name": entry.table_name,
+                "table_header": entry.table_header
+            }
+            for entry in table_header_entry
+        ]
+
+        return jsonify({"data": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+def update_table_data(project_id, table_name, old_header, new_header):
+    old_columns = set(old_header)
+    new_columns = set(new_header)
+
+    # 找出舊 header 有，但新 header 沒有的欄位
+    removed_columns = old_columns - new_columns
+
+    # 找出新 header 有，但舊 header 沒有的欄位
+    added_columns = new_columns - old_columns
+
+    table_data = TableData.query.filter_by(project_id=project_id, table_name=table_name).all()
+
+    # 更新舊有的 TableData 內容
+    for row in table_data:
+        data = row.data
+
+        if data:
+            data = json.loads(data)
+
+            # 處理欄位刪除：如果欄位被移除，則從 data 中刪除該欄位
+            for column in removed_columns:
+                if column in data:
+                    del data[column]
+
+            # 處理欄位新增：如果有新欄位，設為空值
+            for column in added_columns:
+                if column not in data:
+                    data[column] = ""
+
+            row.data = json.dumps(data)
+            db.session.commit()

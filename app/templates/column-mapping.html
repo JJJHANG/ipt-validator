@@ -1,9 +1,5 @@
 {% extends 'base.html' %} {% block head %}
 <script src="../static/package/jquery-3.6.4.min.js"></script>
-<!-- <link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/project.css') }}"
-/> -->
 <link
     rel="stylesheet"
     href="{{ url_for('static', filename='css/column-mapping.css') }}"
@@ -15,6 +11,7 @@
     STEP4-2. 對應欄位<span id="autosave-status"></span>
 </div>
 {% endblock %} {% block box3 %}
+
 <ul class="mapping-list">
     <li>
         <div class="mapping-list-title">匯入檔案</div>
@@ -92,7 +89,11 @@
         {% endfor %}
     </tbody>
 </table>
-{% endblock %} {% block box5 %}{% endblock %} {% block box6 %}
+{% endblock %} {% block box5 %}
+<div class="loader-wrapper d-none">
+    <span id="loader" class="loader"></span>
+</div>
+{% endblock %} {% block box6 %}
 <button class="btn back-btn">返回</button>
 <button class="btn next-btn">確認匯入</button>
 {% endblock %}

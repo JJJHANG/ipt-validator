@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/project.css') }}">
 <script src="../static/package/jquery-3.6.4.min.js"></script>
 <script type=text/javascript src="{{ url_for('static', filename='js/data-clearance.js') }}"></script>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 {% endblock %}
 
 {% block popup %}
@@ -42,7 +43,7 @@
 {% endfor %}
 
 <ul class="tab-title">
-    {% for type, names in template_names.items()|reverse  %}
+    {% for type, names in template_names.items() %}
         {% if names %}
         <div class="bookmark-title">{{ type }}</div> 
         {% endif %}
@@ -52,14 +53,52 @@
     {% endfor %}
 </ul>
 
-<div class="col-content d-none"></div>
+<div class="col-content function-panel d-none"></div>
+<div class="col-content-text-filter function-panel d-none"></div>
+<div class="col-content-swap function-panel d-none"></div>
+<div class="fetch-species-api function-panel d-none"></div>
 
 {% for key, value in table_stats.items() %}
     <div id="{{ key }}-error-message" class="tab-inner error-message-container">
-        <p class="error-message-title">錯誤訊息</p>
-        {% if value.unique_stats.items() %}
+        <div id="error-message-container">
+            <p class="error-message-title">錯誤訊息</p>
+            <div class="info-icon-container">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+                <div class="info-tooltip">
+                    <div><strong class="custom">點擊錯誤訊息中的資料列即可轉跳到對應資料頁</strong></div>
+                </div>
+            </div>
+        </div>
+        {% if value is not none and 'unique_stats' in value %}
             {% for inner_key, inner_value in value.unique_stats.items() %}
                 {% if inner_value['valid_percentage'] < 100 %}
+                    {% if 'blank_rows' in inner_value and inner_value['blank_rows']['count'] > 1 %}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['blank_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['blank_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['blank_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['blank_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['blank_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
                     <div class="error-message-box">
                         <span>{{ inner_value['invalid_rows']['error_message'] }}</span>
                         <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
@@ -86,7 +125,7 @@
             {% endfor %}
         {% endif %} 
         
-        {% if value.controlled_stats.items() %}
+        {% if value is not none and 'controlled_stats' in value %}
             {% for inner_key, inner_value in value.controlled_stats.items() %}
                 {% if inner_value['valid_percentage'] < 100 %}
                     <div class="error-message-box">
@@ -115,7 +154,7 @@
             {% endfor %} 
         {% endif %} 
 
-        {% if value.lon_stats.items() %}
+        {% if value is not none and 'lon_stats' in value %}
             {% for inner_key, inner_value in value.lon_stats.items() %}
                 {% if inner_value['invalid_rows']['count'] >= 1%}
                     <div class="error-message-box">
@@ -189,10 +228,34 @@
                         </table>
                     </div>
                 {% endif %}
+                {% if inner_value['invalid_content_rows']['count'] >= 1%}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['invalid_content_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_content_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_content_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_content_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_content_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             {% endfor %}
         {% endif %} 
 
-        {% if value.lat_stats.items() %}
+        {% if value is not none and 'lat_stats' in value %}
             {% for inner_key, inner_value in value.lat_stats.items() %}
                 {% if inner_value['invalid_rows']['count'] >= 1%}
                     <div class="error-message-box">
@@ -266,10 +329,34 @@
                         </table>
                     </div>
                 {% endif %}
+                {% if inner_value['invalid_content_rows']['count'] >= 1%}
+                    <div class="error-message-box">
+                        <span>{{ inner_value['invalid_content_rows']['error_message'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['invalid_content_rows']['count'] }}</span>
+                    </div>
+                    <div class="accordion-menu d-none">
+                        <table class="accordion-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>{{ inner_key }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(inner_value['invalid_content_rows']['count']) %}
+                                    <tr>
+                                        <td>{{ inner_value['invalid_content_rows']['indexes'][i] }}</td>
+                                        <td>{{ inner_value['invalid_content_rows']['values'][i] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             {% endfor %}
         {% endif %} 
 
-        {% if value.datetime_stats.items() %}
+        {% if value is not none and 'datetime_stats' in value %}
             {% for inner_key, inner_value in value.datetime_stats.items() %}
                 {% if inner_value['valid_percentage'] < 100 %}
                     <div class="error-message-box">
@@ -376,11 +463,11 @@
             {% endfor %}
         {% endif %} 
 
-        {% if value.date_column_stats.items() %}
+        {% if value is not none and 'date_column_stats' in value %}
             {% for inner_key, inner_value in value.date_column_stats.items() %}
                 {% if inner_value['valid_percentage'] < 100 %}
                     <div class="error-message-box">
-                        <span>{{ inner_value['error_message'] }}</span>
+                        <span>{{ inner_value['invalid_rows']['error_message'] }}</span>
                         <span class="invalid_rows">{{ inner_value['invalid_rows']['count'] }}</span>
                     </div>
                     <div class="accordion-menu d-none">
@@ -405,12 +492,12 @@
             {% endfor %}
         {% endif %}
         
-        {% if value.remain_column_stats.items() %}
+        {% if value is not none and 'remain_column_stats' in value %}
             {% for inner_key, inner_value in value.remain_column_stats.items() %}
-                {% if inner_value['blank_rows']['counts'] > 0 %}
+                {% if inner_value['blank_rows']['count'] > 0 %}
                     <div class="error-message-box blank">
                         <span>{{ inner_value['blank_rows']['error_message'] }}</span>
-                        <span class="invalid_rows">{{ inner_value['blank_rows']['counts'] }}</span>
+                        <span class="invalid_rows">{{ inner_value['blank_rows']['count'] }}</span>
                     </div>
                     <div class="accordion-menu d-none">
                         <table class="accordion-table">
@@ -421,7 +508,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in range(inner_value['blank_rows']['counts']) %}
+                                {% for i in range(inner_value['blank_rows']['count']) %}
                                     <tr>
                                         <td>{{ inner_value['blank_rows']['indexes'][i] }}</td>
                                         <td>{{ inner_value['blank_rows']['values'][i] }}</td>
@@ -441,21 +528,21 @@
 {% endblock %}
 
 {% block box4 %}
-
+<div class="loader-wrapper d-none">
+    <span id="loader" class="loader"></span>
+</div>
 {% for type, names in template_names.items() %}
     {% for name in names %}
         <div id="{{ name }}" class="tab-inner">
-            <div class="function-container">
-                <button class="function-btn text-facet-button" id="text-facet-{{ name }}" data-name="{{ name }}">內容篩選</button>
-                <!-- <button class="function-btn duplicate-facet-button" id="duplicate-facet-{{ name }}" data-name="{{ name }}">重複值篩選</button> -->
-
-                <button class="function-btn text-filter-button" id="text-filter-{{ name }}" data-name="{{ name }}">文字篩選</button>
-                <!-- <button class="function-btn import-button" id="import-{{ name }}" data-name="{{ name }}">匯入資料</button>
-                <button class="function-btn export-button" id="export-{{ name }}" data-name="{{ name }}">匯出資料</button>
-                <div class="wrapper">
-                    <button id="add-row-{{ name }}" class="function-btn add-row-button" data-name="{{ name }}">新增列在表格底部</button>
-                    <input type="text" id="insert-row-number-{{ name }}" class="insert-row-number" placeholder="填入需新增列數"/>
-                </div> -->
+            <div class="table-function-container">
+                <div class="function-container">
+                    <button class="function-btn text-facet-button" id="text-facet-{{ name }}" data-name="{{ name }}">內容篩選</button>
+                    <button class="function-btn text-filter-button" id="text-filter-{{ name }}" data-name="{{ name }}">文字篩選</button>
+                    <button class="function-btn column-swap-button" id="column-swap-{{ name }}" data-name="{{ name }}">欄位內容對調</button>
+                    <button class="function-btn fetch-species-api-button" id="fetch-species-api-{{ name }}" data-name="{{ name }}">串接物種 API</button>
+                    <div id="text-filter-waring" class="d-none">⚠️ 文字篩選模式啟用中，內容篩選、錯誤訊息轉跳跳功能已被禁用</div>
+                </div>
+                <div id="pages-grid-{{ name }}" class="grid-paginator-container"></div> 
             </div>
             <div class="alert-text">
                 <div class="info-icon-container">
@@ -472,7 +559,7 @@
                 <div id="row-count-grid-{{ name }}" class="row-count"></div>
             </div>
             <div id="grid-{{ name }}" class="grid-container"></div> 
-            <div id="pages-grid-{{ name }}"></div> 
+
         </div>
     {% endfor %}
 {% endfor %}

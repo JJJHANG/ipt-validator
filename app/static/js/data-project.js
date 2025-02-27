@@ -81,7 +81,7 @@ $(document).ready(function () {
                     延伸資料集: [],
                 };
 
-                Object.keys(data.table_content).forEach((name) => {
+                Object.keys(data).forEach((name) => {
                     const core = [
                         "checklist",
                         "occurrence",
@@ -97,9 +97,8 @@ $(document).ready(function () {
                 // console.log(templateNames);
                 const checkboxNames = {};
                 // 遍歷每個模板
-                Object.keys(data.table_content).forEach(function (template) {
-                    const checkbox =
-                        data.table_content[template].checkbox_names;
+                Object.keys(data).forEach(function (template) {
+                    const checkbox = data[template].checkbox_names;
                     checkboxNames[template] = checkbox;
                 });
                 // console.log(templateNames);
@@ -107,6 +106,7 @@ $(document).ready(function () {
 
                 $.ajax({
                     // 這裡只傳遞專案名稱、專案 ID、各模板名稱、各模板用的欄位名稱
+                    // 傳遞給前端渲染 html 上的元素
                     type: "POST",
                     url: "/data-edit/store_data",
                     contentType: "application/json;charset=UTF-8",

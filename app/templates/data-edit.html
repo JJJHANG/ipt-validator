@@ -15,6 +15,65 @@
 </script>
 {% endblock %} {% block popup %}
 <!-- Warning Popup -->
+<div class="popup-container remove-row-popup d-none">
+    <div class="xx">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+        >
+            <g
+                id="Group_789"
+                data-name="Group 789"
+                transform="translate(-1679 -599)"
+            >
+                <g
+                    id="Group_712"
+                    data-name="Group 712"
+                    transform="translate(-133.5 164.5)"
+                >
+                    <line
+                        id="Line_1"
+                        data-name="Line 1"
+                        x1="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2b59c3"
+                        stroke-linecap="round"
+                        stroke-width="1.5"
+                    />
+                    <line
+                        id="Line_2"
+                        data-name="Line 2"
+                        x2="12"
+                        y2="12"
+                        transform="translate(1824.5 446.5)"
+                        fill="none"
+                        stroke="#2b59c3"
+                        stroke-linecap="round"
+                        stroke-width="1.5"
+                    />
+                </g>
+            </g>
+        </svg>
+    </div>
+    <div class="popup-alert">
+        <div id="remove-row-alert-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#B91F3E" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+            </svg>
+        </div>
+        <label>刪除選擇列後無法復原，請確認是否執行 ( •́ _ •̀)？</label>
+    </div>
+    <div class="popup-btn">
+        <button id="remove-row-comfirm">確認刪除</button>
+        <button id="remove-row-cancel">取消</button>
+    </div>
+</div>
+
 <div class="popup-container duplicated-popup d-none">
     <div class="xx">
         <svg
@@ -222,47 +281,51 @@
     <br /><br />
     <input type="submit" />
 </form>
-{% endblock %} {% block box4 %} {% for type, names in template_names.items() %}
-{% for name in names %}
+{% endblock %} {% block box4 %}
+<div class="loader-wrapper d-none">
+    <span id="loader" class="loader"></span>
+</div>
+{% for type, names in template_names.items() %} {% for name in names %}
 <div id="{{ name }}" class="tab-inner">
-    <!-- <p>{{ name }}</p> -->
-    <div class="function-container">
-        <button
-            class="function-btn get-data-col-button"
-            id="get-data-col-{{ name }}"
-            data-name="{{ name }}"
-        >
-            獲取行資料
-        </button>
-        <button
-            class="function-btn import-button"
-            id="import-{{ name }}"
-            data-name="{{ name }}"
-        >
-            匯入資料至當前資料表
-        </button>
-        <button
-            class="function-btn export-button"
-            id="export-{{ name }}"
-            data-name="{{ name }}"
-        >
-            匯出當前資料表
-        </button>
-        <div class="wrapper">
+    <div class="table-function-container">
+        <div class="function-container">
             <button
-                id="add-row-{{ name }}"
-                class="function-btn add-row-button"
+                class="function-btn get-data-col-button"
+                id="get-data-col-{{ name }}"
                 data-name="{{ name }}"
             >
-                新增列在表格底部
+                獲取行資料
             </button>
-            <input
-                type="text"
-                id="insert-row-number-{{ name }}"
-                class="insert-row-number"
-                placeholder="填入需新增列數"
-            />
+            <button
+                class="function-btn remove-row-button"
+                id="remove-row-{{ name }}"
+                data-name="{{ name }}"
+            >
+                刪除選擇列
+            </button>
+            <button
+                class="function-btn import-button"
+                id="import-{{ name }}"
+                data-name="{{ name }}"
+            >
+                匯入資料至當前資料表
+            </button>
+            <button
+                class="function-btn export-button"
+                id="export-{{ name }}"
+                data-name="{{ name }}"
+            >
+                匯出當前資料表
+            </button>
+            <button
+                class="function-btn insert-page-button"
+                id="insert-page-{{ name }}"
+                data-name="{{ name }}"
+            >
+                新增空白資料頁
+            </button>
         </div>
+        <div id="pages-grid-{{ name }}" class="grid-paginator-container"></div>
     </div>
     <div class="alert-text">
         <div class="info-icon-container">
@@ -298,11 +361,10 @@
         <div id="row-count-grid-{{ name }}" class="row-count"></div>
     </div>
     <div id="grid-{{ name }}" class="grid-container"></div>
-    <div id="pages-grid-{{ name }}"></div>
 </div>
 <!-- <div id="example1"></div> -->
-{% endfor %} {% endfor %} {% endblock %} {% block box5 %}{% endblock %} {% block
-box6 %}
+{% endfor %} {% endfor %} {% endblock %} {% block box5 %} {% endblock %} {%
+block box6 %}
 <button class="btn back-btn">上一步</button>
 <button class="btn next-btn">下一步</button>
 {% endblock %}

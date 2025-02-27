@@ -1,6 +1,7 @@
 from database import db
 import json
 from sqlalchemy.ext import mutable
+from sqlalchemy import JSON, func
 
 class JsonEncodedDict(db.TypeDecorator):
     """Enables JSON storage by encoding and decoding on the fly."""
@@ -307,3 +308,64 @@ class ErrorMessages(db.Model):
     def as_dict(self):
         data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         return data
+
+class DynamicTable(db.Model):
+    __tablename__ = 'dynamic_table'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    row_id = db.Column(db.Integer, nullable=False)
+    table_id = db.Column(db.Integer, nullable=False)
+    data = db.Column(JSON, nullable=False)  
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+class TableHeader(db.Model):
+    __tablename__ = 'table_header'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    table_name = db.Column(db.String, nullable=False)  
+    table_header = db.Column(JSON, nullable=False)       
+
+    project = db.relationship('Projects', backref=db.backref('table_headers', lazy=True, cascade='all, delete-orphan'))
+
+    @classmethod
+    def get_table_headers(cls, project_id):
+        headers_data = {}
+        table_header_entries = cls.query.filter_by(project_id=project_id).all()
+        
+        for entry in table_header_entries:
+            headers_data[entry.table_name] = {"checkbox_names": entry.table_header}
+        
+        return headers_data
+    
+    @classmethod
+    def get_template_names(cls, project_id):
+        template_names = {
+            '資料集類型': [],
+            '延伸資料集': []
+        }
+        table_header_entries = cls.query.filter_by(project_id=project_id).all()
+        
+        for entry in table_header_entries:
+            table_name = entry.table_name
+            if table_name in ['checklist', 'occurrence', 'samplingevent', 'others']:
+                template_names['資料集類型'].append(table_name)
+            else:
+                template_names['延伸資料集'].append(table_name)
+        
+        return template_names
+
+class TableData(db.Model):
+    __tablename__ = 'table_data'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    table_id = db.Column(db.Integer, db.ForeignKey('table_header.id'), nullable=False)
+    table_name = db.Column(db.String, nullable=False)
+    row_id = db.Column(db.Integer, nullable=False)
+    data = db.Column(JSON, nullable=False)     
+
+    project = db.relationship('Projects', backref=db.backref('data_rows', lazy=True, cascade='all, delete-orphan'))
+    header = db.relationship('TableHeader', backref=db.backref('data_entries', lazy=True, cascade='all, delete-orphan'))
+

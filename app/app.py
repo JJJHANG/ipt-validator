@@ -9,6 +9,9 @@ from data_edit.view import data_edit_bp
 from data_validation.view import data_validation_bp
 from data_clearance.view import data_clearance_bp
 from data_project.view import data_project_bp
+from socket_io import socketio
+from engineio.async_drivers import threading
+
 
 def create_app():
     app = Flask(__name__)
@@ -23,13 +26,16 @@ def create_app():
     app.register_blueprint(data_clearance_bp, url_prefix='/data-clearance')
     app.register_blueprint(data_project_bp, url_prefix='/data-project')
 
-    return app 
+    socketio.init_app(app)
+
+    return app
 
 def setup_database(app):
     with app.app_context():
         db.create_all()
 
 if __name__ == '__main__':
+    PORT = 5555
     app = create_app()
 
     if not os.environ.get("WERKZEUG_RUN_MAIN"): # The reloader has not yet run, open the browser
@@ -37,4 +43,5 @@ if __name__ == '__main__':
     if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'init.db')):
         setup_database(app)
 
-    app.run(host='0.0.0.0', port=5555, debug=True)
+    socketio.run(app, host='0.0.0.0', port=PORT, debug=True)
+    # app.run(host='0.0.0.0', port=PORT)

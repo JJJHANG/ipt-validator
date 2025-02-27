@@ -36,8 +36,9 @@ def create_projects():
 
 @data_project_bp.route('/projects/<int:id>', methods=['GET'])
 def get_project(id):
-    project = Projects.query.get_or_404(id)
-    return jsonify(project.as_dict())
+    # project = Projects.query.get_or_404(id)
+    project_data = TableHeader.get_table_headers(id)
+    return jsonify(project_data)
 
 @data_project_bp.route('/projects/<int:id>', methods=['DELETE'])
 def delete_projects(id):

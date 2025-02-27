@@ -13,6 +13,7 @@
 <script src="{{ url_for('static', filename='package/select2.min.js') }}"></script>
 {% endblock %} {% block popup %}
 <!-- Save Template Popup -->
+<div class="popup-overlay d-none"></div>
 <div class="popup-container save-popup d-none">
     <div class="xx">
         <svg
@@ -409,15 +410,15 @@
     </div>
 
     <div class="custom-columns-function-container">
-        <div
+        <button
             class="custom-columns-btn active-function"
             id="add-column-content-btn"
         >
             新增自訂欄位
-        </div>
-        <div class="custom-columns-btn" id="edit-column-content-btn">
+        </button>
+        <button class="custom-columns-btn" id="edit-column-content-btn">
             修改自訂欄位
-        </div>
+        </button>
     </div>
 
     <div class="popup-content-container">
@@ -445,9 +446,21 @@
                 ><br />
                 <div>欄位備註</div>
                 <textarea name="column_comment" type="text"></textarea>
+                <div>
+                    <span>欲加入模板</span>
+                    <span class="title-tag">必填</span>
+                </div>
+                <select name="add_template"></select>
             </form>
         </div>
         <div id="edit-column-content-container" class="d-none">
+            <div class="right-content-container">
+                <div class="right-content-subtitle">欲加入模板</div>
+                <select
+                    name="add_template"
+                    class="right-content-detail"
+                ></select>
+            </div>
             <div id="edit-column-content">
                 <div id="edit-column-content-left"></div>
                 <!-- 點擊 edit-column-content-btn 時 fetch api 後填入 -->
@@ -530,7 +543,7 @@
                 <option value="samplingevent">Sampling Event 調查活動</option>
             </optgroup>
             <optgroup label="其他">
-                <option value="others">其他</option>
+                <option value="others">LTSER 長期生態站</option>
             </optgroup>
         </select>
     </div>
@@ -569,6 +582,7 @@
 <div class="loader-wrapper d-none">
     <span id="loader" class="loader"></span>
 </div>
+<div id="custom-fieldset-container"></div>
 <form id="customFieldset"></form>
 <form id="requiredFieldset" method="post" action="/data-template"></form>
 <form id="themeFieldset"></form>

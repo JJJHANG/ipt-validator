@@ -9,7 +9,7 @@ var CORE_TEXT_VALUE_MAP = {
     "資料集類型欄位：Checklist 物種名錄": "checklist",
     "資料集類型欄位：Occurrence 出現紀錄": "occurrence",
     "資料集類型欄位：Sampling Event 調查活動": "samplingevent",
-    "資料集類型欄位：其他": "others",
+    "資料集類型欄位：LTSER 長期生態站": "others",
 };
 
 var THEME_TEMPALTE_SETS = {
@@ -31,7 +31,7 @@ var THEME_TEMPALTE_SETS = {
     },
 };
 
-const { projectID, projectName } = getProjectParamsFromUrl();
+const { projectID, projectName, isEdit } = getProjectParamsFromUrl();
 
 $(document).ready(function () {
     $("#custom").select2();
@@ -189,7 +189,7 @@ $(document).ready(function () {
 
     // 滑鼠事件：移入欄位顯示對應的說明
     $(
-        "#requiredFieldset, #extensionFieldset, #themeFieldset, #customFieldset"
+        "#requiredFieldset, #extensionFieldset, #themeFieldset, #custom-fieldset-container"
     ).on("mouseenter", ".checkbox", function () {
         const name = $(this).data("name");
         const type = $(this).data("type");
@@ -278,6 +278,8 @@ $(document).ready(function () {
         var column_name = $('input[name="column_name"]').val();
         var column_type = $('select[name="column_type"]').val();
         var column_comment = $('textarea[name="column_comment"]').val();
+        const addTemplateValue = $('select[name="add_template"]').find(":selected").val();
+        const addTemplateText = $('#add-column-content-container select[name="add_template"]').find(":selected").text().trim();
 
         if (column_name && column_type) {
             $.ajax({
@@ -306,7 +308,7 @@ $(document).ready(function () {
 
                                 // 新增欄位到模板中
                                 var existingFieldset = $(
-                                    "#customFieldset fieldset"
+                                    `#customFieldset-${addTemplateValue}`
                                 );
                                 var newContent = `
                                     <div class="checkbox" data-name="${column_name}" data-type="使用者自定義類型，${column_type}" data-description="使用者自定義欄位。${column_comment}" data-commonname="" data-example="">
@@ -321,12 +323,12 @@ $(document).ready(function () {
                                     existingFieldset.append(newContent);
                                 } else {
                                     var content = `
-                                        <fieldset id="customFieldset">
-                                            <legend>自訂欄位</legend>
+                                        <fieldset id="customFieldset-${addTemplateValue}" class="custom-fieldset" data-template="${addTemplateValue}">
+                                            <legend>自訂欄位：${addTemplateText}</legend>
                                             ${newContent}
                                         </fieldset>
                                     `;
-                                    $("#customFieldset").html(content);
+                                    $('#custom-fieldset-container').append(content);
                                 }
 
                                 // 新增欄位成功之後，清掉輸入
@@ -362,6 +364,9 @@ $(document).ready(function () {
 
     // 將自訂欄位加到模板中
     $("#confirm-add-column").on("click", function () {
+        const addTemplateValue = $('.right-content-container select[name="add_template"]').find(":selected").val();
+        const addTemplateText = $('.right-content-container select[name="add_template"]').find(":selected").text().trim();
+
         var selectedBoxesList = $(
             ".content-detail .column-name input[type='checkbox']:checked"
         )
@@ -376,7 +381,7 @@ $(document).ready(function () {
             })
             .get();
 
-        var existingFieldset = $("#customFieldset fieldset");
+        var existingFieldset = $(`#customFieldset-${addTemplateValue}`);
         var existingColumns = new Set();
 
         // 檢查現有的自訂欄位名稱，將其加入到 Set
@@ -419,14 +424,17 @@ $(document).ready(function () {
                 existingFieldset.append(content);
             } else {
                 var newContent = `
-                    <fieldset id="customFieldset">
-                        <legend>自訂欄位</legend>
+                    <fieldset id="customFieldset-${addTemplateValue}" class="custom-fieldset" data-template="${addTemplateValue}">
+                        <legend>自訂欄位：${addTemplateText}</legend>
                         ${content}
                     </fieldset>
                 `;
-                $("#customFieldset").html(newContent);
+                $('#custom-fieldset-container').append(newContent);
             }
         }
+
+        // 取消所有選中的 checkbox
+        $(".content-detail .column-name input[type='checkbox']:checked").prop("checked", false);
     });
 
     // 按鈕事件：下載模板
@@ -440,7 +448,7 @@ $(document).ready(function () {
         if ($("#core").val() !== "") {
             var coreTableTerms = collectCoreTableTerms();
             var extensionTableTerms = collectExtensionTableTerms();
-            var CustomTerms = collectCustomTerms();
+            var customTerms = collectCustomTerms();
             var extensionFieldsetArray = []; // 延伸資料集抓 fieldset 上 value，因為下拉式選單多選不好抓
 
             $("#extensionFieldset fieldset").each(function () {
@@ -448,10 +456,22 @@ $(document).ready(function () {
                 extensionFieldsetArray.push(value);
             });
 
+            const coreTemplateName = $("#core").val(); // 資料集類型抓下拉選單的值
+
             var templateNames = {
-                資料集類型: [$("#core").val()], // 資料集類型抓下拉選單的值
+                資料集類型: [coreTemplateName], // 轉成陣列傳遞
                 延伸資料集: extensionFieldsetArray,
             };
+
+            // 把 customTerms 中的值依照 key 加到對應的 coreTableTerms 和 extensionTableTerms 中
+            const coreKeys = ["checklist", "occurrence", "samplingevent", "others"];
+            for (const [key, value] of Object.entries(customTerms)) {
+                if (coreKeys.includes(key)) {
+                    value.forEach(item => coreTableTerms[key].push(item));
+                } else {
+                    value.forEach(item => extensionTableTerms[key].push(item));
+                }
+            }
 
             var allTableTerms = Object.assign(
                 {},
@@ -459,10 +479,53 @@ $(document).ready(function () {
                 extensionTableTerms
             );
             addToIndexedDB();
+
+            // 儲存 Table Header 相關欄位到資料表中
+            // 如果只有資料集類型，就不用處理延伸資料集
+            $.ajax({
+                type: "POST",
+                url: "/data-template/table_header",
+                data: JSON.stringify({
+                    project_id: projectID,
+                    table_name: coreTemplateName,
+                    table_header: coreTableTerms[coreTemplateName],
+                }),
+                contentType: "application/json;charset=UTF-8",
+                success: function (response) {
+                    console.log("Message:", response.message);
+                },
+                error: function (response) {
+                    console.log("Message:", response.message);
+                    console.log("Error:", response.error);
+                },
+            });
+            if (templateNames["延伸資料集"].length != 0) {
+                // 用迴圈儲存延伸資料集的表頭
+                templateNames["延伸資料集"].map((extension) => {
+                    $.ajax({
+                        type: "POST",
+                        url: "/data-template/table_header",
+                        data: JSON.stringify({
+                            project_id: projectID,
+                            table_name: extension,
+                            table_header: extensionTableTerms[extension],
+                        }),
+                        contentType: "application/json;charset=UTF-8",
+                        success: function (response) {
+                            console.log("Message:", response.message);
+                        },
+                        error: function (response) {
+                            console.log("Message:", response.message);
+                            console.log("Error:", response.error);
+                        },
+                    });
+                });
+            }
+
             goDataEditPage(
                 allTableTerms,
                 templateNames,
-                CustomTerms,
+                customTerms,
                 projectName,
                 projectID
             );
@@ -472,12 +535,40 @@ $(document).ready(function () {
     });
 
     $(".column-btn").click(function () {
+        $('.popup-overlay').removeClass('d-none');
+        const templateOptions = [];
+
+        // 取得 #core 當前選中的 value 和 text
+        const selectedCoreValue = $("#core").val(); 
+        const selectedCoreText = $("#core").find(":selected").text().trim();
+
+        if (selectedCoreValue) {
+            templateOptions.push([selectedCoreValue, selectedCoreText]); 
+        }
+
+        // 取得 #extension 中選中的 value 和 text
+        $('#extension').find("option:selected").each(function () {
+            const value = $(this).val();
+            const text = $(this).text().trim();
+            templateOptions.push([value, text]); 
+        });
+
+        // 新增到 <select name="add_template">
+        const $select = $("select[name='add_template']");
+        templateOptions.forEach(function ([value, text]) {
+            // 檢查是否已存在相同的 value，避免重複添加
+            if ($select.find(`option[value='${value}']`).length === 0) {
+                $select.append(`<option value="${value}">${text}</option>`); 
+            }
+        });
+
         $(".custom-columns-popup").removeClass("d-none");
     });
 
     // 彈出視窗事件：儲存模板
     $(".save-template-btn").on("click", function (event) {
         event.preventDefault();
+        $(".popup-overlay").removeClass("d-none");
         $(".save-popup").removeClass("d-none");
     });
 
@@ -508,7 +599,102 @@ $(document).ready(function () {
 
     $(".xx").on("click", function (event) {
         $(".popup-container").addClass("d-none");
+        $(".popup-overlay").addClass("d-none");
     });
+
+    // 從資料編輯頁面上一步後，要重新渲染資料模板頁面
+    if (isEdit) {
+        $.ajax({
+            type: "GET",
+            url: `/data-template/table_header?project_id=${projectID}`,
+            contentType: "application/json;charset=UTF-8",
+            success: function (response) {
+                if (response.error) {
+                    console.error(response.error);
+                } else {
+                    // console.log(response.data);
+                    const coreArray = [
+                        "checklist",
+                        "occurrence",
+                        "samplingevent",
+                    ];
+                    const extensionArray = [];
+                    const extensionTableHeaders = {};
+                    response.data.forEach(function (row) {
+                        if (coreArray.includes(row.table_name)) {
+                            const tableName = row.table_name; // 取得對應的 table_name
+                            const tableHeader = row.table_header; // 取得對應的 table_header
+                            // 確定好 core 之後先觸發 select2 改變下拉式選單的值
+                            $("#core").val(tableName).trigger("change");
+
+                            // 使用 requestAnimationFrame 等待 DOM 完成渲染
+                            requestAnimationFrame(function () {
+                                requestAnimationFrame(function () {
+                                    $(".required-fieldset .checkbox").each(
+                                        function () {
+                                            const checkboxDiv = $(this);
+                                            const fieldName =
+                                                checkboxDiv.data("name");
+                                            const checkbox = checkboxDiv.find(
+                                                "input[type='checkbox']"
+                                            );
+
+                                            if (
+                                                tableHeader.includes(fieldName)
+                                            ) {
+                                                checkbox.prop("checked", true); // 勾選在 tableHeader 中的 checkbox
+                                            } else {
+                                                checkbox.prop("checked", false); // 反勾選在 tableHeader 中的 checkbox
+                                            }
+                                        }
+                                    );
+                                });
+                            });
+                        } else {
+                            const tableName = row.table_name; // 取得 core 以外的 table_name
+                            const tableHeader = row.table_header; // 取得對應的 table_header
+                            if (!extensionArray.includes(tableName)) {
+                                extensionArray.push(tableName);
+                                extensionTableHeaders[tableName] = tableHeader;
+                            }
+                        }
+                    });
+                    // 對 exttension 的處理放到迴圈後
+                    $("#extension").val(extensionArray).trigger("change");
+                    // console.log(extensionTableHeaders);
+                    Object.entries(extensionTableHeaders).forEach(function ([
+                        tableName,
+                        tableHeader,
+                    ]) {
+                        // console.log(tableName);
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () {
+                                $(
+                                    `fieldset[value='${tableName}'] .checkbox`
+                                ).each(function () {
+                                    const checkboxDiv = $(this);
+                                    const fieldName = checkboxDiv.data("name");
+                                    const checkbox = checkboxDiv.find(
+                                        "input[type='checkbox']"
+                                    );
+
+                                    // 檢查是否需要勾選
+                                    if (tableHeader.includes(fieldName)) {
+                                        checkbox.prop("checked", true); // 勾選在 fields 中的 checkbox
+                                    } else {
+                                        checkbox.prop("checked", false); // 反勾選
+                                    }
+                                });
+                            });
+                        });
+                    });
+                }
+            },
+            error: function (response) {
+                console.error(response);
+            },
+        });
+    }
 });
 
 function getCoreTemplate(templateName, templateText) {
@@ -610,6 +796,32 @@ function renderCustomTerms() {
             });
 
             $("#edit-column-content-left").html(content);
+
+            const templateOptions = [];
+
+            // 取得 #core 當前選中的 value 和 text
+            const selectedCoreValue = $("#core").val(); 
+            const selectedCoreText = $("#core").find(":selected").text().trim();
+
+            if (selectedCoreValue) {
+                templateOptions.push([selectedCoreValue, selectedCoreText]); 
+            }
+
+            // 取得 #extension 中選中的 value 和 text
+            $('#extension').find("option:selected").each(function () {
+                const value = $(this).val();
+                const text = $(this).text().trim();
+                templateOptions.push([value, text]); 
+            });
+
+            // 新增到 <select name="add_template">
+            const $select = $(".right-content-container select[name='add_template']");
+            templateOptions.forEach(function ([value, text]) {
+                // 檢查是否已存在相同的 value，避免重複添加
+                if ($select.find(`option[value='${value}']`).length === 0) {
+                    $select.append(`<option value="${value}">${text}</option>`); 
+                }
+            });
         },
         error: function (xhr, status, error) {
             console.error("Failed to fetch custom terms:", status, error);
@@ -665,6 +877,7 @@ function fetchCustomTemplates(id) {
 function processTemplateContent(records) {
     // $("#extension").val("simple-multimedia").trigger("change");
     var templateKeys = Object.keys(records); // 取得自訂模板中每一個 fieldset 的 legend
+    console.log(templateKeys);
     templateKeys.forEach(function (key) {
         var columns = records[key].columns;
         var content = "";
@@ -697,6 +910,7 @@ function generateColumnHtml(column) {
 
 // 更新欄位內容
 function updateFieldsets(key, content) {
+    console.log(key);
     const EXTENSION_KEY_TO_VALUES_MAP = {
         "延伸資料集欄位：Darwin Core Occurrence": "darwin-core-occurrence",
         "延伸資料集欄位：Simple Multimedia": "simple-multimedia",
@@ -710,7 +924,7 @@ function updateFieldsets(key, content) {
         key === "資料集類型欄位：Checklist 物種名錄" ||
         key === "資料集類型欄位：Occurrence 出現紀錄" ||
         key === "資料集類型欄位：Sampling Event 調查活動" ||
-        key === "資料集類型欄位：其他"
+        key === "資料集類型欄位：LTSER 長期生態站"
     ) {
         fieldset = `<fieldset class="required-fieldset">${content}<legend>${key}</legend></fieldset>`;
         $("#requiredFieldset").html(fieldset);
@@ -720,9 +934,25 @@ function updateFieldsets(key, content) {
         updateSelect2("#theme", "none", "無");
         $("#theme").prop("disabled", true);
         $(".lock-tag").removeClass("d-none");
-    } else if (key === "自訂欄位") {
-        fieldset = `<fieldset>${content}<legend>${key}</legend></fieldset>`;
-        $("#customFieldset").html(fieldset);
+    } else if (key.includes("自訂欄位")) {
+        const KEY_TO_VALUES_MAP = {
+            "自訂欄位：Checklist 物種名錄": "checklist",
+            "自訂欄位：Occurrence 出現紀錄": "occurrence",
+            "自訂欄位：Sampling Event 調查活動": "samplingevent",
+            "自訂欄位：LTSER 長期生態站": "others",
+            "自訂欄位：Darwin Core Occurrence": "darwin-core-occurrence",
+            "自訂欄位：Simple Multimedia": "simple-multimedia",
+            "自訂欄位： Extended Measurement Or Facts":
+                "extended-measurement-or-facts",
+            "自訂欄位：Resource Relationship": "resource-relationship",
+            "自訂欄位：DNA derived data": "dna-derived-data",
+        }
+        const addTemplateValue = KEY_TO_VALUES_MAP[key];
+        fieldset = `<fieldset id="customFieldset-${addTemplateValue}" class="custom-fieldset" data-template="${addTemplateValue}">
+                        <legend>${key}</legend>
+                        ${content}
+                    </fieldset>`;
+        $('#custom-fieldset-container').append(fieldset);
     } else if (key.includes("主題欄位")) {
         fieldset = `<fieldset>${content}<legend>${key}</legend></fieldset>`;
         $("#themeFieldset").html(fieldset);
@@ -843,12 +1073,22 @@ function deleteCustomTerm(termID) {
 }
 
 function collectCustomTerms() {
-    var customTerms = [];
-    $("#customFieldset")
-        .find("input[type=checkbox]:checked")
-        .each(function () {
-            customTerms.push($(this).attr("name"));
-        });
+    const customTerms = {};
+
+    $(".custom-fieldset").each(function () {
+        const template = $(this).attr("data-template");
+        const selectedCheckboxes = [];
+
+        $(this)
+            .find("input[type=checkbox]:checked")
+            .each(function () {
+                selectedCheckboxes.push($(this).attr("name"));
+            });
+
+        if (selectedCheckboxes.length > 0) {
+            customTerms[template] = selectedCheckboxes;
+        }
+    });
 
     return customTerms;
 }
@@ -858,7 +1098,6 @@ function collectCoreTableTerms() {
     var coreTableFieldsets = [
         $("#requiredFieldset"),
         $("#themeFieldset"),
-        $("#customFieldset"),
     ];
     var coreTableName = $("#core").val();
     var columns = [];
@@ -920,5 +1159,6 @@ function getProjectParamsFromUrl() {
     return {
         projectID: urlParams.get("project_id"),
         projectName: urlParams.get("project_name"),
+        isEdit: urlParams.get("edit"),
     };
 }

@@ -14,20 +14,26 @@ $(document).ready(function () {
                 mappingResult[labelValue] = selectedOption;
             }
         });
+        $(".loader-wrapper").removeClass("d-none");
 
         $.ajax({
             type: "POST",
             url: "/data-edit/store_mapping_result",
             contentType: "application/json;charset=UTF-8",
-            data: JSON.stringify(mappingResult),
+            data: JSON.stringify({
+                mappingResult: mappingResult,
+                project_id: projectID,
+            }),
             success: function () {
                 // 成功後重定向到 data-edit 視圖
                 location.href = `/data-edit?project_name=${encodeURIComponent(
                     projectName
                 )}&project_id=${encodeURIComponent(projectID)}&edit=1`;
+                // $(".loader-wrapper").addClass("d-none");
             },
             error: function (response) {
                 console.error(response);
+                // $(".loader-wrapper").addClass("d-none");
             },
         });
     });
@@ -38,7 +44,10 @@ $(document).ready(function () {
             type: "POST",
             url: "/data-edit/store_mapping_result",
             contentType: "application/json;charset=UTF-8",
-            data: JSON.stringify(mappingResult),
+            data: JSON.stringify({
+                mappingResult: mappingResult,
+                project_id: projectID,
+            }),
             success: function () {
                 // 成功後重定向到 data-edit 視圖
                 location.href = `/data-edit?project_name=${encodeURIComponent(
